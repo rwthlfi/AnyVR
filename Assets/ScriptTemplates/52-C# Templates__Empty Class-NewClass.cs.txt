@@ -1,0 +1,22 @@
+#LICENSE-HEADER#
+#NOTRIM#
+    #ROOTNAMESPACEBEGIN#
+public class #SCRIPTNAME#
+{
+    // Private fields
+    #NOTRIM#
+    #NOTRIM#
+
+    // Properties
+    #NOTRIM#
+    #NOTRIM#
+
+    // Constructors
+    #NOTRIM#
+    #NOTRIM#
+
+    // Methods
+    #NOTRIM#
+    #NOTRIM#
+}
+#ROOTNAMESPACEEND#
