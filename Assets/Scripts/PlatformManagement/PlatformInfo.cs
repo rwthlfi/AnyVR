@@ -18,6 +18,7 @@
 using UnityEngine;
 using UnityEngine.XR;
 using System.Collections.Generic;
+using UnityEngine.XR.Management;
 
 namespace AnyVR.PlatformManagement
 {
@@ -148,7 +149,7 @@ namespace AnyVR.PlatformManagement
         /// <returns>Whether the used platform is an XR platform.</returns>
         public static bool IsXRPlatform()
         {
-            return XRSettings.isDeviceActive;
+            return XRGeneralSettings.Instance.Manager.activeLoader != null;
         }
 
         /// <summary>
