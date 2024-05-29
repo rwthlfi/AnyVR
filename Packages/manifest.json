@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.baracuda.runtime-monitoring": "3.6.0",
     "com.unity.collab-proxy": "2.2.0",
     "com.unity.feature.development": "1.0.1",
     "com.unity.feature.vr": "1.0.0",
@@ -10,7 +11,7 @@
     "com.unity.toolchain.win-x86_64-linux-x86_64": "2.0.6",
     "com.unity.visualscripting": "1.9.1",
     "com.unity.xr.hands": "1.3.0",
-    "com.unity.xr.interaction.toolkit": "2.5.2",
+    "com.unity.xr.interaction.toolkit": "2.5.4",
     "com.unity.xr.management": "4.4.0",
     "com.unity.xr.openxr": "1.10.0",
     "com.unity.modules.ai": "1.0.0",
@@ -44,5 +45,14 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  }
+  },
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.baracuda"
+      ]
+    }
+  ]
 }

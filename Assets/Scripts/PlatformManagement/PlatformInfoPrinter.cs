@@ -54,5 +54,10 @@ namespace AnyVR.PlatformManagement
             }
         }
 
+        public void PrintHelloWorld()
+        {
+            Debug.Log("Hello World");
+        }
+
     }
 }
