@@ -1,0 +1,158 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: UISpriteAtlas
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 3
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 1
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: 68eae42a1830ea644a80203a62fcc12e, type: 3}
+    - {fileID: 102900000, guid: f7764c3f728d87e4799f7091d2611132, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 181ac700d6097b74b9b60aa14b23e3f5, type: 3}
+  - {fileID: 21300000, guid: ea5d17701a9cb14449701e1cb21f22a9, type: 3}
+  - {fileID: 21300000, guid: 4146daa07c8cd0a4dbd317d6365de63c, type: 3}
+  - {fileID: 21300000, guid: 39110ea0ffbe43b4291513067af84eaa, type: 3}
+  - {fileID: 21300000, guid: 107e8aa112cd37846991bfe59b749f48, type: 3}
+  - {fileID: 21300000, guid: 6207aba1c10a60040aa3e5fdbcfb9944, type: 3}
+  - {fileID: 21300000, guid: 818b50d175c23574f87a1a9f7cc7d966, type: 3}
+  - {fileID: 21300000, guid: deee31428f34eda4d90ed6f10fe26ff1, type: 3}
+  - {fileID: 21300000, guid: f80137427cdd48741b15e5a10909f96a, type: 3}
+  - {fileID: 21300000, guid: 805f5052240c0c84390f84d90248a5f8, type: 3}
+  - {fileID: 21300000, guid: 7800b262c5382f54fa4f1e6ecd16b3ba, type: 3}
+  - {fileID: 21300000, guid: b5d2af923920b494690d7a7f419fe343, type: 3}
+  - {fileID: 21300000, guid: f10d41a255c6052459086dcccffe871a, type: 3}
+  - {fileID: 21300000, guid: 373924a205664aa439a49a9c96f6c288, type: 3}
+  - {fileID: 21300000, guid: 7b6f9ed2e0fcb1f4196f08b24017f71a, type: 3}
+  - {fileID: 21300000, guid: e6fe1ce285fb8744694aee95081f4ae2, type: 3}
+  - {fileID: 21300000, guid: aa9d8b9435ef8844fbbfcf288f868f0b, type: 3}
+  - {fileID: 21300000, guid: b20061a4a9180df4dabe3b40859f5a17, type: 3}
+  - {fileID: 21300000, guid: 5ba89ef4403ccab41b98fc5649e0ae66, type: 3}
+  - {fileID: 21300000, guid: 1200159531f7e094faba7817d2f6c051, type: 3}
+  - {fileID: 21300000, guid: 05dddf57086351846863c9b7ecee0b6e, type: 3}
+  - {fileID: 21300000, guid: 672f3297dc5fd0346b7297ba7f088a2b, type: 3}
+  - {fileID: 21300000, guid: 0e547ad769fa96a4a814924a7b681a33, type: 3}
+  - {fileID: 21300000, guid: 10ecda38b2f926543a9d1f4395b00353, type: 3}
+  - {fileID: 21300000, guid: 4014f058b3d319a48a1f4931f990022e, type: 3}
+  - {fileID: 21300000, guid: e95b1b58e6201714e8773d438d87a5e2, type: 3}
+  - {fileID: 21300000, guid: 342c56785b89f934bb2d77fa3b94a3d3, type: 3}
+  - {fileID: 21300000, guid: 40c6bc781893b60428819eebf42aa836, type: 3}
+  - {fileID: 21300000, guid: d0f01e88a9c85524fbebfe616edddd3d, type: 3}
+  - {fileID: 21300000, guid: 7ff201c81fb002e448bb36875a4dfac2, type: 3}
+  - {fileID: 21300000, guid: 4ded34c88c4ed6541b7bed57857c9325, type: 3}
+  - {fileID: 21300000, guid: 11c1abc88a0b73243a2f4c73117203f7, type: 3}
+  - {fileID: 21300000, guid: 86887e49a84c16643b5681a843fc7e91, type: 3}
+  - {fileID: 21300000, guid: 00e3871a614ceda4bad08376478f2f82, type: 3}
+  - {fileID: 21300000, guid: e044ee9a86481b84aab55d351e8b6e7c, type: 3}
+  - {fileID: 21300000, guid: 26d9d0ba6530c4b4c84b89e3847742be, type: 3}
+  - {fileID: 21300000, guid: 569072dad78e8264f8615079442d67a7, type: 3}
+  - {fileID: 21300000, guid: 82a8470b0bde9ab438c2ee8244c50b11, type: 3}
+  - {fileID: 21300000, guid: bf2ab7abbfeb74b49baf732e97ebcd3d, type: 3}
+  - {fileID: 21300000, guid: 010e7aab223ae7c4bb38bb7f4ec22bed, type: 3}
+  - {fileID: 21300000, guid: b28313fb952801545a8d8653b4a746c0, type: 3}
+  - {fileID: 21300000, guid: df56596cf52c04c4eae2cfd3699195cc, type: 3}
+  - {fileID: 21300000, guid: 89bd3a7c9ccac7347b4e71c6ceae9572, type: 3}
+  - {fileID: 21300000, guid: 4cff019c9c4007f4782f6668a0cf4439, type: 3}
+  - {fileID: 21300000, guid: 36bdcfdc4d1f13746ba410363549e599, type: 3}
+  - {fileID: 21300000, guid: 15a232fcd2bb7af4fbe642ac398cf698, type: 3}
+  - {fileID: 21300000, guid: 38b0d89db8515ef438af88ade9ef22ab, type: 3}
+  - {fileID: 21300000, guid: f932043e59722db46aa2f7953c5fdc0c, type: 3}
+  - {fileID: 21300000, guid: 096722fe5135bbb45bf36bfbb9464a39, type: 3}
+  - {fileID: 21300000, guid: fa8f6e3fe22f26d4b9caca75401be941, type: 3}
+  - {fileID: 21300000, guid: 1960aeafdf48569409a3b06c40f27988, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - icon_info
+  - icon_change
+  - icon_person
+  - icon_microphone_muted
+  - icon_image_avatar
+  - icon_lock_open
+  - icon_microphone
+  - half_circle_upwards_128
+  - icon_cast
+  - icon_close
+  - icon_add
+  - icon_settings
+  - icon_happy
+  - icon_delete
+  - icon_angry
+  - icon_warning
+  - icon_logout_2
+  - icon_face
+  - icon_users
+  - circle_64
+  - circle_hollow_64
+  - icon_refresh
+  - icon_wifi
+  - icon_back
+  - circle_32
+  - icon_nav
+  - circle_128
+  - half_circle_right_128
+  - icon_notes
+  - icon_bookmark
+  - icon_emote
+  - icon_home
+  - icon_remove
+  - half_circle_left_128
+  - icon_forward
+  - half_circle_left_64
+  - icon_dice
+  - icon_addbookmark
+  - icon_teleport
+  - icon_admin
+  - icon_pen
+  - icon_lock
+  - circle_256
+  - icon_logout
+  - background_512x512
+  - icon_edit_avatar
+  - half_circle_downwards_128
+  - icon_shirt
+  - icon_mic
+  - icon_browser
+  - icon_list
+  m_RenderDataMap: {}
+  m_Tag: UISpriteAtlas
+  m_IsVariant: 0

@@ -6,8 +6,26 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 55daccc09a3b69647bbab145b54a3ab3
+    path: Assets/Scenes/OfflineScene.unity
+    guid: 85b300545ad86e948b08bc1ce420af24
+  - enabled: 1
+    path: Assets/Scenes/GlobalScene.unity
+    guid: 866f7d683f7b4b84db620ec2248a3686
+  - enabled: 1
+    path: Assets/Scenes/LobbySelectionScene.unity
+    guid: 88c610e0c5e587440bbd0c3273a5d163
+  - enabled: 1
+    path: Assets/Scenes/CreateRoomScene.unity
+    guid: 6aabd3054f1e4e84197d34131dbfad77
+  - enabled: 1
+    path: Assets/Scenes/UIScene.unity
+    guid: bba88a0c3162cca4ca6104582577da92
+  - enabled: 1
+    path: Assets/Scenes/LobbyScenes/BobOmbBattlefield.unity
+    guid: 2ca22128f2e89c440830135404c6d2d2
+  - enabled: 1
+    path: Assets/Scenes/LobbyScenes/KokiriVillage.unity
+    guid: 2176b899340b3c44b9f2b7d12e3bbc6d
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: c89a838ad6223e74e8f4f5eff42fc3be, type: 2}
     Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: dc5a169419fa04987b057f65238cf3ba, type: 2}
