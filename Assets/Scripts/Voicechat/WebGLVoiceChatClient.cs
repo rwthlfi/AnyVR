@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Voicechat.WebGL
+namespace Voicechat
 {
     internal class WebGLVoiceChatClient : VoiceChatClient
     {
@@ -15,7 +15,6 @@ namespace Voicechat.WebGL
         internal override event Action<Participant> ParticipantConnected;
         internal override event Action<string> ParticipantDisconnected;
         internal override event Action ConnectedToRoom;
-        internal override event Action<string, byte[]> DataReceived;
         internal override event Action<string> VideoReceived;
 
         internal override void Init()
@@ -73,7 +72,6 @@ namespace Voicechat.WebGL
             _room.LocalTrackPublished += (_, _) => { Debug.Log("Local Track Published!"); };
             _room.Disconnected += _ => Connected = false;
 
-            _room.DataReceived += (data, participant, _) => { DataReceived?.Invoke(participant.Sid, data); };
             Debug.Log("WebGLVoiceChatClient initialized!");
         }
 
@@ -86,6 +84,17 @@ namespace Voicechat.WebGL
         internal override void Disconnect()
         {
             _room.Disconnect();
+        }
+
+        internal override bool TryGetAvailableMicrophoneNames(out string[] micNames)
+        {
+            micNames = null;
+            return false;
+        }
+
+        internal override void SetActiveMicrophone(string micName)
+        {
+            
         }
 
         private IEnumerator Co_Connect(string address, string token)
@@ -128,17 +137,6 @@ namespace Voicechat.WebGL
             string state = b ? "enabled" : "disabled";
             Debug.Log($"Setting microphone state: {state}");
             _room.LocalParticipant.SetMicrophoneEnabled(b);
-        }
-
-        internal override void SetMicEnabled(bool b)
-        {
-            _room.LocalParticipant.SetCameraEnabled(b);
-        }
-
-
-        internal override void SendData(byte[] buffer)
-        {
-            _room.LocalParticipant.PublishData(buffer, DataPacketKind.LOSSY, _room.Participants.Values.ToArray());
         }
     }
 }

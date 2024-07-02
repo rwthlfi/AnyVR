@@ -41,8 +41,8 @@ namespace LobbySystem.UI
             _clientListHandler.gameObject.SetActive(false);
             _pausePanelHandler.gameObject.SetActive(false);
 
-            _clientListHandler.ClientKick += ClientKick;
-            _clientListHandler.ClientMuteChange += ClientMuteChange;
+            //_clientListHandler.ClientKick += ClientKick;
+            //_clientListHandler.ClientMuteChange += ClientMuteChange;
 
             _panels.Add(_clientListHandler.gameObject);
             _panels.Add(_pausePanelHandler.gameObject);
@@ -51,7 +51,7 @@ namespace LobbySystem.UI
 
             _muteToggle.onValueChanged.AddListener(b =>
             {
-                SetMicrophoneEnableState?.Invoke(!b);
+                LobbyRoomHandler.SetMicrophoneActive(!b);
             });
         }
 
@@ -70,14 +70,6 @@ namespace LobbySystem.UI
         {
             s_instance = null;
         }
-
-        public event Action<int, bool> ClientMuteChange;
-
-        public event Action<bool> MuteChange;
-
-        public event Action<int> ClientKick;
-
-        public event Action<bool> SetMicrophoneEnableState;
 
         internal bool IsLocalClientAdmin()
         {

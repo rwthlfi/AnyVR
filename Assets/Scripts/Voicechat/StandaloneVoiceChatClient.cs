@@ -8,7 +8,7 @@ using System.Linq;
 using UnityEngine;
 using RoomOptions = LiveKit.RoomOptions;
 
-namespace Voicechat.Standalone
+namespace Voicechat
 {
     internal class StandaloneVoiceChatClient : VoiceChatClient
     {
@@ -20,7 +20,6 @@ namespace Voicechat.Standalone
         internal override event Action<Participant> ParticipantConnected;
         internal override event Action<string> ParticipantDisconnected;
         internal override event Action ConnectedToRoom;
-        internal override event Action<string, byte[]> DataReceived;
         internal override event Action<string> VideoReceived;
 
         internal override void Init()
@@ -61,11 +60,6 @@ namespace Voicechat.Standalone
             {
                 Connected = false;
             };
-            _room.DataReceived += (data, participant, kind, topic) =>
-            {
-                Debug.Log("data received!");
-                DataReceived?.Invoke(participant.Sid, data);
-            };
             _input = new GameObject("LiveKitAudioInput").AddComponent<AudioSource>();
             DontDestroyOnLoad(_input.gameObject);
             _output = new GameObject("LiveKitAudioOutput").AddComponent<AudioSource>();
@@ -82,6 +76,26 @@ namespace Voicechat.Standalone
         internal override void Disconnect()
         {
             _room.Disconnect();
+        }
+
+        internal override bool TryGetAvailableMicrophoneNames(out string[] micNames)
+        {
+            micNames = Microphone.devices;
+            return true;
+        }
+
+        internal override void SetActiveMicrophone(string micName)
+        {
+            bool b = IsMicEnabled;
+            if (b)
+            {
+                SetMicrophoneEnabled(false);
+            }
+            _activeMicName = micName;
+            if (b)
+            {
+                SetMicrophoneEnabled(true);
+            }
         }
 
         internal override void SetMicrophoneEnabled(bool b)
@@ -111,16 +125,6 @@ namespace Voicechat.Standalone
 
                 ConnectedToRoom?.Invoke();
             }
-        }
-
-        internal override void SetMicEnabled(bool b)
-        {
-            //todo 
-        }
-
-        internal override void SendData(byte[] buffer)
-        {
-            //TODO 
         }
 
         internal override void SetClientMute(string sid, bool mute)
@@ -178,14 +182,6 @@ namespace Voicechat.Standalone
 
             AudioStream stream = new(audioTrack, _output);
             // Audio is being played on the source ..
-        }
-
-        public void SetActiveMicrophone(string micName)
-        {
-            bool b = IsMicEnabled;
-            SetMicEnabled(false);
-            _activeMicName = micName;
-            SetMicEnabled(b);
         }
     }
 }

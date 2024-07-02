@@ -5,13 +5,11 @@ using UnityEngine;
 using System.Text.RegularExpressions;
 
 #if UNITY_WEBGL
-using Voicechat.WebGL;
 using UnityEngine.Networking;
 #else
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Voicechat.Standalone;
 #endif
 
 namespace Voicechat
@@ -119,13 +117,6 @@ namespace Voicechat
                     ParticipantIsSpeakingUpdate?.Invoke(p);
                 }
             };
-            _chatClient.DataReceived += (sid, bytes) =>
-            {
-                if (TryGetParticipantBySid(sid, out Participant p))
-                {
-                    DataReceived?.Invoke(p, bytes);
-                }
-            };
             _chatClient.VideoReceived += sid =>
             {
                 if (TryGetParticipantBySid(sid, out Participant p))
@@ -157,7 +148,13 @@ namespace Voicechat
             RequestTokenAndServerAddressAsync(roomName, userName, (token, serverAddress) =>
             {
                 _chatClient.Connect(serverAddress, token);
-                _chatClient.ConnectedToRoom += () => { _chatClient.SetMicrophoneEnabled(activateMic); };
+                _chatClient.ConnectedToRoom += () =>
+                {
+                    if (activateMic)
+                    {
+                        _chatClient.SetMicrophoneEnabled(true);
+                    }
+                };
 
                 // TODO: Handle Exception when token not received
                 // OnRoomConnectionFailed?.Invoke();
@@ -171,7 +168,6 @@ namespace Voicechat
         {
             _chatClient.Disconnect();
         }
-
         public void SetMicrophoneEnabled(bool b)
         {
             _chatClient.SetMicrophoneEnabled(b);
@@ -291,20 +287,18 @@ namespace Voicechat
         /// </summary>
         public void SetActiveMicrophone(string micName)
         {
-#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
-            Debug.Log("Setting mic!");
-            ((StandaloneVoiceChatClient)_chatClient).SetActiveMicrophone(micName);
-#endif
+            _chatClient.SetActiveMicrophone(micName);
         }
 
-        public void SendData(byte[] buffer)
+        public bool TryGetAvailableMicrophoneNames(out string[] micNames)
         {
-            _chatClient.SendData(buffer);
-        }
-
-        public void SetCamActive(bool b)
-        {
-            _chatClient.SetMicEnabled(b);
+            if(_chatClient.TryGetAvailableMicrophoneNames(out string[] names))
+            {
+                micNames = names;
+                return true;
+            }
+            micNames = null;
+            return false;
         }
     }
 }

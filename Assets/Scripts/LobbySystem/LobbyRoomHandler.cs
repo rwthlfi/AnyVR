@@ -3,6 +3,7 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Voicechat;
@@ -11,6 +12,23 @@ namespace LobbySystem
 {
     public class LobbyRoomHandler : NetworkBehaviour
     {
+        #region Singleton
+
+        private static LobbyRoomHandler s_instance;
+
+        private void InitSingleton()
+        {
+            if (s_instance != null)
+            {
+                Debug.LogWarning("Instance of LobbyRoomHandler already exists!");
+                return;
+            }
+
+            s_instance = this;
+        }
+
+        #endregion
+        
         private readonly SyncDictionary<int, string> _sids = new();
 
         private LobbyMetaData _lmd;
@@ -46,7 +64,14 @@ namespace LobbySystem
             {
                 RegisterLocalSid(LiveKitManager.s_instance.LocalParticipant.Sid);
             };
+            if (LiveKitManager.s_instance.TryGetAvailableMicrophoneNames(out string[] micNames))
+            { 
+                string msg = micNames.Aggregate("Available Microphones:\n", (current, micName) => current + ("\t" + micName + "\n"));
+                Debug.Log(msg);
+                LiveKitManager.s_instance.SetActiveMicrophone(micNames[1]);
+            }
             UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("UIScene", LoadSceneMode.Additive);
+            
             LobbyManager.s_instance.LobbyClientListReceived += list =>
             {
                 ClientListReceived?.Invoke(list);
@@ -79,22 +104,10 @@ namespace LobbySystem
         {
             return s_instance._lmd.Creator;
         }
-
-        #region Singleton
-
-        private static LobbyRoomHandler s_instance;
-
-        private void InitSingleton()
+        
+        public static void SetMicrophoneActive(bool micActive)
         {
-            if (s_instance != null)
-            {
-                Debug.LogWarning("Instance of LobbyRoomHandler already exists!");
-                return;
-            }
-
-            s_instance = this;
+            LiveKitManager.s_instance.SetMicrophoneEnabled(micActive);
         }
-
-        #endregion
     }
 }

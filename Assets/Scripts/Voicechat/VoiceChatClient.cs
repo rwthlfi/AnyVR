@@ -32,8 +32,6 @@ namespace Voicechat
 
         internal abstract event Action ConnectedToRoom;
 
-        internal abstract event Action<string, byte[]> DataReceived;
-
         internal abstract event Action<string> VideoReceived;
 
         internal abstract void Init();
@@ -42,11 +40,9 @@ namespace Voicechat
 
         internal abstract void Disconnect();
 
+        internal abstract bool TryGetAvailableMicrophoneNames(out string[] micNames);
+        internal abstract void SetActiveMicrophone(string micName);
         internal abstract void SetMicrophoneEnabled(bool b);
-
-        internal abstract void SetMicEnabled(bool b);
-
-        internal abstract void SendData(byte[] buffer);
 
         internal abstract void SetClientMute(string sid, bool mute);
 
@@ -67,7 +63,6 @@ namespace Voicechat
                     ParticipantIsSpeakingUpdate?.Invoke(sid, true);
                 }
             }
-
             _activeSpeakers = activeSpeakers;
         }
     }
