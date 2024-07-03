@@ -6,6 +6,7 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
 //TODO: Remove TMPro from the LobbySystem Assembly Definition. 
 
 namespace LobbySystem.LobbySelection

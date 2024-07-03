@@ -1,11 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using System.Text.RegularExpressions;
-
+using UnityEngine;
 #if UNITY_WEBGL
 using UnityEngine.Networking;
+
 #else
 using System.Collections.Generic;
 using System.Net.Http;
@@ -74,13 +74,6 @@ namespace Voicechat
         /// </summary>
         public event Action<Participant> VideoReceived;
 
-        /// <summary>
-        ///     Will be invoked when the local participant received data from a remote participant.
-        ///     The participant is the sending remote participant.
-        ///     The byte array is the received data.
-        /// </summary>
-        public event Action<Participant, byte[]> DataReceived;
-
         private const string k_tokenURL = "http://{0}/requestToken?room_name={1}&user_name={2}";
 
         private void Awake()
@@ -90,12 +83,15 @@ namespace Voicechat
 
         private void Start()
         {
-#if UNITY_WEBGL
+#if UNITY_WEBGL && !UNITY_EDITOR
             Debug.Log("VoiceChatManager initialized. Platform: WEBGL");
             _chatClient = gameObject.AddComponent<WebGLVoiceChatClient>();
-#else
+#elif !UNITY_WEBGL && !UNITY_SERVER
             Debug.Log("VoiceChatManager initialized. Platform: EDITOR/STANDALONE");
             _chatClient = gameObject.AddComponent<StandaloneVoiceChatClient>();
+#else
+            Debug.LogWarning("VoiceChatManager not initialized.");
+            return;
 #endif
             _chatClient.Init();
             _chatClient.ConnectedToRoom += () => { ConnectedToRoom?.Invoke(); };
@@ -168,6 +164,7 @@ namespace Voicechat
         {
             _chatClient.Disconnect();
         }
+
         public void SetMicrophoneEnabled(bool b)
         {
             _chatClient.SetMicrophoneEnabled(b);
@@ -183,7 +180,7 @@ namespace Voicechat
             SetTokenServerAddress($"{ip}:{port}");
         }
 
-        public void SetTokenServerAddress(string address)
+        private void SetTokenServerAddress(string address)
         {
             if (TryParseAddress(address, out (string ip, ushort port) res))
             {
@@ -260,7 +257,7 @@ namespace Voicechat
                 callback.Invoke(webRequest.downloadHandler.text);
             }
         }
-#else 
+#else
         // ReSharper disable Unity.PerformanceAnalysis
         private IEnumerator GetToken(string roomName, string participantName, Action<string> callback)
         {
@@ -292,11 +289,12 @@ namespace Voicechat
 
         public bool TryGetAvailableMicrophoneNames(out string[] micNames)
         {
-            if(_chatClient.TryGetAvailableMicrophoneNames(out string[] names))
+            if (_chatClient.TryGetAvailableMicrophoneNames(out string[] names))
             {
                 micNames = names;
                 return true;
             }
+
             micNames = null;
             return false;
         }

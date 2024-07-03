@@ -8,18 +8,17 @@ namespace LobbySystem
     public class LobbyHandler
     {
         private readonly HashSet<int> _clientIds;
-        private readonly LobbyMetaData _metaData;
+
+        // private readonly LobbyMetaData _metaData;
         private readonly SceneLoadData _sceneLoadData;
-        private int _id;
         private bool _isSceneHandleRegistered;
         private Scene _scene;
 
         public LobbyHandler(LobbyMetaData lobbyMetaData, int id)
         {
-            _id = id;
-            _metaData = lobbyMetaData;
+            // _metaData = lobbyMetaData;
             _clientIds = new HashSet<int>();
-            _sceneLoadData = new SceneLoadData(_metaData.Location)
+            _sceneLoadData = new SceneLoadData(lobbyMetaData.Location)
             {
                 ReplaceScenes = ReplaceOption.All,
                 Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.Physics3D }

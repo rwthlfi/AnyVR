@@ -27,10 +27,5 @@ namespace LobbySystem.LobbySelection
             _joinLabel.text = "Join"; //TODO: localization
             _metaData = metaData;
         }
-
-        public LobbyMetaData GetLobbyMetaData()
-        {
-            return _metaData;
-        }
     }
 }

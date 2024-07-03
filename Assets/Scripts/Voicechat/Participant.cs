@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 namespace Voicechat
@@ -20,11 +19,6 @@ namespace Voicechat
         public override string ToString()
         {
             return $"Participant({Sid}, {Identity})";
-        }
-
-        public void SetMute(bool b)
-        {
-            throw new NotImplementedException();
         }
     }
 }

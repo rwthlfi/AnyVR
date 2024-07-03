@@ -1,10 +1,10 @@
 using FishNet.Transporting.Multipass;
-using FishNet.Transporting.Tugboat;
 using UnityEngine;
-
 #if UNITY_WEBGL
 using FishNet.Transporting.Bayou;
+
 #else
+using FishNet.Transporting.Tugboat;
 #endif
 
 namespace LobbySystem
@@ -16,7 +16,7 @@ namespace LobbySystem
         {
             Multipass mp = GetComponent<Multipass>();
 #if UNITY_WEBGL
-		mp.SetClientTransport<Bayou>();
+            mp.SetClientTransport<Bayou>();
 #else
             mp.SetClientTransport<Tugboat>();
 #endif

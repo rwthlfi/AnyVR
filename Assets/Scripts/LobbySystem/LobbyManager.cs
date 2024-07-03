@@ -118,7 +118,7 @@ namespace LobbySystem
         }
 
         [TargetRpc]
-        private void ReceiveCurrentLobbiesRpc(NetworkConnection conn, LobbyMetaData[] lobbies)
+        private void ReceiveCurrentLobbiesRpc(NetworkConnection _, LobbyMetaData[] lobbies)
         {
             ReceivedCurrentLobbies?.Invoke(lobbies);
         }
@@ -148,7 +148,7 @@ namespace LobbySystem
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void CreateLobbyRpc(LobbyMetaData lobbyMetaData, NetworkConnection conn = null)
+        public void CreateLobbyRpc(LobbyMetaData lobbyMetaData, NetworkConnection _ = null)
         {
             // Each player can only be the owner of one lobby at a time. 
             // lobbyMetaData.Creator is therefore a sufficient unique lobby id
@@ -188,7 +188,7 @@ namespace LobbySystem
         }
 
         [ObserversRpc]
-        private void OnLobbyDestroyedRpc(LobbyMetaData lobbyMeta)
+        private void OnLobbyDestroyedRpc(LobbyMetaData _)
         {
             RequestCurrentLobbiesRpc();
         }
@@ -230,13 +230,13 @@ namespace LobbySystem
         }
 
         [TargetRpc]
-        private void OnClientJoinedLobbyRpc(NetworkConnection conn, int joinedClientId)
+        private void OnClientJoinedLobbyRpc(NetworkConnection _, int joinedClientId)
         {
             ClientJoined?.Invoke(joinedClientId);
         }
 
         [TargetRpc]
-        private void OnClientLeftLobbyRpc(NetworkConnection conn, int leftClientId)
+        private void OnClientLeftLobbyRpc(NetworkConnection _, int leftClientId)
         {
             ClientLeft?.Invoke(leftClientId);
         }
@@ -291,13 +291,13 @@ namespace LobbySystem
 
 
         [TargetRpc]
-        private void OnLobbyLeftRpc(NetworkConnection conn)
+        private void OnLobbyLeftRpc(NetworkConnection _)
         {
             LobbyLeft?.Invoke();
         }
 
         [TargetRpc]
-        private void OnLobbyJoinedRpc(NetworkConnection conn, LobbyMetaData lmd)
+        private void OnLobbyJoinedRpc(NetworkConnection _, LobbyMetaData lmd)
         {
             LobbyJoined?.Invoke(lmd);
         }
@@ -331,7 +331,7 @@ namespace LobbySystem
         }
 
         [TargetRpc]
-        private void ReceiveLobbiesClientListRpc(NetworkConnection conn, int[] clients)
+        private void ReceiveLobbiesClientListRpc(NetworkConnection _, int[] clients)
         {
             LobbyClientListReceived?.Invoke(clients);
         }

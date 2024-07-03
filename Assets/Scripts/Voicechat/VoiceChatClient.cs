@@ -63,6 +63,7 @@ namespace Voicechat
                     ParticipantIsSpeakingUpdate?.Invoke(sid, true);
                 }
             }
+
             _activeSpeakers = activeSpeakers;
         }
     }

@@ -1,4 +1,4 @@
-#if UNITY_WEBGL
+#if UNITY_WEBGL && !UNITY_EDITOR
 using LiveKit;
 using System;
 using System.Collections;
@@ -11,7 +11,6 @@ namespace Voicechat
     internal class WebGLVoiceChatClient : VoiceChatClient
     {
         private Room _room;
-
         internal override event Action<Participant> ParticipantConnected;
         internal override event Action<string> ParticipantDisconnected;
         internal override event Action ConnectedToRoom;

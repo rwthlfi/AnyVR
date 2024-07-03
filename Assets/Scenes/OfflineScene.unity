@@ -1173,7 +1173,7 @@ MonoBehaviour:
     CertificatePassword: 
     SslProtocol: 0
   _mtu: 1023
-  _port: 7770
+  _port: 7777
   _maximumClients: 2000
   _clientAddress: 192.168.0.86
 --- !u!1001 &2063008172

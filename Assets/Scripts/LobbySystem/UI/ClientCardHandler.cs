@@ -13,7 +13,6 @@ namespace LobbySystem.UI
         [SerializeField] private Button _kickButton;
 
         private int _id;
-        private string _name;
 
         private void OnDestroy()
         {
@@ -27,7 +26,6 @@ namespace LobbySystem.UI
         public void SetClient(int clientId, string clientName, bool isAdmin = false)
         {
             _id = clientId;
-            _name = clientName;
             _playerNameLabel.text = clientName;
             if (isAdmin)
             {
