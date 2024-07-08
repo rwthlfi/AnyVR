@@ -1,5 +1,6 @@
 using FishNet;
 using FishNet.Managing.Timing;
+using FishNet.Object;
 using GameKit.Dependencies.Utilities.Types;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ using UnityEngine.SceneManagement;
 
 namespace LobbySystem.LobbySelection
 {
-    public class LobbySelectionSceneHandler : MonoBehaviour
+    public class LobbySelectionSceneHandler : NetworkBehaviour
     {
         [SerializeField] private LobbyCardHandler _lobbyCardPrefab;
         [SerializeField] private Transform _lobbyCardParent;
@@ -40,6 +41,12 @@ namespace LobbySystem.LobbySelection
                 LobbyManager.s_instance.RequestCurrentLobbiesRpc();
             };
             LobbyManager.s_instance.ReceivedCurrentLobbies += UpdateLobbyList;
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            RefreshLobbies();
         }
 
         private void FixedUpdate()

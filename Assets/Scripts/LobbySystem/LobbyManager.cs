@@ -2,6 +2,7 @@ using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -49,6 +50,7 @@ namespace LobbySystem
         {
             base.OnStartServer();
             SceneManager.OnLoadEnd += OnSceneLoadEnd;
+            ServerManager.OnRemoteConnectionState += Server_OnRemoteConnectionState;
         }
 
         public override void OnStartClient()
@@ -177,6 +179,8 @@ namespace LobbySystem
             _lobbies.Remove(lmd);
             OnLobbyDestroyedRpc(lmd);
         }
+        
+        
 
         [ObserversRpc]
         private void OnLobbyCreatedRpc(LobbyMetaData lobbyMeta)
@@ -244,33 +248,43 @@ namespace LobbySystem
         [ServerRpc(RequireOwnership = false)]
         public void LeaveLobbyRpc(NetworkConnection conn = null)
         {
-            if (conn == null)
+            if (!TryRemoveClientFromLobby(conn))
             {
                 return;
-            }
-
-            if (!TryGetLobbyOfClient(conn.ClientId, out LobbyMetaData lmd))
-            {
-                return;
-            }
-
-            if (_lobbyHandlers.TryGetValue(lmd, out LobbyHandler handler))
-            {
-                handler.RemoveClient(conn.ClientId);
             }
 
             SceneLoadData sld = new(new[] { "LobbyScene" }) { ReplaceScenes = ReplaceOption.All };
             SceneManager.LoadConnectionScenes(conn, sld);
-            OnLobbyLeftRpc(conn);
-
-            if (handler == null)
+        }
+        
+        private bool TryRemoveClientFromLobby(NetworkConnection client)
+        {
+            if (client == null)
             {
-                return;
+                return false;
             }
 
+            if (!TryGetLobbyOfClient(client.ClientId, out LobbyMetaData lmd))
+            {
+                return false;
+            }
+
+            if (!_lobbyHandlers.TryGetValue(lmd, out LobbyHandler handler))
+            {
+                return false;
+            }
+            handler.RemoveClient(client.ClientId);
+            OnLobbyLeftRpc(client);
+            
+            if (!handler.GetClients().Any())
+            {
+                DestroyLobby(lmd);
+                return true;
+            }
+            
             foreach (int clientId in handler.GetClients())
             {
-                if (conn.ClientId == clientId)
+                if (client.ClientId == clientId)
                 {
                     continue;
                 }
@@ -280,15 +294,21 @@ namespace LobbySystem
                     continue;
                 }
 
-                OnClientLeftLobbyRpc(c, conn.ClientId);
+                OnClientLeftLobbyRpc(c, client.ClientId);
             }
-
-            if (!handler.GetClients().Any())
-            {
-                DestroyLobby(lmd);
-            }
+            return true;
         }
 
+        private void Server_OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        {
+            if (args.ConnectionState != RemoteConnectionState.Stopped)
+            {
+                return;
+            }
+
+            Debug.Log($"Client {conn.ClientId} left.");
+            TryRemoveClientFromLobby(conn);
+        }
 
         [TargetRpc]
         private void OnLobbyLeftRpc(NetworkConnection _)
