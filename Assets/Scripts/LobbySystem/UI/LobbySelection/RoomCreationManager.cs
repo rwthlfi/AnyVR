@@ -1,11 +1,11 @@
 using FishNet;
-using LobbySystem.LobbySelection;
+using System;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace LobbySystem.UI
+namespace LobbySystem.UI.LobbySelection
 {
     public class RoomCreationManager : MonoBehaviour
     {
@@ -53,15 +53,13 @@ namespace LobbySystem.UI
                 return;
             }
 
-            LobbyMetaData lobbyMeta = default;
-            lobbyMeta.Name = _nameInputField.text;
-
-            lobbyMeta.Location = match.Groups[1].Value;
-            lobbyMeta.Creator = InstanceFinder.ClientManager.Connection.ClientId;
-            lobbyMeta.MaxClients = (ushort)_userLimitSlider.value;
-            lobbyMeta.Id = lobbyMeta.GetHashCode().ToString();
-
-            LobbySelectionSceneHandler.s_instance.CloseCreateRoomScene(lobbyMeta);
+            string lobbyName = _nameInputField.text;
+            string location = match.Groups[1].Value;
+            int creator = 0; // TODO InstanceFinder.ClientManager.Connection.ClientId;
+            ushort maxClients = (ushort)_userLimitSlider.value;
+            UILobbyMetaData uiLobbyMeta = new(lobbyName, creator, location, maxClients);
+            
+            LobbySelectionSceneHandler.s_instance.CloseCreateRoomScene(uiLobbyMeta);
         }
     }
 }

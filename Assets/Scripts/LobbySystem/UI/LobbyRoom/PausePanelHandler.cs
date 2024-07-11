@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace LobbySystem.UI
+namespace LobbySystem.UI.LobbyRoom
 {
     public class PausePanelHandler : MonoBehaviour
     {
@@ -39,7 +39,7 @@ namespace LobbySystem.UI
 
         public void QuitToMainMenu()
         {
-            LobbyManager.s_instance.LeaveLobbyRpc();
+            UIHandler.s_instance.LeaveLobby();
         }
     }
 }

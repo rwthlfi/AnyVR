@@ -171,6 +171,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2666295951398815909, guid: 4833cfa3e442f3445b1b9b800571cfe9, type: 3}
+      propertyPath: _observerConditions.Array.data[0]
+      value: 
+      objectReference: {fileID: 11400000, guid: 2033f54fd2794464bae08fa5a55c8996, type: 2}
     - target: {fileID: 4049651667036582243, guid: 4833cfa3e442f3445b1b9b800571cfe9, type: 3}
       propertyPath: m_Name
       value: LobbyRoomManager

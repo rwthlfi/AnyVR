@@ -1,28 +1,26 @@
 using FishNet.Managing.Scened;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace LobbySystem
 {
-    public class LobbyHandler
+    public class LobbyHandler : NetworkBehaviour
     {
-        private readonly HashSet<int> _clientIds;
+        private readonly SyncHashSet<int> _clientIds = new();
+        private readonly SyncVar<int> _lobbyId;
 
         // private readonly LobbyMetaData _metaData;
-        private readonly SceneLoadData _sceneLoadData;
-        private bool _isSceneHandleRegistered;
-        private Scene _scene;
+        private readonly SceneLoadData _sceneLoadData; // TODO: to remove (move to LobbyManager)
+        private bool _isSceneHandleRegistered; // TODO: to remove (move to LobbyManager)
+        private Scene _scene; // TODO: to remove (move to LobbyManager)
 
-        public LobbyHandler(LobbyMetaData lobbyMetaData, int id)
+        public override void OnStartServer()
         {
-            // _metaData = lobbyMetaData;
-            _clientIds = new HashSet<int>();
-            _sceneLoadData = new SceneLoadData(lobbyMetaData.Location)
-            {
-                ReplaceScenes = ReplaceOption.All,
-                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.Physics3D }
-            };
+            base.OnStartServer();
+            //LobbyManager.s_instance.SetLobbySceneHandle(_lobbyId, gameObject.scene);
         }
 
         public void AddClient(int clientId)

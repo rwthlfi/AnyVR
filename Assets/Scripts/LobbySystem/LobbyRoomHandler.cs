@@ -52,7 +52,7 @@ namespace LobbySystem
                 string msg = micNames.Aggregate("Available Microphones:\n",
                     (current, micName) => current + "\t" + micName + "\n");
                 Debug.Log(msg);
-                LiveKitManager.s_instance.SetActiveMicrophone(micNames[1]);
+                LiveKitManager.s_instance.SetActiveMicrophone(micNames[0]);
             }
 
             UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("UIScene", LoadSceneMode.Additive);

@@ -3,13 +3,14 @@ using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities.Types;
+using LobbySystem.UI;
 using System.IO;
 using UnityEngine;
 using Voicechat;
 
 namespace LobbySystem
 {
-    public class SceneManager : MonoBehaviour
+    public class LoginManager : MonoBehaviour
     {
         [SerializeField] [Scene] private string _globalScene;
 
@@ -22,42 +23,43 @@ namespace LobbySystem
         private NetworkManager _networkManager;
         private LocalConnectionState _serverState;
 
-        public static string EnteredUserName { get; private set; }
+        public static string UserName { get; private set; }
 
         private void Start()
         {
             _networkManager = GetComponent<NetworkManager>();
-            _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
-            _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
-            _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
 #if UNITY_SERVER
             if (_networkManager == null)
                 return;
-            
-            Debug.Log("starting server!");
+            Debug.Log("Starting server!");
             _networkManager.ServerManager.StartConnection();
+            _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
+            _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
+#else
+            OfflineScene.OnLoginRequest += Client_ConnectToServer;
 #endif
         }
 
         private void OnDestroy()
         {
-            _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
+#if UNITY_SERVER
             _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
+            _networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
+#endif
         }
 
-        public void Client_ConnectToServer(string ipAddress, ushort port, string liveKitIpAddress, ushort liveKitPort,
-            string userName)
+        private void Client_ConnectToServer((string ip, ushort port) fishnetAddress, (string ip, ushort port) livekitAddress, string userName)
         {
             if (_networkManager == null)
             {
                 return;
             }
 
-            _networkManager.TransportManager.Transport.SetClientAddress(ipAddress);
-            _networkManager.TransportManager.Transport.SetPort(port);
+            _networkManager.TransportManager.Transport.SetClientAddress(fishnetAddress.ip);
+            _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
             _networkManager.ClientManager.StartConnection();
-            EnteredUserName = userName;
-            LiveKitManager.s_instance.SetTokenServerAddress(liveKitIpAddress, liveKitPort);
+            UserName = userName;
+            LiveKitManager.s_instance.SetTokenServerAddress(livekitAddress.ip, livekitAddress.port);
         }
 
         private void ServerManager_OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
@@ -84,25 +86,7 @@ namespace LobbySystem
             {
                 Options = { AutomaticallyUnload = false }
             };
-            _networkManager.SceneManager.LoadConnectionScenes(_lobbySceneLoadData);
-        }
-
-        private static void LoadOfflineScene()
-        {
-        }
-
-        private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs state)
-        {
-            _clientState = state.ConnectionState;
-            if (_clientState != LocalConnectionState.Stopped)
-            {
-                return;
-            }
-
-            if (!_networkManager.IsServerStarted)
-            {
-                LoadOfflineScene();
-            }
+            _networkManager.SceneManager.LoadConnectionScenes(_lobbySceneLoadData); // Preload lobby scene
         }
 
         private static string GetSceneName(string path)

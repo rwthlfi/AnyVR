@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace LobbySystem.LobbySelection
+namespace LobbySystem.UI.LobbySelection
 {
     public class LobbyCardHandler : MonoBehaviour
     {
@@ -11,18 +11,18 @@ namespace LobbySystem.LobbySelection
         [SerializeField] private TextMeshProUGUI _clientCountLabel;
         [SerializeField] private TextMeshProUGUI _joinLabel;
 
-        private LobbyMetaData _metaData;
+        private UILobbyMetaData _metaData;
 
         public void OnJoinBtn()
         {
-            LobbySelectionSceneHandler.JoinLobby(_metaData);
+            LobbySelectionSceneHandler.s_instance.JoinLobby(_metaData);
         }
 
-        public void SetLobbyMeta(LobbyMetaData metaData)
+        public void SetLobbyMeta(UILobbyMetaData metaData)
         {
             _nameLabel.text = metaData.Name;
             _locationLabel.text = metaData.Location;
-            _creatorLabel.text = PlayerNameTracker.GetPlayerName(metaData.Creator);
+            //_creatorLabel.text = PlayerNameTracker.GetPlayerName(metaData.Creator); TODO
             _clientCountLabel.text = $"0/{metaData.MaxClients}"; //TODO: handle player count
             _joinLabel.text = "Join"; //TODO: localization
             _metaData = metaData;

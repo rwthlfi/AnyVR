@@ -1,4 +1,4 @@
-using FishNet;
+using System;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -7,21 +7,17 @@ namespace LobbySystem.UI
 {
     public class OfflineScene : MonoBehaviour
     {
-        [Header("Networking")] [SerializeField]
-        private SceneManager _sceneManager;
-
         [Header("UI")] [SerializeField] private TMP_InputField _fishnetIpInputField;
 
         [SerializeField] private TMP_InputField _livekitIpInputField;
         [SerializeField] private TMP_InputField _usernameInputField;
 
-
+        public static event Action<(string, ushort), (string, ushort), string> OnLoginRequest;
+        
         private void Start()
         {
             _fishnetIpInputField.text = "127.0.0.1:7777";
             _livekitIpInputField.text = "192.168.0.192:3030";
-#if UNITY_SERVER
-#endif
         }
 
         public void OnGoBtn()
@@ -39,30 +35,13 @@ namespace LobbySystem.UI
             {
                 if (TryParseAddress(liveKitAddress, out (string ip, ushort port) liveKitRes))
                 {
-                    _sceneManager.Client_ConnectToServer(fishnetRes.ip, fishnetRes.port, liveKitRes.ip, liveKitRes.port,
-                        userName);
+                    OnLoginRequest?.Invoke(fishnetRes, liveKitRes, userName);
                     return;
                 }
             }
 
             Debug.LogError(
                 "Invalid client address! Address has to match the pattern <ip>:<port>"); //TODO: display msg graphically
-        }
-
-        public void OnHostBtn()
-        {
-            string userName = _usernameInputField.text.Trim();
-            if (string.IsNullOrEmpty(userName))
-            {
-                return;
-            }
-
-            InstanceFinder.ServerManager.StartConnection();
-
-            if (TryParseAddress(_livekitIpInputField.text.Trim(), out (string ip, ushort port) res))
-            {
-                _sceneManager.Client_ConnectToServer("127.0.0.1", 7777, res.ip, res.port, userName);
-            }
         }
 
         private static bool TryParseAddress(string address, out (string, ushort) res)

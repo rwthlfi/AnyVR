@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace LobbySystem.UI
@@ -12,11 +13,13 @@ namespace LobbySystem.UI
 
         private readonly Dictionary<int, ClientCardHandler> _clientCards = new();
 
-        public event Action<int, bool> ClientMuteChange;
+        public event Action<int, float> ClientVolumeChange;
 
         public event Action<int> ClientKick;
+        
+        private (int id, string name)[] _clients;
 
-        public void AddClient(int clientId, string clientName, bool isAdmin = false)
+        private void AddClient(int clientId, string clientName, bool isAdmin = false)
         {
             if (_clientCards.ContainsKey(clientId))
             {
@@ -27,11 +30,11 @@ namespace LobbySystem.UI
             ClientCardHandler card = Instantiate(_clientCardPrefab, _clientCardParent);
             card.SetClient(clientId, clientName, isAdmin);
             card.KickBtn += ClientKick;
-            card.MuteToggle += ClientMuteChange;
+            //card.MuteToggle += ClientMuteChange;
             _clientCards.Add(clientId, card);
         }
 
-        public void RemoveClient(int clientId)
+        private void RemoveClient(int clientId)
         {
             if (_clientCards.Remove(clientId, out ClientCardHandler card))
             {
@@ -39,17 +42,17 @@ namespace LobbySystem.UI
             }
         }
 
-        public void UpdateClientList(IEnumerable<int> clientIds, int adminId)
+        public void UpdateClientList((int id, string name)[] clientIds, int adminId)
         {
-            foreach (ClientCardHandler card in _clientCards.Values)
+            (int id, string name)[] toAdd = clientIds.Except(_clients).ToArray();
+            (int id, string name)[] toRemove = _clients.Except(clientIds).ToArray();
+            foreach ((int id, string name) client in toAdd)
             {
-                Destroy(card.gameObject);
+                AddClient(client.id, client.name);
             }
-
-            _clientCards.Clear();
-            foreach (int id in clientIds)
+            foreach ((int id, string name) client in toRemove)
             {
-                AddClient(id, PlayerNameTracker.GetPlayerName(id), adminId == id);
+                RemoveClient(client.id);
             }
         }
     }

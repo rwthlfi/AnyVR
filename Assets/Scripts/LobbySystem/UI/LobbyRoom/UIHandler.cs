@@ -1,3 +1,5 @@
+using LobbySystem.UI.LobbyRoom;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,35 +15,28 @@ namespace LobbySystem.UI
         [SerializeField] private Toggle _muteToggle;
 
         private readonly List<GameObject> _panels = new();
+        
         private bool _isLocalAdmin;
+
+        public event Action<bool> OnMicToggle;
+        public event Action<int> ClientKick;
+        public event Action<float> ClientVolumeChange;
+        public event Action OnLeaveLobby;
 
         private void Awake()
         {
             InitSingleton();
         }
-
+        
         private void Start()
         {
             _muteToggle.SetIsOnWithoutNotify(true);
-            _isLocalAdmin =
-                LobbyRoomHandler
-                    .IsLocalClientAdmin(); //TODO: Remove Fishnet from LobbySystem.UI Assembly Definition from 
-
-            LobbyRoomHandler.ClientListReceived += list =>
-            {
-                UpdateClientList(list, LobbyRoomHandler.GetAdminId());
-            };
-            LobbyRoomHandler.ClientJoined += clientId =>
-            {
-                _clientListHandler.AddClient(clientId, PlayerNameTracker.GetPlayerName(clientId));
-            };
-            LobbyRoomHandler.ClientLeft += _clientListHandler.RemoveClient;
 
             _clientListHandler.gameObject.SetActive(false);
             _pausePanelHandler.gameObject.SetActive(false);
 
-            //_clientListHandler.ClientKick += ClientKick;
-            //_clientListHandler.ClientMuteChange += ClientMuteChange;
+            _clientListHandler.ClientKick += ClientKick;
+            // _clientListHandler.ClientMuteChange += ClientMuteChange;
 
             _panels.Add(_clientListHandler.gameObject);
             _panels.Add(_pausePanelHandler.gameObject);
@@ -50,8 +45,17 @@ namespace LobbySystem.UI
 
             _muteToggle.onValueChanged.AddListener(b =>
             {
-                LobbyRoomHandler.SetMicrophoneActive(!b);
+                OnMicToggle?.Invoke(b);
             });
+        }
+
+        private void UpdateClientList(IEnumerable<int> clientIds)
+        {
+        }
+        
+        public void LeaveLobby()
+        {
+            OnLeaveLobby?.Invoke();
         }
 
         private void Update()
@@ -63,6 +67,11 @@ namespace LobbySystem.UI
 
             Cursor.visible = !Cursor.visible;
             Cursor.lockState = Cursor.visible ? CursorLockMode.None : CursorLockMode.Locked;
+        }
+
+        public void SetLocalClientIsAdmin(bool b)
+        {
+            _isLocalAdmin = b;
         }
 
         private void OnDestroy()
@@ -100,10 +109,8 @@ namespace LobbySystem.UI
             panel.SetActive(active);
         }
 
-        private void UpdateClientList(IEnumerable<int> clientIds, int adminId)
-        {
+        private void UpdateClientList((int, string)[] clientIds, int adminId) =>
             _clientListHandler.UpdateClientList(clientIds, adminId);
-        }
 
         #region Singleton
 
@@ -121,5 +128,6 @@ namespace LobbySystem.UI
         }
 
         #endregion
+
     }
 }
