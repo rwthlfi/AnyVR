@@ -18,15 +18,20 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace AnyVR.InteractionSystem
+namespace AnyVR.UserControlSystem
 {
+    /// <summary>
+    /// Provides the functionality to turn the camera using mouse input on PC.
+    /// </summary>
     public class PCTurnProvider : MonoBehaviour
     {
         // Private fields
         [SerializeField]
         private Transform _turnOrigin;
 
-        [SerializeField, Tooltip("Max/min degrees of pitching the camera"), Range(-89f, 89f)]
+        [SerializeField]
+        [Tooltip("Max/min degrees of pitching the camera")]
+        [Range(-89f, 89f)]
         private float _pitchThreshhold = 60f;
 
         private Vector2 _turnRotation;
@@ -55,7 +60,5 @@ namespace AnyVR.InteractionSystem
             _turnRotation.x = Mathf.Clamp(_turnRotation.x - rotation.y * scaledRotateSpeed, -_pitchThreshhold, _pitchThreshhold);
             _turnOrigin.localEulerAngles = _turnRotation;
         }
-
-
     }
 }
