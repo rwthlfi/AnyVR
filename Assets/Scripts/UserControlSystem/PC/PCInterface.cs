@@ -17,24 +17,14 @@
 
 using UnityEngine;
 
-namespace AnyVR
+namespace AnyVR.UserControlSystem
 {
-    /// <summary>
-    /// Shouts "Hello World!"
-    /// </summary>
-    public class HelloWorldExclaimer : MonoBehaviour
+    public class PCInterface : MonoBehaviour
     {
-        private void Start()
+        public void ToggleCursorLock(bool shouldBeLocked)
         {
-            ShoutHelloWorld();
-        }
-
-        /// <summary>
-        /// This will tell the world who the gameObject this script is attached to is.
-        /// </summary>
-        public void ShoutHelloWorld()
-        {
-            Debug.Log($"Hello World! I am {gameObject.name}!", gameObject);
+            Cursor.visible = !shouldBeLocked;
+            Cursor.lockState = shouldBeLocked ? CursorLockMode.Locked : CursorLockMode.None;
         }
     }
 }

@@ -17,25 +17,36 @@
 
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
-namespace AnyVR.InteractionSystem
+
+namespace AnyVR.UserControlSystem
 {
+    /// <summary>
+    /// Represents a PC interaction system that extends XRBaseInteractor.
+    /// This class handles the interaction logic for PC input modality.
+    /// </summary>
     public class PCInteractionSystem : XRBaseInteractor
     {
+        /// <summary>
+        /// Represents the interaction mode for the PC interaction system.
+        /// </summary>
         public enum InteractionMode
         {
             Toggle,
             Hold
         }
 
-        [SerializeField, Tooltip("Maximum range for interactable objects")]
+        [SerializeField]
+        [Tooltip("Maximum range for interactable objects")]
         private float _maxInteractionDistance = 3f;
 
         [SerializeField]
         private Transform _interactionRaycastOrigin;
 
         [SerializeField]
+        [Tooltip("If interaction should be toggleable or only when button is pressed.")]
         private InteractionMode _interactionMode;
 
         [SerializeField]
@@ -60,7 +71,7 @@ namespace AnyVR.InteractionSystem
 
             if (_hoveredObject == null && IsThereObject(out interactable))
             {
-                interactionManager.HoverEnter((IXRHoverInteractor)this, (IXRHoverInteractable)interactable);
+                interactionManager.HoverEnter((IXRHoverInteractor)this, interactable);
                 _hoveredObject = interactable;
             }
 
