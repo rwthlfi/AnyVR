@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Voicechat;
 
 namespace LobbySystem
@@ -30,6 +29,33 @@ namespace LobbySystem
         }
 
         #endregion
+
+        #region ServerOnly
+
+        /// <summary>
+        /// The actual lobby handlers.
+        /// Only initialized on the server.
+        /// </summary>
+        private Dictionary<string, LobbyHandler> _lobbyHandlers;
+
+        /// <summary>
+        /// A dictionary mapping clients to their corresponding lobby
+        /// Only initialized on the server.
+        /// </summary>
+        private Dictionary<int, string> _clientLobbyDict;
+
+        #endregion
+        
+        #region ClientOnly
+        
+        /// <summary>
+        /// The meta data of the current lobby.
+        /// Can be null if local client is not connected to a lobby
+        /// Only initialized on the client.
+        /// </summary>
+        private LobbyMetaData? _currentLobby;
+        
+        #endregion
         
         /// <summary>
         /// Dictionary with all active lobbies on the server.
@@ -37,17 +63,6 @@ namespace LobbySystem
         /// </summary>
         private readonly SyncDictionary<string, LobbyMetaData> _lobbies = new();
 
-        /// <summary>
-        /// The actual lobby handlers.
-        /// Only initialized on the server.
-        /// </summary>
-        private Dictionary<string, LobbyHandler> _lobbyHandlers;
-        
-        /// <summary>
-        /// The meta data of the current lobby.
-        /// Can be null if local client is not connected to a lobby
-        /// </summary>
-        private LobbyMetaData? _currentLobby;
         
         private void Awake()
         {
@@ -80,46 +95,54 @@ namespace LobbySystem
         /// </summary>
         public event Action<int> ClientLeft;
         public event Action<int[]> LobbyClientListReceived;
-
+        
         public override void OnStartServer()
         {
             base.OnStartServer();
             _lobbyHandlers = new Dictionary<string, LobbyHandler>();
-            SceneManager.OnLoadEnd += OnSceneLoadEnd;
+            _clientLobbyDict = new Dictionary<int, string>();
             ServerManager.OnRemoteConnectionState += Server_OnRemoteConnectionState;
         }
 
-        public override void OnStartClient()
+        private string CreateUniqueLobbyId(string scene)
         {
-            base.OnStartClient();
-            LobbyJoined += Client_OnLobbyJoined;
-            LobbyLeft += Client_OnLobbyLeft;
+            int i = 1;
+            while (i > 0)
+            {
+                string id = scene + i.ToString();
+                if (!_lobbies.ContainsKey(id))
+                {
+                    return id;
+                }
+                i++;
+            }
+            return null;
         }
         
         /// <summary>
         /// Server Rpc to create a new lobby on the server.
         /// </summary>
-        /// <param name="lobbyMetaData">The metadata of the lobby</param>
         [ServerRpc(RequireOwnership = false)]
-        public void CreateLobby(LobbyMetaData lobbyMetaData, NetworkConnection conn = null)
+        public void CreateLobby(string lobbyName, string scene, ushort maxClients, NetworkConnection conn = null)
         {
+            LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, ClientManager.Connection.ClientId, scene, maxClients);
             _lobbies.Add(lobbyMetaData.ID, lobbyMetaData);
+            Debug.Log("Lobby created");
             JoinLobby(lobbyMetaData.ID, conn); // Auto join lobby
         }
 
         /// <summary>
         /// Server Rpc to join an active lobby on the server.
         /// </summary>
-        /// <param name="id">The id of the lobby to join</param>
         [ServerRpc(RequireOwnership = false)]
-        public void JoinLobby(string id, NetworkConnection conn = null)
+        public void JoinLobby(string lobbyId, NetworkConnection conn = null)
         {
             if (conn == null)
             {
                 return;
             }
 
-            if (!_lobbies.TryGetValue(id, out LobbyMetaData lobby))
+            if (!_lobbies.TryGetValue(lobbyId, out LobbyMetaData lobby))
             {
                 return;
             }
@@ -128,35 +151,58 @@ namespace LobbySystem
             {
                 LeaveLobbyRpc();
             }
+
+            if (!_clientLobbyDict.TryAdd(conn.ClientId, lobbyId))
+            {
+                Debug.LogError($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'");
+                return;
+            }
+            OnLobbyJoinedRpc(conn, lobby);
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
         }
-
-        /// <summary>
-        /// Callback for when the local client leaves a lobby.
-        /// Registered to <see cref="LobbyLeft"/>
-        /// </summary>
-        private void Client_OnLobbyLeft()
+        
+        [Server]
+        internal void RegisterLobbyHandler(LobbyHandler lobbyHandler, int clientId)
         {
-            _currentLobby = null;
-            LiveKitManager.s_instance.Disconnect(); // Disconnecting from voicechat
-        }
+            if (!_clientLobbyDict.TryGetValue(clientId, out string lobbyId))
+            {
+                Debug.LogError("Error when registering lobby handler");
+                return;
+            }
 
+            _lobbies[lobbyId].SetSceneHandle(lobbyHandler.gameObject.scene.handle);
+            _lobbyHandlers.Add(lobbyId, lobbyHandler);
+        }
+        
         /// <summary>
         /// Callback for when the local client joins a lobby.
-        /// Registered to <see cref="LobbyJoined"/>
         /// </summary>
-        private void Client_OnLobbyJoined(LobbyMetaData metaData)
+        [TargetRpc]
+        private void OnLobbyJoinedRpc(NetworkConnection _, LobbyMetaData lmd)
         {
-            _currentLobby = metaData;
+            _currentLobby = lmd;
             if (LiveKitManager.s_instance != null)
             {
-                LiveKitManager.s_instance.TryConnectToRoom(metaData.ID, LobbySystem.LoginManager.UserName);
+                LiveKitManager.s_instance.TryConnectToRoom(lmd.ID, LoginManager.UserName);
             }
             else
             {
                 Debug.LogWarning("LivKitManager is not initialized");
             }
+            LobbyJoined?.Invoke(lmd);
         }
+        
+        /// <summary>
+        /// Callback for when the local client leaves a lobby.
+        /// </summary>
+        [TargetRpc]
+        private void OnLobbyLeftRpc(NetworkConnection _)
+        {
+            _currentLobby = null;
+            LiveKitManager.s_instance.Disconnect(); // Disconnecting from voicechat
+            LobbyLeft?.Invoke();
+        }
+
 
         private void lobbies_OnChange(SyncDictionaryOperation op, string key, LobbyMetaData value, bool asServer)
         {
@@ -164,7 +210,6 @@ namespace LobbySystem
             {
                 return;
             }
-
             switch (op)
             {
                 case SyncDictionaryOperation.Add:
@@ -183,30 +228,6 @@ namespace LobbySystem
                     throw new ArgumentOutOfRangeException(nameof(op), op, null);
             }
         }
-
-        private void OnSceneLoadEnd(SceneLoadEndEventArgs obj)
-        {
-            if (!obj.QueueData.AsServer)
-            {
-                return;
-            }
-
-            foreach (Scene scene in obj.LoadedScenes)
-            {
-                if (obj.QueueData.Connections.Length == 0)
-                {
-                    return;
-                }
-
-                if (!TryGetLobbyOfClient(obj.QueueData.Connections.First().ClientId, out string lobbyId))
-                {
-                    continue;
-                }
-
-                _lobbies[lobbyId].SetSceneHandle(scene);
-            }
-        }
-
 
         private void CloseLobby(string lobbyId)
         {
@@ -304,17 +325,6 @@ namespace LobbySystem
             TryRemoveClientFromLobby(conn);
         }
 
-        [TargetRpc]
-        private void OnLobbyLeftRpc(NetworkConnection _)
-        {
-            LobbyLeft?.Invoke();
-        }
-
-        [TargetRpc]
-        private void OnLobbyJoinedRpc(NetworkConnection _, LobbyMetaData lmd)
-        {
-            LobbyJoined?.Invoke(lmd);
-        }
 
         [Server]
         private bool TryGetLobbyOfClient(int clientId, out string lobbyId)
@@ -360,10 +370,5 @@ namespace LobbySystem
             _lobbies.OnChange -= lobbies_OnChange;
         }
 
-
-        public void SetLobbySceneHandle(string lobbyId, Scene scene)
-        {
-            _lobbies[lobbyId].SetSceneHandle(scene);
-        }
     }
 }

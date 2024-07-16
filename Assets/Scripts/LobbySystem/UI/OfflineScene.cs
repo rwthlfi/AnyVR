@@ -1,4 +1,3 @@
-using System;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -7,13 +6,12 @@ namespace LobbySystem.UI
 {
     public class OfflineScene : MonoBehaviour
     {
+        [SerializeField] private LoginManager _loginManager;
         [Header("UI")] [SerializeField] private TMP_InputField _fishnetIpInputField;
 
         [SerializeField] private TMP_InputField _livekitIpInputField;
         [SerializeField] private TMP_InputField _usernameInputField;
 
-        public static event Action<(string, ushort), (string, ushort), string> OnLoginRequest;
-        
         private void Start()
         {
             _fishnetIpInputField.text = "127.0.0.1:7777";
@@ -35,7 +33,7 @@ namespace LobbySystem.UI
             {
                 if (TryParseAddress(liveKitAddress, out (string ip, ushort port) liveKitRes))
                 {
-                    OnLoginRequest?.Invoke(fishnetRes, liveKitRes, userName);
+                    _loginManager.ConnectToServer(fishnetRes, liveKitRes, userName);
                     return;
                 }
             }

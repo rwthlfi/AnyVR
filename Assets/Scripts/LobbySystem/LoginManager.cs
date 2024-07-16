@@ -3,7 +3,6 @@ using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities.Types;
-using LobbySystem.UI;
 using System.IO;
 using UnityEngine;
 using Voicechat;
@@ -30,13 +29,16 @@ namespace LobbySystem
             _networkManager = GetComponent<NetworkManager>();
 #if UNITY_SERVER
             if (_networkManager == null)
+            {
                 return;
+            }
+
             Debug.Log("Starting server!");
             _networkManager.ServerManager.StartConnection();
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
             _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
 #else
-            OfflineScene.OnLoginRequest += Client_ConnectToServer;
+            //OfflineScene.OnLoginRequest += Client_ConnectToServer; TODO
 #endif
         }
 
@@ -48,7 +50,7 @@ namespace LobbySystem
 #endif
         }
 
-        private void Client_ConnectToServer((string ip, ushort port) fishnetAddress, (string ip, ushort port) livekitAddress, string userName)
+        public void ConnectToServer((string ip, ushort port) fishnetAddress, (string ip, ushort port) liveKitAddress, string userName)
         {
             if (_networkManager == null)
             {
@@ -59,7 +61,7 @@ namespace LobbySystem
             _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
             _networkManager.ClientManager.StartConnection();
             UserName = userName;
-            LiveKitManager.s_instance.SetTokenServerAddress(livekitAddress.ip, livekitAddress.port);
+            LiveKitManager.s_instance.SetTokenServerAddress(liveKitAddress.ip, liveKitAddress.port);
         }
 
         private void ServerManager_OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)

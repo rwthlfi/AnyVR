@@ -1,10 +1,9 @@
-using LobbySystem.UI.LobbyRoom;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace LobbySystem.UI
+namespace LobbySystem.UI.LobbyRoom
 {
     public class UIHandler : MonoBehaviour
     {

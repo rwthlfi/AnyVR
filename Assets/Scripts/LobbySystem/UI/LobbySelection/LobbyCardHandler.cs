@@ -1,5 +1,7 @@
+using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace LobbySystem.UI.LobbySelection
 {
@@ -10,12 +12,18 @@ namespace LobbySystem.UI.LobbySelection
         [SerializeField] private TextMeshProUGUI _creatorLabel;
         [SerializeField] private TextMeshProUGUI _clientCountLabel;
         [SerializeField] private TextMeshProUGUI _joinLabel;
+        [SerializeField] private Button _joinBtn;
 
-        private UILobbyMetaData _metaData;
+        internal UILobbyMetaData MetaData { get; private set; }
 
-        public void OnJoinBtn()
+        internal event Action JoinBtn;
+
+        private void Start()
         {
-            LobbySelectionSceneHandler.s_instance.JoinLobby(_metaData);
+            _joinBtn.onClick.AddListener(() =>
+            {
+                JoinBtn?.Invoke();
+            });
         }
 
         public void SetLobbyMeta(UILobbyMetaData metaData)
@@ -25,7 +33,7 @@ namespace LobbySystem.UI.LobbySelection
             //_creatorLabel.text = PlayerNameTracker.GetPlayerName(metaData.Creator); TODO
             _clientCountLabel.text = $"0/{metaData.MaxClients}"; //TODO: handle player count
             _joinLabel.text = "Join"; //TODO: localization
-            _metaData = metaData;
+            MetaData = metaData;
         }
     }
 }

@@ -1,46 +1,40 @@
-using FishNet.Managing.Scened;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace LobbySystem
 {
-    public class LobbyHandler : NetworkBehaviour
+    internal class LobbyHandler : NetworkBehaviour
     {
         private readonly SyncHashSet<int> _clientIds = new();
         private readonly SyncVar<int> _lobbyId;
 
-        // private readonly LobbyMetaData _metaData;
-        private readonly SceneLoadData _sceneLoadData; // TODO: to remove (move to LobbyManager)
-        private bool _isSceneHandleRegistered; // TODO: to remove (move to LobbyManager)
-        private Scene _scene; // TODO: to remove (move to LobbyManager)
+        // The id of the admin
+        private int _adminId;
 
         public override void OnStartServer()
         {
             base.OnStartServer();
-            //LobbyManager.s_instance.SetLobbySceneHandle(_lobbyId, gameObject.scene);
-        }
-
-        public void AddClient(int clientId)
-        {
-            _clientIds.Add(clientId);
-        }
-
-        public void RemoveClient(int clientId)
-        {
-            _clientIds.Remove(clientId);
-            if (_clientIds.Count == 0)
+            if (!SceneManager.SceneConnections.TryGetValue(gameObject.scene,
+                    out HashSet<NetworkConnection> connections))
             {
-                _isSceneHandleRegistered = false;
+                return;
             }
+
+            Debug.Log($"Lobby started on server!\nConnections: {connections.ToString()}");
+            LobbyManager.s_instance.RegisterLobbyHandler(this, connections.First().ClientId);
         }
 
-        internal void RegisterScene(Scene scene)
+        [ServerRpc(RequireOwnership = false)]
+        internal void RemoveClient(int id, NetworkConnection conn = null)
         {
-            _isSceneHandleRegistered = true;
-            _scene = scene;
+            if(conn != null && (id == conn.ClientId || _adminId == conn.ClientId))
+            {
+                _clientIds.Remove(id);
+            }
         }
 
         public IEnumerable<int> GetClients()
@@ -53,22 +47,6 @@ namespace LobbySystem
             }
 
             return arr;
-        }
-
-        public SceneLoadData GetSceneLoadData()
-        {
-            if (!_isSceneHandleRegistered)
-            {
-                Debug.Log("Loading by name");
-                return _sceneLoadData;
-            }
-
-            SceneLoadData sceneLoadData = new(_scene.handle)
-            {
-                ReplaceScenes = ReplaceOption.All,
-                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.Physics3D }
-            };
-            return sceneLoadData;
         }
     }
 }

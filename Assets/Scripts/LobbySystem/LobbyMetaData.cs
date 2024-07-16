@@ -11,20 +11,24 @@ namespace LobbySystem
         public readonly string ID;
         public readonly string Name;
         public readonly int Creator;
-        public readonly string Location;
+        public readonly string Scene;
         public readonly ushort MaxClients;
         private readonly SceneLoadData _sceneLoadData;
-        private Scene? _sceneHandle;
+        private int? _sceneHandle;
 
-        public LobbyMetaData(string id, string name, int creator, string location, ushort maxClients, SceneLoadData sceneLoadData)
+        public LobbyMetaData(string id, string name, int creator, string scene, ushort maxClients)
         {
             Name = name;
-            Location = location;
+            Scene = scene;
             Creator = creator;
             MaxClients = maxClients;
             ID = id;
-            _sceneLoadData = sceneLoadData;
             _sceneHandle = null;
+            _sceneLoadData = new SceneLoadData(scene)
+            {
+                ReplaceScenes = ReplaceOption.All,
+                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.Physics3D }
+            };
         }
 
         /// <summary>
@@ -36,7 +40,7 @@ namespace LobbySystem
             {
                 return _sceneLoadData;
             }
-            SceneLoadData sceneLoadData = new(((Scene)_sceneHandle).handle)
+            SceneLoadData sceneLoadData = new((int)_sceneHandle)
             {
                 ReplaceScenes = ReplaceOption.All,
                 Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.Physics3D }
@@ -44,9 +48,9 @@ namespace LobbySystem
             return sceneLoadData;
         }
 
-        internal void SetSceneHandle(Scene scene)
+        internal void SetSceneHandle(int sceneHandle)
         {
-            _sceneHandle = scene;
+            _sceneHandle = sceneHandle;
         }
     }
 }

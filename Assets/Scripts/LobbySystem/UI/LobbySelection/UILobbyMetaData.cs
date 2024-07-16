@@ -16,5 +16,14 @@ namespace LobbySystem.UI.LobbySelection
             MaxClients = maxClients;
             ID = GetHashCode().ToString();
         }
+
+        public UILobbyMetaData(LobbyMetaData lobby)
+        {
+            Name = lobby.Name;
+            Creator = lobby.Creator;
+            Location = lobby.Scene;
+            MaxClients = lobby.MaxClients;
+            ID = lobby.ID;
+        }
     }
 }

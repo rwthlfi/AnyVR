@@ -844,6 +844,7 @@ MonoBehaviour:
   _creatorLabel: {fileID: 4648819310177369343}
   _clientCountLabel: {fileID: 7074282280150814834}
   _joinLabel: {fileID: 4523105184006386141}
+  _joinBtn: {fileID: 3654165174439193948}
 --- !u!1 &7082671892473550566
 GameObject:
   m_ObjectHideFlags: 0

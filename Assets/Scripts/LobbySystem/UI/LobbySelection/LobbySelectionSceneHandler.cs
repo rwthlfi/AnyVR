@@ -1,5 +1,4 @@
 using GameKit.Dependencies.Utilities.Types;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -20,19 +19,14 @@ namespace LobbySystem.UI.LobbySelection
 
         private Dictionary<UILobbyMetaData, LobbyCardHandler> _lobbyCards;
 
-        public event Action<UILobbyMetaData> OnCreateLobbyBtn;
-
-        public event Action<UILobbyMetaData> OnJoinLobbyBtn;
-
-        public event Action OnRefreshLobbyBtn;
-
         private void Start()
         {
             InitSingleton();
             _lobbyCards = new Dictionary<UILobbyMetaData, LobbyCardHandler>();
             _isRoomCreationSceneActive = false;
+            LobbyManager.s_instance.LobbyOpened += AddLobbyCard;
+            LobbyManager.s_instance.LobbyClosed += RemoveLobbyCard;
         }
-
 
         // TODO
         // private void FixedUpdate()
@@ -48,19 +42,6 @@ namespace LobbySystem.UI.LobbySelection
             _pingLabel.text = $"{ms}ms";
         }
 
-        private void UpdateLobbyList(IEnumerable<UILobbyMetaData> lobbies)
-        {
-            while (_lobbyCards.Count > 0)
-            {
-                RemoveLobbyCard(_lobbyCards.First().Key);
-            }
-
-            foreach (UILobbyMetaData lobby in lobbies)
-            {
-                AddLobbyCard(lobby);
-            }
-        }
-
         public void Client_OpenCreateRoomScene()
         {
             if (_isRoomCreationSceneActive)
@@ -69,8 +50,7 @@ namespace LobbySystem.UI.LobbySelection
             }
 
             _isRoomCreationSceneActive = true;
-            AsyncOperation op =
-                UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(_roomCreationScene, LoadSceneMode.Additive);
+            SceneManager.LoadSceneAsync(_roomCreationScene, LoadSceneMode.Additive);
         }
 
         public void CloseCreateRoomScene(UILobbyMetaData uiLobbyMetaData)
@@ -81,7 +61,7 @@ namespace LobbySystem.UI.LobbySelection
             }
 
             CloseCreateRoomScene();
-            OnCreateLobbyBtn?.Invoke(uiLobbyMetaData);
+            LobbyManager.s_instance.CreateLobby(uiLobbyMetaData.Name, uiLobbyMetaData.Location, uiLobbyMetaData.MaxClients);
         }
 
         public void CloseCreateRoomScene()
@@ -92,18 +72,24 @@ namespace LobbySystem.UI.LobbySelection
             }
 
             _isRoomCreationSceneActive = false;
-            UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(_roomCreationScene);
+            SceneManager.UnloadSceneAsync(_roomCreationScene);
         }
 
-        private void AddLobbyCard(UILobbyMetaData uiLobby)
+        private void AddLobbyCard(LobbyMetaData lobby)
         {
+            UILobbyMetaData uiLobby = new(lobby);
             LobbyCardHandler card = Instantiate(_lobbyCardPrefab, _lobbyCardParent);
             card.SetLobbyMeta(uiLobby);
+            card.JoinBtn += () =>
+            {   
+                LobbyManager.s_instance.JoinLobby(card.MetaData.ID);
+            };
             _lobbyCards.Add(uiLobby, card);
         }
 
-        private void RemoveLobbyCard(UILobbyMetaData uiLobby)
+        private void RemoveLobbyCard(LobbyMetaData lobby)
         {
+            UILobbyMetaData uiLobby = new(lobby);
             if (!_lobbyCards.TryGetValue(uiLobby, out LobbyCardHandler card))
             {
                 return;
@@ -117,14 +103,15 @@ namespace LobbySystem.UI.LobbySelection
             _lobbyCards.Remove(uiLobby);
         }
 
-        public void RefreshLobbies()
+        public static void JoinLobby(UILobbyMetaData metaData)
         {
-            OnRefreshLobbyBtn?.Invoke();
+            LobbyManager.s_instance.JoinLobby(metaData.ID);
         }
 
-        public void JoinLobby(UILobbyMetaData metaData)
+        private void OnDestroy()
         {
-            OnJoinLobbyBtn?.Invoke(metaData);
+            LobbyManager.s_instance.LobbyOpened -= AddLobbyCard;
+            LobbyManager.s_instance.LobbyClosed -= RemoveLobbyCard;
         }
 
         #region Singleton

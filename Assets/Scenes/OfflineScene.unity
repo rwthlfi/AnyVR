@@ -278,6 +278,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9781093689539e47b580c62a8d2347a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _loginManager: {fileID: 1630651779}
   _fishnetIpInputField: {fileID: 791032193}
   _livekitIpInputField: {fileID: 54229228}
   _usernameInputField: {fileID: 335932805}
@@ -1188,7 +1189,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d0962ead4b02a34aae248fccce671ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WriteSceneObjectDetails: 0
+  WriteSceneObjectDetails: 1
   ObserverRpcLinks: 1
   TargetRpcLinks: 1
   ReplicateRpcLinks: 1
