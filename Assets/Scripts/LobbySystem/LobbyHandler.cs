@@ -10,7 +10,7 @@ namespace LobbySystem
     internal class LobbyHandler : NetworkBehaviour
     {
         private readonly SyncHashSet<int> _clientIds = new();
-        private readonly SyncVar<int> _lobbyId;
+        private readonly SyncVar<int> _lobbyId = new();
 
         // The id of the admin
         private int _adminId;

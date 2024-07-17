@@ -53,9 +53,8 @@ namespace LobbySystem.UI.LobbySelection
 
             string lobbyName = _nameInputField.text;
             string location = match.Groups[1].Value;
-            int creator = 0; // TODO InstanceFinder.ClientManager.Connection.ClientId;
             ushort maxClients = (ushort)_userLimitSlider.value;
-            UILobbyMetaData uiLobbyMeta = new(lobbyName, creator, location, maxClients);
+            UILobbyMetaData uiLobbyMeta = new(lobbyName, -1, location, maxClients);
             
             LobbySelectionSceneHandler.s_instance.CloseCreateRoomScene(uiLobbyMeta);
         }

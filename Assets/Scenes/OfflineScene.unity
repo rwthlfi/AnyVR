@@ -912,7 +912,6 @@ GameObject:
   - component: {fileID: 1630651787}
   - component: {fileID: 1630651785}
   - component: {fileID: 1630651786}
-  - component: {fileID: 1630651788}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -1051,24 +1050,6 @@ MonoBehaviour:
   _port: 7777
   _maximumClients: 2000
   _clientAddress: 192.168.0.86
---- !u!114 &1630651788
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1630651778}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d0962ead4b02a34aae248fccce671ce, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  WriteSceneObjectDetails: 1
-  ObserverRpcLinks: 1
-  TargetRpcLinks: 1
-  ReplicateRpcLinks: 1
-  ReconcileRpcLinks: 1
-  ServerRpcLinks: 1
 --- !u!1001 &2063008172
 PrefabInstance:
   m_ObjectHideFlags: 0

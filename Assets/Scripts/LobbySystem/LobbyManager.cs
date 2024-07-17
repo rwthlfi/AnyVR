@@ -134,7 +134,12 @@ namespace LobbySystem
         [ServerRpc(RequireOwnership = false)]
         public void CreateLobby(string lobbyName, string scene, ushort maxClients, NetworkConnection conn = null)
         {
-            LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, ClientManager.Connection.ClientId, scene, maxClients);
+            if (conn == null)
+            {
+                return;
+            }
+
+            LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, conn.ClientId, scene, maxClients);
             _lobbies.Add(lobbyMetaData.ID, lobbyMetaData);
             Log($"Lobby created. {lobbyMetaData.ToString()}");
             JoinLobby(lobbyMetaData.ID, conn); // Auto join lobby
