@@ -6,6 +6,7 @@ using FishNet.Transporting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using Voicechat;
 
@@ -27,6 +28,12 @@ namespace LobbySystem
 
             s_instance = this;
         }
+
+        #region SerializedFields
+
+        [SerializeField] private bool _loggingEnabled;
+
+        #endregion
 
         #endregion
 
@@ -101,7 +108,9 @@ namespace LobbySystem
             base.OnStartServer();
             _lobbyHandlers = new Dictionary<string, LobbyHandler>();
             _clientLobbyDict = new Dictionary<int, string>();
-            ServerManager.OnRemoteConnectionState += Server_OnRemoteConnectionState;
+            ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
+            string logging = _loggingEnabled ? "enabled" : "disabled";
+            Debug.Log($"Server started. Logging {logging}");
         }
 
         private string CreateUniqueLobbyId(string scene)
@@ -127,7 +136,7 @@ namespace LobbySystem
         {
             LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, ClientManager.Connection.ClientId, scene, maxClients);
             _lobbies.Add(lobbyMetaData.ID, lobbyMetaData);
-            Debug.Log("Lobby created");
+            Log($"Lobby created. {lobbyMetaData.ToString()}");
             JoinLobby(lobbyMetaData.ID, conn); // Auto join lobby
         }
 
@@ -157,6 +166,7 @@ namespace LobbySystem
                 Debug.LogError($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'");
                 return;
             }
+            Log($"Client '{conn.ClientId}' joined lobby with id '{lobbyId}");
             OnLobbyJoinedRpc(conn, lobby);
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
         }
@@ -170,6 +180,7 @@ namespace LobbySystem
                 return;
             }
 
+            Log($"LobbyHandler with lobbyId '{lobbyId}' is registered");
             _lobbies[lobbyId].SetSceneHandle(lobbyHandler.gameObject.scene.handle);
             _lobbyHandlers.Add(lobbyId, lobbyHandler);
         }
@@ -229,6 +240,7 @@ namespace LobbySystem
             }
         }
 
+        [Server]
         private void CloseLobby(string lobbyId)
         {
             if (!_lobbyHandlers.TryGetValue(lobbyId, out LobbyHandler handler))
@@ -242,9 +254,10 @@ namespace LobbySystem
                 handler.RemoveClient(client);
                 OnLobbyLeftRpc(ClientManager.Clients[client]);
             }
-
+            
             _lobbyHandlers.Remove(lobbyId);
             _lobbies.Remove(lobbyId);
+            Log($"Lobby with id '{lobbyId}' is closed");
         }
         
         
@@ -261,7 +274,7 @@ namespace LobbySystem
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void LeaveLobbyRpc(NetworkConnection conn = null)
+        private void LeaveLobbyRpc(NetworkConnection conn = null)
         {
             if (!TryRemoveClientFromLobby(conn))
             {
@@ -314,15 +327,21 @@ namespace LobbySystem
             return true;
         }
 
-        private void Server_OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        [Server]
+        private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
         {
-            if (args.ConnectionState != RemoteConnectionState.Stopped)
+            switch (args.ConnectionState)
             {
-                return;
+                case RemoteConnectionState.Stopped:
+                    Debug.Log($"Client {conn.ClientId} left the server");
+                    TryRemoveClientFromLobby(conn);
+                    break;
+                case RemoteConnectionState.Started:
+                    Debug.Log($"Client {conn.ClientId} joined the server");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-
-            Debug.Log($"Client {conn.ClientId} left.");
-            TryRemoveClientFromLobby(conn);
         }
 
 
@@ -369,6 +388,17 @@ namespace LobbySystem
         {
             _lobbies.OnChange -= lobbies_OnChange;
         }
-
+        
+        /// <summary>
+        /// Logs a common value if can log.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Log(string value)
+        {
+            if (_loggingEnabled)
+            {
+                Debug.Log(value);
+            }
+        }
     }
 }

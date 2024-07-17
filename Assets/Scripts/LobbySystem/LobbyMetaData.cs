@@ -52,5 +52,10 @@ namespace LobbySystem
         {
             _sceneHandle = sceneHandle;
         }
+
+        public override string ToString()
+        {
+            return $"LobbyMetaData (Id={ID}, Name={Name}, Scene={Scene}, Creator={Creator}, MaxClients={MaxClients})";
+        }
     }
 }

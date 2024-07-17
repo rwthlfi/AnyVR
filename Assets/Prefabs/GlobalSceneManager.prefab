@@ -9,9 +9,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3478720956390726424}
+  - component: {fileID: 8216294827977510481}
   - component: {fileID: 4083339213612696829}
   - component: {fileID: 6574523170611092761}
-  - component: {fileID: 8216294827977510481}
   m_Layer: 0
   m_Name: GlobalSceneManager
   m_TagString: Untagged
@@ -34,6 +34,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8216294827977510481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5419417114175935541}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 044cbd80f449876408b74b1c5abbe3a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 1
+  _addedNetworkObject: {fileID: 6574523170611092761}
+  _networkObjectCache: {fileID: 6574523170611092761}
+  _loggingEnabled: 0
 --- !u!114 &4083339213612696829
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -96,18 +112,3 @@ MonoBehaviour:
   <SpawnableCollectionId>k__BackingField: 0
   <SceneId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 7012129641167222971
---- !u!114 &8216294827977510481
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5419417114175935541}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 044cbd80f449876408b74b1c5abbe3a3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 1
-  _addedNetworkObject: {fileID: 6574523170611092761}
-  _networkObjectCache: {fileID: 6574523170611092761}
