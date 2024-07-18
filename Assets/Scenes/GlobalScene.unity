@@ -196,6 +196,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+      propertyPath: _lobbyHandlerPrefab
+      value: 
+      objectReference: {fileID: 3580284226864861460, guid: 4833cfa3e442f3445b1b9b800571cfe9, type: 3}
+    - target: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
       propertyPath: _componentIndexCache
       value: 0
       objectReference: {fileID: 0}

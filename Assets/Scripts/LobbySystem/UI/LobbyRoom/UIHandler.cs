@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,11 +16,8 @@ namespace LobbySystem.UI.LobbyRoom
         
         private bool _isLocalAdmin;
 
-        public event Action<bool> OnMicToggle;
-        public event Action<int> ClientKick;
-        public event Action<float> ClientVolumeChange;
-        public event Action OnLeaveLobby;
-
+        private LobbyHandler _lobbyHandler;
+        
         private void Awake()
         {
             InitSingleton();
@@ -34,24 +30,21 @@ namespace LobbySystem.UI.LobbyRoom
             _clientListHandler.gameObject.SetActive(false);
             _pausePanelHandler.gameObject.SetActive(false);
 
-            _clientListHandler.ClientKick += ClientKick;
-            // _clientListHandler.ClientMuteChange += ClientMuteChange;
-
             _panels.Add(_clientListHandler.gameObject);
             _panels.Add(_pausePanelHandler.gameObject);
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
 
+            if (!LobbyManager.TryGetLobbyHandler(out _lobbyHandler))
+            {
+                Debug.LogError("UIScene could not find the LobbyHandler");
+            }
             _muteToggle.onValueChanged.AddListener(b =>
             {
-                OnMicToggle?.Invoke(b);
+                _lobbyHandler.SetMuteSelf(b);
             });
         }
 
-        private void UpdateClientList(IEnumerable<int> clientIds)
-        {
-        }
-        
         public void LeaveLobby()
         {
             OnLeaveLobby?.Invoke();

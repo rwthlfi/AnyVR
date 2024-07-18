@@ -5,9 +5,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 #if UNITY_WEBGL
 using UnityEngine.Networking;
-
 #else
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 #endif
@@ -18,7 +16,7 @@ namespace Voicechat
     {
         #region Singleton
 
-        public static LiveKitManager s_instance;
+        public static LiveKitManager s_instance; // TODO: set singleton accessibility to internal
 
         private void InitSingleton()
         {
@@ -34,7 +32,7 @@ namespace Voicechat
         #endregion
 
         private Dictionary<string, Participant> RemoteParticipants => _chatClient.RemoteParticipants;
-        public Participant LocalParticipant => _chatClient.LocalParticipant;
+        private Participant LocalParticipant => _chatClient.LocalParticipant;
 
         private VoiceChatClient _chatClient;
         [Header("LiveKit")] [SerializeField] private string _tokenServerAddr;

@@ -16,7 +16,7 @@ namespace LobbySystem
     {
         #region Singleton
 
-        public static LobbyManager s_instance;
+        internal static LobbyManager s_instance;
 
         private void InitSingleton()
         {
@@ -32,6 +32,7 @@ namespace LobbySystem
         #region SerializedFields
 
         [SerializeField] private bool _loggingEnabled;
+        [SerializeField] private LobbyHandler _lobbyHandlerPrefab;
 
         #endregion
 
@@ -109,8 +110,46 @@ namespace LobbySystem
             _lobbyHandlers = new Dictionary<string, LobbyHandler>();
             _clientLobbyDict = new Dictionary<int, string>();
             ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
+            SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
             string logging = _loggingEnabled ? "enabled" : "disabled";
             Debug.Log($"Server started. Logging {logging}");
+        }
+
+        [Server]
+        private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
+        {
+            // Lobbies only have one scene
+            if(loadArgs.LoadedScenes.Length != 1)
+            {
+                return;
+            }
+
+            // Lobby scenes are always loaded with exactly one client (creator)
+            if (loadArgs.QueueData.Connections.Length != 1)
+            {
+                return;
+            }
+
+            // Try get corresponding lobbyId
+            if (!_clientLobbyDict.TryGetValue(loadArgs.QueueData.Connections[0].ClientId, out string lobbyId))
+            {
+                return;
+            }
+
+            // Check if lobby exists
+            if (!_lobbies.ContainsKey(lobbyId))
+            {
+                return;
+            }
+            
+            // Spawn and register the LobbyHandler
+            LobbyHandler lobbyHandler = Instantiate(_lobbyHandlerPrefab);
+            Spawn(lobbyHandler.NetworkObject, null, loadArgs.LoadedScenes[0]);
+            lobbyHandler.Init(lobbyId, loadArgs.QueueData.Connections[0].ClientId);
+            
+            _lobbies[lobbyId].SetSceneHandle(loadArgs.LoadedScenes[0].handle);
+            _lobbyHandlers.Add(lobbyId, lobbyHandler);
+            Log($"LobbyHandler with lobbyId '{lobbyId}' is registered");
         }
 
         private string CreateUniqueLobbyId(string scene)
@@ -142,14 +181,20 @@ namespace LobbySystem
             LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, conn.ClientId, scene, maxClients);
             _lobbies.Add(lobbyMetaData.ID, lobbyMetaData);
             Log($"Lobby created. {lobbyMetaData.ToString()}");
-            JoinLobby(lobbyMetaData.ID, conn); // Auto join lobby
+            AddClientToLobby(lobbyMetaData.ID, conn); // Auto join lobby
         }
-
+        
         /// <summary>
         /// Server Rpc to join an active lobby on the server.
         /// </summary>
         [ServerRpc(RequireOwnership = false)]
         public void JoinLobby(string lobbyId, NetworkConnection conn = null)
+        {
+            AddClientToLobby(lobbyId, conn);
+        }
+
+        [Server]
+        private void AddClientToLobby(string lobbyId, NetworkConnection conn)
         {
             if (conn == null)
             {
@@ -174,20 +219,6 @@ namespace LobbySystem
             Log($"Client '{conn.ClientId}' joined lobby with id '{lobbyId}");
             OnLobbyJoinedRpc(conn, lobby);
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
-        }
-        
-        [Server]
-        internal void RegisterLobbyHandler(LobbyHandler lobbyHandler, int clientId)
-        {
-            if (!_clientLobbyDict.TryGetValue(clientId, out string lobbyId))
-            {
-                Debug.LogError("Error when registering lobby handler");
-                return;
-            }
-
-            Log($"LobbyHandler with lobbyId '{lobbyId}' is registered");
-            _lobbies[lobbyId].SetSceneHandle(lobbyHandler.gameObject.scene.handle);
-            _lobbyHandlers.Add(lobbyId, lobbyHandler);
         }
         
         /// <summary>
@@ -218,7 +249,31 @@ namespace LobbySystem
             LiveKitManager.s_instance.Disconnect(); // Disconnecting from voicechat
             LobbyLeft?.Invoke();
         }
+        
+        [Client]
+        public static bool TryGetLobbyHandler(out LobbyHandler lobbyHandler)
+        {
+            if (s_instance._currentLobby.HasValue)
+            {
+                return s_instance._lobbyHandlers.TryGetValue(s_instance._currentLobby.Value.ID, out lobbyHandler);
+            }
 
+            lobbyHandler = null;
+            return false;
+        }
+
+        [Client]
+        public static bool TryGetLobbyMeta(out LobbyMetaData lmd)
+        {
+            if (!s_instance._currentLobby.HasValue)
+            {
+                lmd = default;
+                return false;
+            }
+
+            lmd = (LobbyMetaData)s_instance._currentLobby;
+            return true;
+        }
 
         private void lobbies_OnChange(SyncDictionaryOperation op, string key, LobbyMetaData value, bool asServer)
         {
@@ -382,11 +437,6 @@ namespace LobbySystem
         private void ReceiveLobbiesClientListRpc(NetworkConnection _, int[] clients)
         {
             LobbyClientListReceived?.Invoke(clients);
-        }
-
-        public LobbyMetaData? GetCurrentLobby()
-        {
-            return _currentLobby;
         }
         
         private void OnDestroy()
