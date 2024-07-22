@@ -4,6 +4,7 @@ using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Voicechat;
@@ -67,6 +68,16 @@ namespace LobbySystem
             
             AddClient();
             UnityEngine.SceneManagement.SceneManager.LoadScene("Scenes/UIScene", LoadSceneMode.Additive);
+
+            if (!LiveKitManager.s_instance.TryGetAvailableMicrophoneNames(out string[] micNames))
+            {
+                return;
+            }
+
+            string msg = micNames.Aggregate("Available Microphones:\n",
+                (current, micName) => current + "\t" + micName + "\n");
+            Debug.Log(msg);
+            LiveKitManager.s_instance.SetActiveMicrophone(micNames[1]);
         }
 
         private void OnClientUpdate(SyncHashSetOperation op, int item, bool asServer)
