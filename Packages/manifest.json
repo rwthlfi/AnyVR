@@ -11,7 +11,7 @@
     "com.unity.toolchain.win-x86_64-linux-x86_64": "2.0.6",
     "com.unity.visualscripting": "1.9.1",
     "com.unity.xr.hands": "1.3.0",
-    "com.unity.xr.interaction.toolkit": "2.5.4",
+    "com.unity.xr.interaction.toolkit": "3.0.4",
     "com.unity.xr.management": "4.4.0",
     "com.unity.xr.openxr": "1.10.0",
     "io.livekit.livekit-sdk": "https://github.com/livekit/client-sdk-unity.git",
