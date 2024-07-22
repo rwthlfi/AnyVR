@@ -16,10 +16,10 @@ namespace LobbySystem.UI.LobbyRoom
         public event Action<int, float> ClientVolumeChange;
 
         public event Action<int> ClientKick;
-        
-        private (int id, string name)[] _clients;
 
-        private void AddClient(int clientId, string clientName, bool isAdmin = false)
+        private readonly Dictionary<int, string> _clients = new();
+
+        internal void AddClient(int clientId, string clientName, bool isAdmin = false)
         {
             if (_clientCards.ContainsKey(clientId))
             {
@@ -28,13 +28,14 @@ namespace LobbySystem.UI.LobbyRoom
             }
 
             ClientCardHandler card = Instantiate(_clientCardPrefab, _clientCardParent);
+            Debug.Log("Card instantiated");
             card.SetClient(clientId, clientName, isAdmin);
             card.KickBtn += ClientKick;
             //card.MuteToggle += ClientMuteChange;
             _clientCards.Add(clientId, card);
         }
 
-        private void RemoveClient(int clientId)
+        public void RemoveClient(int clientId)
         {
             if (_clientCards.Remove(clientId, out ClientCardHandler card))
             {
@@ -44,14 +45,18 @@ namespace LobbySystem.UI.LobbyRoom
 
         public void UpdateClientList((int id, string name)[] clientIds, int adminId)
         {
-            (int id, string name)[] toAdd = clientIds.Except(_clients).ToArray();
-            (int id, string name)[] toRemove = _clients.Except(clientIds).ToArray();
+            Debug.Log($"Updating clients! size: {clientIds.Length}");
+            (int id, string name)[] clientArray = _clients.Select(kvp => (kvp.Key, kvp.Value)).ToArray();
+            (int id, string name)[] toAdd = clientIds.Except(clientArray).ToArray();
+            (int id, string name)[] toRemove = clientArray.Except(clientIds).ToArray();
             foreach ((int id, string name) client in toAdd)
             {
-                AddClient(client.id, client.name);
+                _clients.Add(client.id, client.name);
+                AddClient(client.id, client.name, client.id == adminId);
             }
             foreach ((int id, string name) client in toRemove)
             {
+                _clients.Remove(client.id);
                 RemoveClient(client.id);
             }
         }

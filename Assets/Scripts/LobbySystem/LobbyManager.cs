@@ -3,6 +3,8 @@ using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
+using GameKit.Dependencies.Utilities;
+using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,7 +73,6 @@ namespace LobbySystem
         /// </summary>
         private readonly SyncDictionary<string, LobbyMetaData> _lobbies = new();
 
-        
         private void Awake()
         {
             InitSingleton();
@@ -94,15 +95,6 @@ namespace LobbySystem
         /// Invoked when the local client left a lobby
         /// </summary>
         public event Action LobbyLeft;
-        /// <summary>
-        /// Invoked when an remote client joined the lobby of the local client
-        /// </summary>
-        public event Action<int> ClientJoined;
-        /// <summary>
-        /// Invoked when an remote client left the lobby of thk local client
-        /// </summary>
-        public event Action<int> ClientLeft;
-        public event Action<int[]> LobbyClientListReceived;
         
         public override void OnStartServer()
         {
@@ -149,6 +141,7 @@ namespace LobbySystem
             
             _lobbies[lobbyId].SetSceneHandle(loadArgs.LoadedScenes[0].handle);
             _lobbyHandlers.Add(lobbyId, lobbyHandler);
+            
             Log($"LobbyHandler with lobbyId '{lobbyId}' is registered");
         }
 
@@ -216,6 +209,7 @@ namespace LobbySystem
                 Debug.LogError($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'");
                 return;
             }
+            
             Log($"Client '{conn.ClientId}' joined lobby with id '{lobbyId}");
             OnLobbyJoinedRpc(conn, lobby);
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
@@ -249,29 +243,17 @@ namespace LobbySystem
             LiveKitManager.s_instance.Disconnect(); // Disconnecting from voicechat
             LobbyLeft?.Invoke();
         }
-        
-        [Client]
-        public static bool TryGetLobbyHandler(out LobbyHandler lobbyHandler)
-        {
-            if (s_instance._currentLobby.HasValue)
-            {
-                return s_instance._lobbyHandlers.TryGetValue(s_instance._currentLobby.Value.ID, out lobbyHandler);
-            }
-
-            lobbyHandler = null;
-            return false;
-        }
 
         [Client]
-        public static bool TryGetLobbyMeta(out LobbyMetaData lmd)
+        public bool TryGetLobbyMeta(out LobbyMetaData lmd)
         {
-            if (!s_instance._currentLobby.HasValue)
+            if (!_currentLobby.HasValue)
             {
                 lmd = default;
                 return false;
             }
 
-            lmd = (LobbyMetaData)s_instance._currentLobby;
+            lmd = (LobbyMetaData)_currentLobby;
             return true;
         }
 
@@ -307,12 +289,12 @@ namespace LobbySystem
             {
                 return;
             }
-
+            
             // Kick all players from the lobby
-            foreach (int client in handler.GetClients())
+            foreach ((int id, string) client in handler.GetClients())
             {
-                handler.RemoveClient(client);
-                OnLobbyLeftRpc(ClientManager.Clients[client]);
+                handler.Server_RemoveClient(client.id);
+                OnLobbyLeftRpc(ClientManager.Clients[client.id]);
             }
             
             _lobbyHandlers.Remove(lobbyId);
@@ -320,19 +302,6 @@ namespace LobbySystem
             Log($"Lobby with id '{lobbyId}' is closed");
         }
         
-        
-        [TargetRpc]
-        private void OnClientJoinedLobbyRpc(NetworkConnection _, int joinedClientId)
-        {
-            ClientJoined?.Invoke(joinedClientId);
-        }
-
-        [TargetRpc]
-        private void OnClientLeftLobbyRpc(NetworkConnection _, int leftClientId)
-        {
-            ClientLeft?.Invoke(leftClientId);
-        }
-
         [ServerRpc(RequireOwnership = false)]
         private void LeaveLobbyRpc(NetworkConnection conn = null)
         {
@@ -345,14 +314,16 @@ namespace LobbySystem
             SceneManager.LoadConnectionScenes(conn, sld);
         }
         
-        private bool TryRemoveClientFromLobby(NetworkConnection client)
+        [Server]
+        private bool TryRemoveClientFromLobby(NetworkConnection clientConnection)
         {
-            if (client == null)
+            Debug.Log("1");
+            if (clientConnection == null)
             {
                 return false;
             }
-
-            if (!TryGetLobbyOfClient(client.ClientId, out string lobbyId))
+            
+            if (!TryGetLobbyOfClient(clientConnection.ClientId, out string lobbyId))
             {
                 return false;
             }
@@ -361,28 +332,13 @@ namespace LobbySystem
             {
                 return false;
             }
-            handler.RemoveClient(client.ClientId);
-            OnLobbyLeftRpc(client);
+            
+            handler.Server_RemoveClient(clientConnection.ClientId);
+            OnLobbyLeftRpc(clientConnection);
             
             if (!handler.GetClients().Any())
             {
                 CloseLobby(lobbyId);
-                return true;
-            }
-            
-            foreach (int clientId in handler.GetClients())
-            {
-                if (client.ClientId == clientId)
-                {
-                    continue;
-                }
-
-                if (!ServerManager.Clients.TryGetValue(clientId, out NetworkConnection c))
-                {
-                    continue;
-                }
-
-                OnClientLeftLobbyRpc(c, client.ClientId);
             }
             return true;
         }
@@ -410,7 +366,7 @@ namespace LobbySystem
         {
             foreach (KeyValuePair<string, LobbyHandler> lobbyPair in from lobbyPair in _lobbyHandlers
                      let clients = lobbyPair.Value.GetClients()
-                     where clients.Any(client => client == clientId)
+                     where clients.Any(client => client.Item1 == clientId)
                      select lobbyPair)
             {
                 lobbyId = lobbyPair.Key;
@@ -421,27 +377,15 @@ namespace LobbySystem
             return false;
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        public void RequestLobbyClientListRpc(LobbyMetaData lmd, NetworkConnection conn = null)
-        {
-            int[] clients = { };
-            if (_lobbyHandlers.TryGetValue(lmd.ID, out LobbyHandler handler))
-            {
-                clients = handler.GetClients().ToArray();
-            }
-
-            ReceiveLobbiesClientListRpc(conn, clients);
-        }
-
-        [TargetRpc]
-        private void ReceiveLobbiesClientListRpc(NetworkConnection _, int[] clients)
-        {
-            LobbyClientListReceived?.Invoke(clients);
-        }
-        
         private void OnDestroy()
         {
             _lobbies.OnChange -= lobbies_OnChange;
+        }
+
+        [CanBeNull]
+        public static LobbyManager TryGetInstance()
+        {
+            return s_instance;
         }
         
         /// <summary>
@@ -454,6 +398,11 @@ namespace LobbySystem
             {
                 Debug.Log(value);
             }
+        }
+
+        public Dictionary<string, LobbyMetaData> GetAvailableLobbies()
+        {
+            return _lobbies.Collection;
         }
     }
 }

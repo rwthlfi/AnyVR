@@ -1,7 +1,10 @@
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using Voicechat;
 
@@ -14,6 +17,19 @@ namespace LobbySystem
         private readonly SyncVar<int> _adminId = new();
         private readonly SyncVar<bool> _initialized = new(false);
 
+        /// <summary>
+        /// Invoked when an remote client joined the lobby of the local client
+        /// </summary>
+        public event Action<int, string> ClientJoin;
+        
+        /// <summary>
+        /// Invoked when an remote client left the lobby of thk local client
+        /// </summary>
+        public event Action<int> ClientLeft;
+        
+        // Only assigned on client
+        [CanBeNull] private static LobbyHandler s_instance;
+        
         [Server]
         internal void Init(string lobbyId, int adminId)
         {
@@ -22,11 +38,62 @@ namespace LobbySystem
             _initialized.Value = true;
         }
 
+        /// <summary>
+        /// Returns the client's id of the admin
+        /// </summary>
+        public int GetAdminId()
+        {
+            return _adminId.Value;
+        }
+
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            _clientIds.OnChange += OnClientUpdate;
+        }
+
         public override void OnStartClient()
         {
             base.OnStartClient();
+            
+            if (s_instance != null)
+            {
+                Debug.LogError("Instance of LobbyHandler is already initialized");
+                return;
+            }
+            s_instance = this;
+
+            _clientIds.OnChange += OnClientUpdate;
+            
             AddClient();
             UnityEngine.SceneManagement.SceneManager.LoadScene("Scenes/UIScene", LoadSceneMode.Additive);
+        }
+
+        private void OnClientUpdate(SyncHashSetOperation op, int item, bool asServer)
+        {
+            if (asServer)
+            {
+                // ClientJoin & ClientLeft callbacks are already invoked from the 'AddClient' and 'RemoveClient' server RPC
+                return;
+            }
+            switch (op)
+            {
+                case SyncHashSetOperation.Add:
+                    ClientJoin?.Invoke(item, PlayerNameTracker.GetPlayerName(item));
+                    break;
+                case SyncHashSetOperation.Remove:
+                    ClientLeft?.Invoke(item);
+                    break;
+                case SyncHashSetOperation.Clear:
+                    // TODO
+                    break;
+                case SyncHashSetOperation.Complete:
+                    break;
+                case SyncHashSetOperation.Update:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(op), op, null);
+            }
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -36,9 +103,15 @@ namespace LobbySystem
             {
                 return;
             }
+            Server_AddClient(conn.ClientId, PlayerNameTracker.GetPlayerName(conn));
+        }
 
-            _clientIds.Add(conn.ClientId);
-            LobbyManager.s_instance.Log($"Client {conn.ClientId} joined lobby {_lobbyId.Value}");
+        [Server]
+        internal void Server_AddClient(int clientId, string clientName)
+        {
+            _clientIds.Add(clientId);
+            LobbyManager.s_instance.Log($"Client {clientId} joined lobby {_lobbyId.Value}");
+            ClientJoin?.Invoke(clientId, clientName);
         }
         
         [ServerRpc(RequireOwnership = false)]
@@ -48,26 +121,44 @@ namespace LobbySystem
             {
                 return;
             }
-
+            Server_RemoveClient(clientId);
+        }
+        
+        [Server]
+        internal void Server_RemoveClient(int clientId)
+        {
             _clientIds.Remove(clientId);
-            LobbyManager.s_instance.Log($"Client {conn.ClientId} left lobby {_lobbyId.Value}");
+            LobbyManager.s_instance.Log($"Client {clientId} left lobby {_lobbyId.Value}");
+            ClientLeft?.Invoke(clientId);
         }
 
-        public IEnumerable<int> GetClients()
+        public (int, string)[] GetClients()
         {
-            int[] arr = new int[_clientIds.Count];
-            uint i = 0;
-            foreach (int id in _clientIds)
+            HashSet<int> clientIds = _clientIds.Collection;
+            (int, string)[] clients = new (int, string)[clientIds.Count];
+            int i = 0;
+            foreach (int clientId in clientIds)
             {
-                arr[i++] = id;
+                clients[i] = (clientId, PlayerNameTracker.GetPlayerName(clientId));
+                i++;
             }
-
-            return arr;
+            return clients;
         }
 
         public void SetMuteSelf(bool muteSelf)
         {
             LiveKitManager.s_instance.SetMicrophoneEnabled(!muteSelf);
+        }
+
+        [CanBeNull]
+        public static LobbyHandler TryGetInstance()
+        {
+            return s_instance;
+        }
+
+        private void OnDestroy()
+        {
+            _clientIds.OnChange -= OnClientUpdate;
         }
     }
 }

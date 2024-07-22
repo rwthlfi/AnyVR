@@ -19,13 +19,27 @@ namespace LobbySystem.UI.LobbySelection
 
         private Dictionary<UILobbyMetaData, LobbyCardHandler> _lobbyCards;
 
+        private LobbyManager _lobbyManager;
+
         private void Start()
         {
             InitSingleton();
             _lobbyCards = new Dictionary<UILobbyMetaData, LobbyCardHandler>();
             _isRoomCreationSceneActive = false;
-            LobbyManager.s_instance.LobbyOpened += AddLobbyCard;
-            LobbyManager.s_instance.LobbyClosed += RemoveLobbyCard;
+            _lobbyManager = LobbyManager.TryGetInstance();
+            if (_lobbyManager == null)
+            {
+                Debug.LogError("No instance of LobbyManager found");
+                return;
+            }
+            _lobbyManager.LobbyOpened += AddLobbyCard;
+            _lobbyManager.LobbyClosed += RemoveLobbyCard;
+
+            Dictionary<string, LobbyMetaData> lobbies =  _lobbyManager.GetAvailableLobbies();
+            foreach (LobbyMetaData lobby in lobbies.Values)
+            {
+                AddLobbyCard(lobby);
+            }
         }
 
         // TODO
@@ -61,7 +75,7 @@ namespace LobbySystem.UI.LobbySelection
             }
 
             CloseCreateRoomScene();
-            LobbyManager.s_instance.CreateLobby(uiLobbyMetaData.Name, uiLobbyMetaData.Location, uiLobbyMetaData.MaxClients);
+            _lobbyManager.CreateLobby(uiLobbyMetaData.Name, uiLobbyMetaData.Location, uiLobbyMetaData.MaxClients);
         }
 
         public void CloseCreateRoomScene()
@@ -82,7 +96,7 @@ namespace LobbySystem.UI.LobbySelection
             card.SetLobbyMeta(uiLobby);
             card.JoinBtn += () =>
             {   
-                LobbyManager.s_instance.JoinLobby(card.MetaData.ID);
+                _lobbyManager.JoinLobby(card.MetaData.ID);
             };
             _lobbyCards.Add(uiLobby, card);
         }
@@ -103,15 +117,15 @@ namespace LobbySystem.UI.LobbySelection
             _lobbyCards.Remove(uiLobby);
         }
 
-        public static void JoinLobby(UILobbyMetaData metaData)
+        public void JoinLobby(UILobbyMetaData metaData)
         {
-            LobbyManager.s_instance.JoinLobby(metaData.ID);
+            _lobbyManager.JoinLobby(metaData.ID);
         }
 
         private void OnDestroy()
         {
-            LobbyManager.s_instance.LobbyOpened -= AddLobbyCard;
-            LobbyManager.s_instance.LobbyClosed -= RemoveLobbyCard;
+            _lobbyManager.LobbyOpened -= AddLobbyCard;
+            _lobbyManager.LobbyClosed -= RemoveLobbyCard;
         }
 
         #region Singleton

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,11 +35,25 @@ namespace LobbySystem.UI.LobbyRoom
             _panels.Add(_pausePanelHandler.gameObject);
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
-
-            if (!LobbyManager.TryGetLobbyHandler(out _lobbyHandler))
+            
+            _lobbyHandler = LobbyHandler.TryGetInstance();
+            if (_lobbyHandler == null)
             {
                 Debug.LogError("UIScene could not find the LobbyHandler");
+                return;
             }
+            
+            UpdateClientList(_lobbyHandler.GetClients(), _lobbyHandler.GetAdminId());
+            
+            _lobbyHandler.ClientJoin += (clientId, clientName) =>
+            {
+                _clientListHandler.AddClient(clientId, clientName);
+            };
+            _lobbyHandler.ClientLeft += clientId =>
+            {
+                _clientListHandler.RemoveClient(clientId);
+            };
+            
             _muteToggle.onValueChanged.AddListener(b =>
             {
                 _lobbyHandler.SetMuteSelf(b);
@@ -47,7 +62,7 @@ namespace LobbySystem.UI.LobbyRoom
 
         public void LeaveLobby()
         {
-            OnLeaveLobby?.Invoke();
+            // OnLeaveLobby?.Invoke(); TODO
         }
 
         private void Update()
