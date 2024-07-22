@@ -62,7 +62,7 @@ namespace LobbySystem.UI.LobbyRoom
 
         public void LeaveLobby()
         {
-            // OnLeaveLobby?.Invoke(); TODO
+            _lobbyHandler.Leave();
         }
 
         private void Update()

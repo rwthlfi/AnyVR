@@ -201,7 +201,7 @@ namespace LobbySystem
             
             if (_currentLobby != null)
             {
-                LeaveLobbyRpc();
+                LeaveLobby();
             }
 
             if (!_clientLobbyDict.TryAdd(conn.ClientId, lobbyId))
@@ -244,19 +244,6 @@ namespace LobbySystem
             LobbyLeft?.Invoke();
         }
 
-        [Client]
-        public bool TryGetLobbyMeta(out LobbyMetaData lmd)
-        {
-            if (!_currentLobby.HasValue)
-            {
-                lmd = default;
-                return false;
-            }
-
-            lmd = (LobbyMetaData)_currentLobby;
-            return true;
-        }
-
         private void lobbies_OnChange(SyncDictionaryOperation op, string key, LobbyMetaData value, bool asServer)
         {
             if (asServer)
@@ -293,8 +280,13 @@ namespace LobbySystem
             // Kick all players from the lobby
             foreach ((int id, string) client in handler.GetClients())
             {
-                handler.Server_RemoveClient(client.id);
-                OnLobbyLeftRpc(ClientManager.Clients[client.id]);
+                if (!ServerManager.Clients.TryGetValue(client.id, out NetworkConnection clientConn))
+                {
+                    Debug.LogWarning($"Could not get NetworkConnection from client {client.id}");
+                    continue;
+                }
+
+                TryRemoveClientFromLobby(clientConn);
             }
             
             _lobbyHandlers.Remove(lobbyId);
@@ -303,21 +295,20 @@ namespace LobbySystem
         }
         
         [ServerRpc(RequireOwnership = false)]
-        private void LeaveLobbyRpc(NetworkConnection conn = null)
+        internal void LeaveLobby(NetworkConnection conn = null)
         {
             if (!TryRemoveClientFromLobby(conn))
             {
                 return;
             }
 
-            SceneLoadData sld = new(new[] { "LobbyScene" }) { ReplaceScenes = ReplaceOption.All };
+            SceneLoadData sld = new(new[] { "LobbySelectionScene" }) { ReplaceScenes = ReplaceOption.All };
             SceneManager.LoadConnectionScenes(conn, sld);
         }
         
         [Server]
         private bool TryRemoveClientFromLobby(NetworkConnection clientConnection)
         {
-            Debug.Log("1");
             if (clientConnection == null)
             {
                 return false;
@@ -334,6 +325,7 @@ namespace LobbySystem
             }
             
             handler.Server_RemoveClient(clientConnection.ClientId);
+            _clientLobbyDict.Remove(clientConnection.ClientId);
             OnLobbyLeftRpc(clientConnection);
             
             if (!handler.GetClients().Any())

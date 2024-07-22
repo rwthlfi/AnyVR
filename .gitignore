@@ -77,3 +77,5 @@ crashlytics-build.properties
 # Custom Additions
 [Dd]ocs/
 *.md
+
+/[Aa]ssets/Baracuda/*
