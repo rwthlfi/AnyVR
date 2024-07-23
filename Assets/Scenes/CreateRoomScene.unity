@@ -855,6 +855,7 @@ MonoBehaviour:
   _locationCardPrefab: {fileID: 2769105965858780572, guid: 1bb1000097e03de43af9d291ebae7ccc, type: 3}
   _locationCardParent: {fileID: 2129787310}
   _lobbySceneMetaData:
+  - {fileID: 11400000, guid: 312f6433088670546ac0141095d04d56, type: 2}
   - {fileID: 11400000, guid: 41c59584f0e95ca4eba418f86dd9c3c6, type: 2}
   - {fileID: 11400000, guid: bb2b7f89c60cc374d9dcf8777305d203, type: 2}
 --- !u!1 &1026878409

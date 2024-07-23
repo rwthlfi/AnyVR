@@ -21,6 +21,9 @@ EditorBuildSettings:
     path: Assets/Scenes/UIScene.unity
     guid: bba88a0c3162cca4ca6104582577da92
   - enabled: 1
+    path: Assets/Scenes/InputModality_DemoScene.unity
+    guid: e22023fc041c3dd42aa64caef345f18f
+  - enabled: 1
     path: Assets/Scenes/LobbyScenes/BobOmbBattlefield.unity
     guid: 2ca22128f2e89c440830135404c6d2d2
   - enabled: 1
