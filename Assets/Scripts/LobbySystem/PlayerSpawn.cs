@@ -13,13 +13,13 @@ namespace LobbySystem
         /// <summary>
         ///     Prefab to spawn for the player.
         /// </summary>
-        [Tooltip("Prefab to spawn for the player.")] [SerializeField]
-        private NetworkObject _playerPrefab;
+        [SerializeField] private NetworkObject _playerPrefab;
 
         public override void OnStartClient()
         {
             base.OnStartClient();
             SpawnPlayer();
+            
         }
 
         [ServerRpc(RequireOwnership = false)]
