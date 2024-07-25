@@ -16,18 +16,22 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using FishNet.Object;
-using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LobbySystem
 {
     public class OnlinePlayerHandler : NetworkBehaviour
     {
-        [SerializeField] private Transform _leftController, _rightController;
-        
-        private PlayerInteractionHandler _interactionHandler;
+        [SerializeField] private Transform _head;
+        [SerializeField] private Transform _leftController;
+        [SerializeField] private Transform _rightController;
 
-        private bool _isInitialized = false;
+        private bool _isInit;
+
+        private PlayerInteractionHandler _handler;
+
+        private Renderer[] _renderers;
         
         public override void OnStartClient()
         {
@@ -37,37 +41,38 @@ namespace LobbySystem
             {
                 return;
             }
-            
-            GameObject setup = GameObject.Find("Player Interaction Setup");
-            if (setup == null)
+
+            _handler = PlayerInteractionHandler.s_interactionHandler;
+            if (_handler == null)
             {
-                Debug.LogError("Error finding the Player Interaction Setup");
-                return;
+                Debug.LogError("Could not find an instance of PlayerInteractionHandler");
             }
 
-            if (!setup.TryGetComponent(out PlayerInteractionHandler handler))
+            _renderers = gameObject.transform.GetComponentsInChildren<Renderer>();
+            int ownerLayer = LayerMask.NameToLayer("OwnerRenderLayer");
+            foreach (Renderer r in _renderers)
             {
-                Debug.LogError("Player Interaction Setup has no PlayerInteractionHandler component");
-                return;
+                r.gameObject.layer = ownerLayer;
             }
 
-            _interactionHandler = handler;
-            _isInitialized = true;
+            _isInit = true;
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
-            if (!_isInitialized)
+            if(!_isInit)
             {
                 return;
             }
 
-            _leftController.position = _interactionHandler._leftController.position;
-            _leftController.rotation = _interactionHandler._leftController.rotation;
-            _rightController.position = _interactionHandler._rightController.position;
-            _rightController.rotation = _interactionHandler._rightController.rotation;
-            transform.position = _interactionHandler._rig.position;
-            transform.rotation = _interactionHandler._rig.rotation;
+            transform.position = _handler._rig.position;
+
+            _head.position = _handler._cam.position;
+            _head.rotation = _handler._cam.rotation;
+            _leftController.position = _handler._leftController.position;
+            _leftController.rotation = _handler._leftController.rotation;
+            _rightController.position = _handler._rightController.position;
+            _rightController.rotation = _handler._rightController.rotation;
         }
     }
 }
