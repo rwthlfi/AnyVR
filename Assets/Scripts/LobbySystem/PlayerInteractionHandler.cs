@@ -21,6 +21,25 @@ namespace LobbySystem
 {
     public class PlayerInteractionHandler : MonoBehaviour
     {
-        [SerializeField] internal Transform _leftController, _rightController, _rig;
+        #region Singleton
+
+        internal static PlayerInteractionHandler s_interactionHandler;
+
+        private void Awake()
+        {
+            if (s_interactionHandler != null)
+            {
+                Debug.LogError("There already is a PlayerInteractionHandler!");
+                return;
+            }
+
+            s_interactionHandler = this;
+        }
+
+        #endregion
+
+        [SerializeField] internal Transform _leftController, _rightController;
+        [SerializeField] internal Transform _rig;
+        [SerializeField] internal Transform _cam;
     }
 }
