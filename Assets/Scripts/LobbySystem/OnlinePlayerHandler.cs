@@ -16,6 +16,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using FishNet.Object;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -27,15 +28,19 @@ namespace LobbySystem
         [SerializeField] private Transform _leftController;
         [SerializeField] private Transform _rightController;
 
-        private bool _isInit;
+        private bool _isOwnerInit;
 
         private PlayerInteractionHandler _handler;
 
         private Renderer[] _renderers;
+
+        public event Action<int, bool> SetClientId;
         
         public override void OnStartClient()
         {
             base.OnStartClient();
+            
+            SetClientId?.Invoke(OwnerId, ClientManager.Connection.ClientId == OwnerId);
 
             if (!IsOwner)
             {
@@ -54,13 +59,13 @@ namespace LobbySystem
             {
                 r.gameObject.layer = ownerLayer;
             }
-
-            _isInit = true;
+            
+            _isOwnerInit = true;
         }
 
         private void Update()
         {
-            if(!_isInit)
+            if(!_isOwnerInit)
             {
                 return;
             }
