@@ -15,37 +15,17 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using System;
 using UnityEngine;
 
 namespace LobbySystem
 {
-    public class PlayerInteractionHandler : MonoBehaviour
+    public class DestroyOnServer : MonoBehaviour
     {
-        #region Singleton
-
-        internal static PlayerInteractionHandler s_interactionHandler;
-
+#if UNITY_SERVER
         private void Awake()
         {
-            if (s_interactionHandler != null)
-            {
-                Debug.LogError("There already is a PlayerInteractionHandler!");
-                return;
-            }
-
-            s_interactionHandler = this;
+            Destroy(gameObject);
         }
-
-        #endregion
-
-        [SerializeField] internal Transform _leftController, _rightController;
-        [SerializeField] internal Transform _rig;
-        [SerializeField] internal Transform _cam;
-
-        private void OnDestroy()
-        {
-            s_interactionHandler = null;
-        }
+#endif
     }
 }
