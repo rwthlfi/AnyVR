@@ -155,7 +155,7 @@ GameObject:
   - component: {fileID: 2865859132731212892}
   - component: {fileID: 3043648853242771194}
   m_Layer: 5
-  m_Name: OfflineCanvas
+  m_Name: ConnectMenu
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -415,6 +415,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3844005973443047826}
   - component: {fileID: 8292281248255900673}
+  - component: {fileID: 6208928440011608016}
   m_Layer: 0
   m_Name: Player Interaction Setup
   m_TagString: Untagged
@@ -457,6 +458,18 @@ MonoBehaviour:
   _rightController: {fileID: 4868968668849929008}
   _rig: {fileID: 1070893720233930296}
   _cam: {fileID: 1804802948549654372}
+--- !u!114 &6208928440011608016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7653165008414711147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98e2bf694c93b5643bb4944062a9eab7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7850344400590751594
 GameObject:
   m_ObjectHideFlags: 0

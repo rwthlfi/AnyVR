@@ -310,6 +310,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4393771023254946662, guid: ee636ce53c66ba44d8f7bf01a19ba46a, type: 3}
+      propertyPath: m_InteractionManager
+      value: 
+      objectReference: {fileID: 585454335}
     - target: {fileID: 7653165008414711147, guid: ee636ce53c66ba44d8f7bf01a19ba46a, type: 3}
       propertyPath: m_Name
       value: Player Interaction Setup
@@ -385,6 +389,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4266640295717640281, guid: beb4e2871579447497fe41dfb108e2cd, type: 3}
   m_PrefabInstance: {fileID: 579311157}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &585454335 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2241289018356184566, guid: ee636ce53c66ba44d8f7bf01a19ba46a, type: 3}
+  m_PrefabInstance: {fileID: 338406592}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83e4e6cca11330d4088d729ab4fc9d9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &656921169 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8083744789594049285, guid: 5f330decdebf7784b83136a3ccdb1951, type: 3}
@@ -444,6 +459,7 @@ GameObject:
   m_Component:
   - component: {fileID: 936747339}
   - component: {fileID: 936747338}
+  - component: {fileID: 936747340}
   m_Layer: 0
   m_Name: Platform Management
   m_TagString: Untagged
@@ -478,6 +494,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &936747340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 936747337}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98e2bf694c93b5643bb4944062a9eab7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1076008577
 GameObject:
   m_ObjectHideFlags: 0
@@ -662,7 +690,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _globalScene: Assets/Scenes/GlobalScene.unity
-  _lobbyScene: Assets/Scenes/LobbySelectionScene.unity
+  _lobbyScene: Assets/Scenes/XRLobbySelectionScene.unity
 --- !u!114 &1630651780
 MonoBehaviour:
   m_ObjectHideFlags: 0

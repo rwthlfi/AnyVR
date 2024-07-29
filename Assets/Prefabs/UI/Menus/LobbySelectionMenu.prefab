@@ -1716,7 +1716,7 @@ GameObject:
   - component: {fileID: 7498028766874490295}
   - component: {fileID: 2088636717103434016}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: LobbySelectionMenu
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
