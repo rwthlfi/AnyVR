@@ -14,7 +14,7 @@ namespace LobbySystem.UI
 
         private void Start()
         {
-            _fishnetIpInputField.text = "127.0.0.1:7777";
+            _fishnetIpInputField.text = "192.168.0.86:7777";
             _livekitIpInputField.text = "192.168.0.192:3030";
         }
 

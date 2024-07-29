@@ -28,7 +28,6 @@ namespace LobbySystem.UI.LobbyRoom
             }
 
             ClientCardHandler card = Instantiate(_clientCardPrefab, _clientCardParent);
-            Debug.Log("Card instantiated");
             card.SetClient(clientId, clientName, isAdmin);
             card.KickBtn += ClientKick;
             //card.MuteToggle += ClientMuteChange;
