@@ -7,8 +7,13 @@ namespace LobbySystem.UI
     public class OfflineScene : MonoBehaviour
     {
         [SerializeField] private LoginManager _loginManager;
-        [Header("UI")] [SerializeField] private TMP_InputField _fishnetIpInputField;
 
+        [Header("Panels")] 
+        [SerializeField] private GameObject _connectionPanel;
+        [SerializeField] private GameObject _lobbySelectionPanel;
+        [SerializeField] private GameObject _createLobbyPanel;
+
+        [Header("UI")] [SerializeField] private TMP_InputField _fishnetIpInputField;
         [SerializeField] private TMP_InputField _livekitIpInputField;
         [SerializeField] private TMP_InputField _usernameInputField;
 
@@ -16,6 +21,16 @@ namespace LobbySystem.UI
         {
             _fishnetIpInputField.text = "192.168.0.86:7777";
             _livekitIpInputField.text = "192.168.0.192:3030";
+            _loginManager.ConnectionState += OnConnectionState;
+            _connectionPanel.SetActive(true);
+            _createLobbyPanel.SetActive(false);
+            _lobbySelectionPanel.SetActive(false);
+        }
+
+        private void OnConnectionState(bool isConnected)
+        {
+            _connectionPanel.SetActive(!isConnected);
+            _lobbySelectionPanel.SetActive(isConnected);
         }
 
         public void OnGoBtn()
