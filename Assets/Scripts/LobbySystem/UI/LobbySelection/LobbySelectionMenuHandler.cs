@@ -6,13 +6,16 @@ using UnityEngine.SceneManagement;
 
 namespace LobbySystem.UI.LobbySelection
 {
-    public class LobbySelectionSceneHandler : MonoBehaviour
+    public class LobbySelectionMenuHandler : MonoBehaviour
     {
+        [SerializeField] private LoginManager _loginManager;
+        [Header("PrefabSetup")]
         [SerializeField] private LobbyCardHandler _lobbyCardPrefab;
         [SerializeField] private Transform _lobbyCardParent;
+        
+        [Header("UI")]
         [SerializeField] private TextMeshProUGUI _pingLabel;
-
-        [SerializeField] [Scene] private string _roomCreationScene;
+        [SerializeField] private RoomCreationManager _roomCreationManager;
 
         private bool _isRoomCreationSceneActive;
 
@@ -20,17 +23,33 @@ namespace LobbySystem.UI.LobbySelection
 
         private LobbyManager _lobbyManager;
 
-        private void Start()
+        private void Awake()
         {
             InitSingleton();
             _lobbyCards = new Dictionary<UILobbyMetaData, LobbyCardHandler>();
             _isRoomCreationSceneActive = false;
-            _lobbyManager = LobbyManager.TryGetInstance();
+
+            _loginManager.ConnectionState += OnConnectionState;
+        }
+
+        private void OnConnectionState(bool isConnected)
+        {
+            Debug.Log(isConnected);
+            if (isConnected)
+            {
+                InitLobby(LobbyManager.GetInstance());
+            }
+        }
+
+        private void InitLobby(LobbyManager lobbyManager)
+        {
+            _lobbyManager = lobbyManager;
             if (_lobbyManager == null)
             {
-                Debug.LogError("No instance of LobbyManager found");
+                Debug.LogError("Passed LobbyManager is null");
                 return;
             }
+            Debug.Log(_lobbyManager);
             _lobbyManager.LobbyOpened += AddLobbyCard;
             _lobbyManager.LobbyClosed += RemoveLobbyCard;
 
@@ -63,7 +82,7 @@ namespace LobbySystem.UI.LobbySelection
             }
 
             _isRoomCreationSceneActive = true;
-            SceneManager.LoadSceneAsync(_roomCreationScene, LoadSceneMode.Additive);
+            _roomCreationManager.gameObject.SetActive(true);
         }
 
         public void CloseCreateRoomScene(UILobbyMetaData uiLobbyMetaData)
@@ -85,7 +104,7 @@ namespace LobbySystem.UI.LobbySelection
             }
 
             _isRoomCreationSceneActive = false;
-            SceneManager.UnloadSceneAsync(_roomCreationScene);
+            _roomCreationManager.gameObject.SetActive(false);
         }
 
         private void AddLobbyCard(LobbyMetaData lobby)
@@ -129,7 +148,7 @@ namespace LobbySystem.UI.LobbySelection
 
         #region Singleton
 
-        public static LobbySelectionSceneHandler s_instance;
+        public static LobbySelectionMenuHandler s_instance;
 
         private void InitSingleton()
         {

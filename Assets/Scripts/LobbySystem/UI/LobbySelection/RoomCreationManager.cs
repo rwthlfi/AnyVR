@@ -32,7 +32,7 @@ namespace LobbySystem.UI.LobbySelection
 
         public void OnBackBtn()
         {
-            LobbySelectionSceneHandler.s_instance.CloseCreateRoomScene();
+            LobbySelectionMenuHandler.s_instance.CloseCreateRoomScene();
         }
 
         public void OnOpenRoomBtn()
@@ -56,7 +56,7 @@ namespace LobbySystem.UI.LobbySelection
             ushort maxClients = (ushort)_userLimitSlider.value;
             UILobbyMetaData uiLobbyMeta = new(lobbyName, -1, location, maxClients);
             
-            LobbySelectionSceneHandler.s_instance.CloseCreateRoomScene(uiLobbyMeta);
+            LobbySelectionMenuHandler.s_instance.CloseCreateRoomScene(uiLobbyMeta);
         }
     }
 }

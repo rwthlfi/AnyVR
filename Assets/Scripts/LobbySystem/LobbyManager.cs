@@ -3,7 +3,6 @@ using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
-using GameKit.Dependencies.Utilities;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
@@ -375,7 +374,7 @@ namespace LobbySystem
         }
 
         [CanBeNull]
-        public static LobbyManager TryGetInstance()
+        public static LobbyManager GetInstance()
         {
             return s_instance;
         }
