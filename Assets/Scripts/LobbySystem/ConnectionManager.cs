@@ -1,24 +1,54 @@
 using FishNet.Managing;
-using FishNet.Managing.Scened;
 using FishNet.Transporting;
-using GameKit.Dependencies.Utilities;
 using GameKit.Dependencies.Utilities.Types;
+using JetBrains.Annotations;
 using System;
-using System.IO;
 using System.Linq;
 using UnityEngine;
 using Voicechat;
 
+#if UNITY_SERVER
+using FishNet.Managing.Scened;
+using System.IO;
+#endif
+
 namespace LobbySystem
 {
-    public class LoginManager : MonoBehaviour
+    public class ConnectionManager : MonoBehaviour
     {
+
+        #region Singleton
+
+        private static ConnectionManager s_instance;
+
+        private void InitSingleton()
+        {
+            if (s_instance != null)
+            {
+                Debug.Log("Instance of ConnectionManager already exists");
+                return;
+            }
+
+            DontDestroyOnLoad(gameObject);
+            s_instance = this;
+        }
+
+        #endregion
+        
+        public bool IsConnected => _networkManager != null && _networkManager.ClientManager.Started;
+        
         [SerializeField] [Scene] private string _globalScene;
         private NetworkManager _networkManager;
         
         public static string UserName { get; private set; }
 
         public event Action<bool> ConnectionState;
+        public event Action GlobalSceneLoaded;
+
+        private void Awake()
+        {
+            InitSingleton();
+        }
 
         private void Start()
         {
@@ -35,19 +65,30 @@ namespace LobbySystem
 #else
             _networkManager.ClientManager.OnClientConnectionState += state =>
             {
-                if (state.ConnectionState == LocalConnectionState.Stopped)
+                switch (state.ConnectionState)
                 {
-                    ConnectionState?.Invoke(false);
+                    case LocalConnectionState.Started:
+                        ConnectionState?.Invoke(true);
+                        break;
+                    case LocalConnectionState.Stopped:
+                        ConnectionState?.Invoke(false);
+                        break;
+                    case LocalConnectionState.Starting:
+                        break;
+                    case LocalConnectionState.Stopping:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             };
-#endif
             _networkManager.SceneManager.OnLoadEnd += args =>
             {
                 if (args.LoadedScenes.Any(scene => _globalScene.Contains(scene.name)))
                 {
-                    ConnectionState?.Invoke(true);
+                    GlobalSceneLoaded?.Invoke();
                 }
             };
+#endif
     }
 
         private void OnDestroy()
@@ -69,6 +110,23 @@ namespace LobbySystem
             _networkManager.ClientManager.StartConnection();
             UserName = userName;
             LiveKitManager.s_instance.SetTokenServerAddress(liveKitAddress.ip, liveKitAddress.port);
+        }
+
+        public void LeaveServer()
+        {
+            if (_networkManager == null)
+            {
+                return;
+            }
+
+            _networkManager.ClientManager.StopConnection();
+            LiveKitManager.s_instance.Disconnect();
+        }
+
+        [CanBeNull]
+        public static ConnectionManager GetInstance()
+        {
+            return s_instance;
         }
 
 #if UNITY_SERVER

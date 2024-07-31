@@ -118,7 +118,7 @@ namespace LobbySystem
         }
 
         [Server]
-        internal void Server_AddClient(int clientId, string clientName)
+        private void Server_AddClient(int clientId, string clientName)
         {
             _clientIds.Add(clientId);
             LobbyManager.s_instance.Log($"Client {clientId} joined lobby {_lobbyId.Value}");
@@ -162,7 +162,7 @@ namespace LobbySystem
         }
 
         [CanBeNull]
-        public static LobbyHandler TryGetInstance()
+        public static LobbyHandler GetInstance()
         {
             return s_instance;
         }

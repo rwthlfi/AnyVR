@@ -6,8 +6,6 @@ namespace LobbySystem.UI
 {
     public class OfflineScene : MonoBehaviour
     {
-        [SerializeField] private LoginManager _loginManager;
-
         [Header("Panels")] 
         [SerializeField] private GameObject _connectionPanel;
         [SerializeField] private GameObject _lobbySelectionPanel;
@@ -16,15 +14,28 @@ namespace LobbySystem.UI
         [Header("UI")] [SerializeField] private TMP_InputField _fishnetIpInputField;
         [SerializeField] private TMP_InputField _livekitIpInputField;
         [SerializeField] private TMP_InputField _usernameInputField;
+        
+        private ConnectionManager _connectionManager;
 
         private void Start()
         {
             _fishnetIpInputField.text = "192.168.0.86:7777";
             _livekitIpInputField.text = "192.168.0.192:3030";
-            _loginManager.ConnectionState += OnConnectionState;
+
+            _connectionManager = ConnectionManager.GetInstance();
+
+            if (_connectionManager == null)
+            {
+                Debug.LogError("Instance of ConnectionManager not found");
+                return;    
+            }
+            
+            _connectionManager.ConnectionState += OnConnectionState;
             _connectionPanel.SetActive(true);
             _createLobbyPanel.SetActive(false);
             _lobbySelectionPanel.SetActive(false);
+            
+            OnConnectionState(_connectionManager.IsConnected);
         }
 
         private void OnConnectionState(bool isConnected)
@@ -48,7 +59,7 @@ namespace LobbySystem.UI
             {
                 if (TryParseAddress(liveKitAddress, out (string ip, ushort port) liveKitRes))
                 {
-                    _loginManager.ConnectToServer(fishnetRes, liveKitRes, userName);
+                    _connectionManager.ConnectToServer(fishnetRes, liveKitRes, userName);
                     return;
                 }
             }

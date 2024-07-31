@@ -36,7 +36,7 @@ namespace LobbySystem.UI.LobbyRoom
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
             
-            _lobbyHandler = LobbyHandler.TryGetInstance();
+            _lobbyHandler = LobbyHandler.GetInstance();
             if (_lobbyHandler == null)
             {
                 Debug.LogError("UIScene could not find the LobbyHandler");

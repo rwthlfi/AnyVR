@@ -26,6 +26,10 @@ namespace LobbySystem.UI.LobbyRoom
         private void Start()
         {
             _cam = Camera.main;
+            if (_cam == null)
+            {
+                enabled = false;
+            }
         }
 
         private void LateUpdate()
