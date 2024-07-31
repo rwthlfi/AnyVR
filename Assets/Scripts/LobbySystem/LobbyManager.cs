@@ -3,12 +3,14 @@ using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
+using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Voicechat;
 
 namespace LobbySystem
@@ -30,12 +32,16 @@ namespace LobbySystem
             s_instance = this;
         }
 
+        #endregion
+        
         #region SerializedFields
 
+        [Tooltip("The Scene to load when the local client leaves their current lobby")]
+        [SerializeField] [Scene] private string _offlineScene;
         [SerializeField] private bool _loggingEnabled;
+        
+        [Header("Prefab Setup")]
         [SerializeField] private LobbyHandler _lobbyHandlerPrefab;
-
-        #endregion
 
         #endregion
 
@@ -63,7 +69,7 @@ namespace LobbySystem
         /// Only initialized on the client.
         /// </summary>
         private LobbyMetaData? _currentLobby;
-        
+
         #endregion
         
         /// <summary>
@@ -223,7 +229,7 @@ namespace LobbySystem
             _currentLobby = lmd;
             if (LiveKitManager.s_instance != null)
             {
-                LiveKitManager.s_instance.TryConnectToRoom(lmd.ID, LoginManager.UserName);
+                LiveKitManager.s_instance.TryConnectToRoom(lmd.ID, ConnectionManager.UserName);
             }
             else
             {
@@ -240,6 +246,8 @@ namespace LobbySystem
         {
             _currentLobby = null;
             LiveKitManager.s_instance.Disconnect(); // Disconnecting from voicechat
+            UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("UIScene");
+            UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(_offlineScene, LoadSceneMode.Additive);
             LobbyLeft?.Invoke();
         }
 
@@ -298,11 +306,8 @@ namespace LobbySystem
         {
             if (!TryRemoveClientFromLobby(conn))
             {
-                return;
+                Debug.LogWarning("Client could not be removed from lobby");
             }
-
-            SceneLoadData sld = new(new[] { "LobbySelectionScene" }) { ReplaceScenes = ReplaceOption.All };
-            SceneManager.LoadConnectionScenes(conn, sld);
         }
         
         [Server]
@@ -325,6 +330,13 @@ namespace LobbySystem
             
             handler.Server_RemoveClient(clientConnection.ClientId);
             _clientLobbyDict.Remove(clientConnection.ClientId);
+
+            if (_lobbies.TryGetValue(lobbyId, out LobbyMetaData lmd))
+            {
+                SceneUnloadData sud = new(new[] { lmd.Scene });
+                SceneManager.UnloadConnectionScenes(clientConnection, sud);
+            }
+
             OnLobbyLeftRpc(clientConnection);
             
             if (!handler.GetClients().Any())

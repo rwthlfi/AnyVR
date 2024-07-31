@@ -181,7 +181,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6574523170611092761, guid: c68b52150fd06234fad771da14cf4693, type: 3}
       propertyPath: <SceneId>k__BackingField
-      value: 1978662397
+      value: 4092591613
       objectReference: {fileID: 0}
     - target: {fileID: 6574523170611092761, guid: c68b52150fd06234fad771da14cf4693, type: 3}
       propertyPath: _networkBehaviours.Array.data[0]
@@ -191,6 +191,10 @@ PrefabInstance:
       propertyPath: _networkBehaviours.Array.data[1]
       value: 
       objectReference: {fileID: 728109941706048309}
+    - target: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+      propertyPath: _offlineScene
+      value: Assets/Scenes/OfflineScene.unity
+      objectReference: {fileID: 0}
     - target: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
       propertyPath: _loggingEnabled
       value: 1

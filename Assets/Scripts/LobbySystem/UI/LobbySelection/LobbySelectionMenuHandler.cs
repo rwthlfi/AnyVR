@@ -1,14 +1,13 @@
-using GameKit.Dependencies.Utilities.Types;
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace LobbySystem.UI.LobbySelection
 {
     public class LobbySelectionMenuHandler : MonoBehaviour
     {
-        [SerializeField] private LoginManager _loginManager;
         [Header("PrefabSetup")]
         [SerializeField] private LobbyCardHandler _lobbyCardPrefab;
         [SerializeField] private Transform _lobbyCardParent;
@@ -16,6 +15,8 @@ namespace LobbySystem.UI.LobbySelection
         [Header("UI")]
         [SerializeField] private TextMeshProUGUI _pingLabel;
         [SerializeField] private RoomCreationManager _roomCreationManager;
+        
+        private ConnectionManager _connectionManager;
 
         private bool _isRoomCreationSceneActive;
 
@@ -26,19 +27,32 @@ namespace LobbySystem.UI.LobbySelection
         private void Awake()
         {
             InitSingleton();
+        }
+
+        private void Start()
+        {
             _lobbyCards = new Dictionary<UILobbyMetaData, LobbyCardHandler>();
             _isRoomCreationSceneActive = false;
 
-            _loginManager.ConnectionState += OnConnectionState;
-        }
-
-        private void OnConnectionState(bool isConnected)
-        {
-            Debug.Log(isConnected);
-            if (isConnected)
+            _connectionManager = ConnectionManager.GetInstance();
+            
+            if (_connectionManager == null)
+            {
+                Debug.LogError("Instance of ConnectionManager not found");
+                return;    
+            }
+            
+            if (LobbyManager.GetInstance() != null)
             {
                 InitLobby(LobbyManager.GetInstance());
             }
+
+            _connectionManager.GlobalSceneLoaded += GlobalSceneLoaded;
+        }
+
+        private void GlobalSceneLoaded()
+        {
+            InitLobby(LobbyManager.GetInstance());
         }
 
         private void InitLobby(LobbyManager lobbyManager)
@@ -49,7 +63,6 @@ namespace LobbySystem.UI.LobbySelection
                 Debug.LogError("Passed LobbyManager is null");
                 return;
             }
-            Debug.Log(_lobbyManager);
             _lobbyManager.LobbyOpened += AddLobbyCard;
             _lobbyManager.LobbyClosed += RemoveLobbyCard;
 
@@ -118,7 +131,7 @@ namespace LobbySystem.UI.LobbySelection
             };
             _lobbyCards.Add(uiLobby, card);
         }
-
+        
         private void RemoveLobbyCard(LobbyMetaData lobby)
         {
             UILobbyMetaData uiLobby = new(lobby);
@@ -133,11 +146,6 @@ namespace LobbySystem.UI.LobbySelection
             }
 
             _lobbyCards.Remove(uiLobby);
-        }
-
-        public void JoinLobby(UILobbyMetaData metaData)
-        {
-            _lobbyManager.JoinLobby(metaData.ID);
         }
 
         private void OnDestroy()

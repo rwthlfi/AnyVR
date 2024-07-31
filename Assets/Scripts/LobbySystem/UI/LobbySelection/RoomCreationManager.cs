@@ -7,12 +7,15 @@ namespace LobbySystem.UI.LobbySelection
 {
     public class RoomCreationManager : MonoBehaviour
     {
+        [Header("UI")]
         [SerializeField] private TMP_InputField _nameInputField;
         [SerializeField] private Slider _userLimitSlider;
 
+        [Header("Prefab Setup")]
         [SerializeField] private LocationCardHandler _locationCardPrefab;
         [SerializeField] private Transform _locationCardParent;
 
+        [Header("Available Locations Setup")]
         [SerializeField] private LobbySceneMetaData[] _lobbySceneMetaData;
 
         private string _selectedRoom;
