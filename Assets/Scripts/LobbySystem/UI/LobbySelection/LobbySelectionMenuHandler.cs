@@ -73,6 +73,11 @@ namespace LobbySystem.UI.LobbySelection
             }
         }
 
+        public void LeaveServerBtn()
+        {
+            _connectionManager.LeaveServer();
+        }
+
         // TODO
         // private void FixedUpdate()
         // {

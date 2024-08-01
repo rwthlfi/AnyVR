@@ -1,3 +1,4 @@
+using System;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
@@ -42,6 +43,11 @@ namespace LobbySystem.UI
         {
             _connectionPanel.SetActive(!isConnected);
             _lobbySelectionPanel.SetActive(isConnected);
+        }
+
+        private void OnDestroy()
+        {
+            _connectionManager.ConnectionState -= OnConnectionState;
         }
 
         public void OnGoBtn()
