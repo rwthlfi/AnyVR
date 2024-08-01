@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace LobbySystem.UI.LobbySelection
 {
@@ -155,6 +153,10 @@ namespace LobbySystem.UI.LobbySelection
 
         private void OnDestroy()
         {
+            if (_lobbyManager == null)
+            {
+                return;
+            }
             _lobbyManager.LobbyOpened -= AddLobbyCard;
             _lobbyManager.LobbyClosed -= RemoveLobbyCard;
         }

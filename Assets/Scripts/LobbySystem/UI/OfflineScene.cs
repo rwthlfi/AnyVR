@@ -1,27 +1,40 @@
-using System;
 using System.Text.RegularExpressions;
-using TMPro;
+using UnityEditor;
 using UnityEngine;
 
 namespace LobbySystem.UI
 {
     public class OfflineScene : MonoBehaviour
     {
-        [Header("Panels")] 
-        [SerializeField] private GameObject _connectionPanel;
-        [SerializeField] private GameObject _lobbySelectionPanel;
-        [SerializeField] private GameObject _createLobbyPanel;
-
-        [Header("UI")] [SerializeField] private TMP_InputField _fishnetIpInputField;
-        [SerializeField] private TMP_InputField _livekitIpInputField;
-        [SerializeField] private TMP_InputField _usernameInputField;
+        [Header("Platform Setup")] 
+        [SerializeField] private GameObject _pcParent;
+        [SerializeField] private GameObject _vrParent;
+        [SerializeField] private bool _forceVr;
         
+        [Header("PC Menu Panels")] 
+        [SerializeField] private GameObject _pcConnectionPanel;
+        [SerializeField] private GameObject _pcLobbySelectionPanel;
+        [SerializeField] private GameObject _pcCreateLobbyPanel;
+        
+        [Header("VR Menu Panels")] 
+        [SerializeField] private GameObject _vrConnectionPanel;
+        [SerializeField] private GameObject _vrLobbySelectionPanel;
+        [SerializeField] private GameObject _vrCreateLobbyPanel;
+
         private ConnectionManager _connectionManager;
+        private GameObject _connectionPanel;
+        private GameObject _lobbySelectionPanel;
+        private GameObject _createLobbyPanel;
 
         private void Start()
         {
-            _fishnetIpInputField.text = "192.168.0.86:7777";
-            _livekitIpInputField.text = "192.168.0.192:3030";
+            bool isVr = _forceVr || Application.platform == RuntimePlatform.Android;
+            _connectionPanel = isVr ? _vrConnectionPanel : _pcConnectionPanel;
+            _lobbySelectionPanel = isVr ? _vrLobbySelectionPanel : _pcLobbySelectionPanel;
+            _createLobbyPanel = isVr ? _vrCreateLobbyPanel : _pcCreateLobbyPanel;
+           
+            _vrParent.SetActive(isVr);
+            _pcParent.SetActive(!isVr);
 
             _connectionManager = ConnectionManager.GetInstance();
 
@@ -50,12 +63,8 @@ namespace LobbySystem.UI
             _connectionManager.ConnectionState -= OnConnectionState;
         }
 
-        public void OnGoBtn()
+        internal void OnConnectBtn(string fishnetAddress, string liveKitAddress, string userName)
         {
-            string fishnetAddress = _fishnetIpInputField.text.Trim();
-            string liveKitAddress = _livekitIpInputField.text.Trim();
-
-            string userName = _usernameInputField.text.Trim();
             if (string.IsNullOrEmpty(userName))
             {
                 return;
