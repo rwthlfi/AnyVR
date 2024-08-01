@@ -1394,14 +1394,14 @@ PrefabInstance:
     - target: {fileID: 9059243186377996576, guid: ee98380869014cf4c93f831a32dc5901, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1630651779}
+      objectReference: {fileID: 2012045339}
     - target: {fileID: 9059243186377996576, guid: ee98380869014cf4c93f831a32dc5901, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: LeaveServer
+      value: LeaveServerBtn
       objectReference: {fileID: 0}
     - target: {fileID: 9059243186377996576, guid: ee98380869014cf4c93f831a32dc5901, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: LobbySystem.LoginManager, LobbySystem
+      value: LobbySystem.UI.LobbySelection.LobbySelectionMenuHandler, LobbySystem.UI
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

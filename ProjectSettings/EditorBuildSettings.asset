@@ -9,20 +9,8 @@ EditorBuildSettings:
     path: Assets/Scenes/OfflineScene.unity
     guid: 85b300545ad86e948b08bc1ce420af24
   - enabled: 1
-    path: Assets/Scenes/XROfflineScene.unity
-    guid: 0d42e5c8a7b2838459abb057a82e0eb6
-  - enabled: 1
-    path: Assets/Scenes/XRLobbySelectionScene.unity
-    guid: 38a324a1ee6abc247a9b87f07c9706c7
-  - enabled: 1
     path: Assets/Scenes/GlobalScene.unity
     guid: 866f7d683f7b4b84db620ec2248a3686
-  - enabled: 1
-    path: Assets/Scenes/LobbySelectionScene.unity
-    guid: 88c610e0c5e587440bbd0c3273a5d163
-  - enabled: 1
-    path: Assets/Scenes/CreateRoomScene.unity
-    guid: 6aabd3054f1e4e84197d34131dbfad77
   - enabled: 1
     path: Assets/Scenes/UIScene.unity
     guid: bba88a0c3162cca4ca6104582577da92
