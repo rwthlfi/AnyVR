@@ -15,10 +15,10 @@ EditorBuildSettings:
     path: Assets/Scenes/UIScene.unity
     guid: bba88a0c3162cca4ca6104582577da92
   - enabled: 1
-    path: Assets/Scenes/InputModality_DemoScene.unity
+    path: Assets/Scenes/LobbyScenes/InputModality_DemoScene.unity
     guid: e22023fc041c3dd42aa64caef345f18f
   - enabled: 1
-    path: Assets/Scenes/PhysicsDemo.unity
+    path: Assets/Scenes/LobbyScenes/PhysicsDemo.unity
     guid: a0bd5a4fcd5af6a4582438c84c456c3f
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: c89a838ad6223e74e8f4f5eff42fc3be, type: 2}
