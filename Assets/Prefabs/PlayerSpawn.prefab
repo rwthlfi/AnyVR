@@ -49,7 +49,7 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 7881639693188791789}
   _networkObjectCache: {fileID: 7881639693188791789}
-  _playerPrefab: {fileID: 1942857708273346334, guid: 8e2dce960d1f1a14eaeca1ace6a18efe, type: 3}
+  _playerPrefab: {fileID: 8505041916568804508, guid: 3d113980a956b4741a9c575ae283a9bc, type: 3}
 --- !u!114 &7881639693188791789
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -70,7 +70,7 @@ MonoBehaviour:
   <SerializedRootNetworkBehaviour>k__BackingField: {fileID: 0}
   <NestedRootNetworkBehaviours>k__BackingField: []
   SerializedTransformProperties:
-    Position: {x: 59.15, y: 21.42, z: 65.72}
+    Position: {x: 0, y: 1, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
     LocalScale: {x: 1, y: 1, z: 1}
   _isNetworked: 1
@@ -92,7 +92,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 0
+  <PrefabId>k__BackingField: 1
   <SpawnableCollectionId>k__BackingField: 0
   <SceneId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 4161755104341382215
