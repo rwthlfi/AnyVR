@@ -18,8 +18,8 @@ EditorBuildSettings:
     path: Assets/Scenes/LobbyScenes/InputModality_DemoScene.unity
     guid: e22023fc041c3dd42aa64caef345f18f
   - enabled: 1
-    path: Assets/Scenes/LobbyScenes/PhysicsDemo.unity
-    guid: a0bd5a4fcd5af6a4582438c84c456c3f
+    path: Assets/Scenes/LobbyScenes/Test.unity
+    guid: f451233d543fea04f9e557992fb1f19a
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: c89a838ad6223e74e8f4f5eff42fc3be, type: 2}
     Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: dc5a169419fa04987b057f65238cf3ba, type: 2}

@@ -1988,24 +1988,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7881639693188791789, guid: 8f4e5a166f1c1334baf19911c07961f4, type: 3}
       propertyPath: <SceneId>k__BackingField
-      value: 3992974671
+      value: 3956008907
       objectReference: {fileID: 0}
-    - target: {fileID: 7881639693188791789, guid: 8f4e5a166f1c1334baf19911c07961f4, type: 3}
-      propertyPath: SerializedTransformProperties.Position.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7881639693188791789, guid: 8f4e5a166f1c1334baf19911c07961f4, type: 3}
-      propertyPath: SerializedTransformProperties.Position.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7881639693188791789, guid: 8f4e5a166f1c1334baf19911c07961f4, type: 3}
-      propertyPath: SerializedTransformProperties.Position.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8832071492197079388, guid: 8f4e5a166f1c1334baf19911c07961f4, type: 3}
-      propertyPath: _playerPrefab
-      value: 
-      objectReference: {fileID: 8505041916568804508, guid: 3d113980a956b4741a9c575ae283a9bc, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

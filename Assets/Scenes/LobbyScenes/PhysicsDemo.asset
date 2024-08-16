@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef3314653ef020e4fae7977120622e25, type: 3}
   m_Name: PhysicsDemo
   m_EditorClassIdentifier: 
-  _scene: Assets/Scenes/PhysicsDemo.unity
+  _scene: Assets/Scenes/LobbyScenes/Test.unity
   _description: PhysicsDemo
   _thumbnail: {fileID: 21300000, guid: ae4177cc588eb8942a2e536f2789d8ac, type: 3}
