@@ -204,6 +204,7 @@ GameObject:
   - component: {fileID: 7389737949359055137}
   - component: {fileID: 7757332466356278936}
   - component: {fileID: 8782005366167885055}
+  - component: {fileID: -5845313385753060195}
   m_Layer: 0
   m_Name: Interactable Instant Cylinder
   m_TagString: Untagged
@@ -444,6 +445,7 @@ MonoBehaviour:
   _networkBehaviours:
   - {fileID: 7757332466356278936}
   - {fileID: 8782005366167885055}
+  - {fileID: -5845313385753060195}
   <SerializedRootNetworkBehaviour>k__BackingField: {fileID: 0}
   <NestedRootNetworkBehaviours>k__BackingField: []
   SerializedTransformProperties:
@@ -504,7 +506,7 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 2544487886413242317}
   _networkObjectCache: {fileID: 2544487886413242317}
-  _componentConfiguration: 0
+  _componentConfiguration: 2
   _synchronizeParent: 1
   _packing:
     Position: 1
@@ -547,6 +549,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _componentIndexCache: 1
+  _addedNetworkObject: {fileID: 2544487886413242317}
+  _networkObjectCache: {fileID: 2544487886413242317}
+--- !u!114 &-5845313385753060195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5574773842409776274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 402926ef33e0a894d9fec352693988ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 2
   _addedNetworkObject: {fileID: 2544487886413242317}
   _networkObjectCache: {fileID: 2544487886413242317}
 --- !u!1 &6894561083284790500
