@@ -204,7 +204,6 @@ GameObject:
   - component: {fileID: 7389737949359055137}
   - component: {fileID: 7757332466356278936}
   - component: {fileID: 8782005366167885055}
-  - component: {fileID: -5845313385753060195}
   m_Layer: 0
   m_Name: Interactable Instant Cylinder
   m_TagString: Untagged
@@ -252,7 +251,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 1
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -445,11 +444,11 @@ MonoBehaviour:
   _networkBehaviours:
   - {fileID: 7757332466356278936}
   - {fileID: 8782005366167885055}
-  - {fileID: -5845313385753060195}
+  - {fileID: 0}
   <SerializedRootNetworkBehaviour>k__BackingField: {fileID: 0}
   <NestedRootNetworkBehaviours>k__BackingField: []
   SerializedTransformProperties:
-    Position: {x: 0.836, y: 0.309, z: 4}
+    Position: {x: 0, y: 0.151, z: -2.35}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
     LocalScale: {x: 1, y: 1, z: 1}
   _isNetworked: 1
@@ -458,9 +457,9 @@ MonoBehaviour:
   _initializeOrder: 0
   _defaultDespawnType: 0
   NetworkObserver: {fileID: 0}
-  _enablePrediction: 0
-  _predictionType: 0
-  _graphicalObject: {fileID: 0}
+  _enablePrediction: 1
+  _predictionType: 1
+  _graphicalObject: {fileID: 401480495335836662}
   _detachGraphicalObject: 0
   _enableStateForwarding: 1
   _networkTransform: {fileID: 0}
@@ -549,21 +548,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _componentIndexCache: 1
-  _addedNetworkObject: {fileID: 2544487886413242317}
-  _networkObjectCache: {fileID: 2544487886413242317}
---- !u!114 &-5845313385753060195
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5574773842409776274}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 402926ef33e0a894d9fec352693988ac, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 2
   _addedNetworkObject: {fileID: 2544487886413242317}
   _networkObjectCache: {fileID: 2544487886413242317}
 --- !u!1 &6894561083284790500

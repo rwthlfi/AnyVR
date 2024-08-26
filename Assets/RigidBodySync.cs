@@ -78,10 +78,6 @@ namespace AnyVR
         {
             //If this object is free-moving and uncontrolled then there is no logic.
             //Just let physics do it's thing.	
-            if (IsServerInitialized)
-            {
-                _predictionRigidbody.AddForce(new Vector3(0, _force * (float)TimeManager.TickDelta, 0));
-            }
         }
 
         //Create the reconcile data here and call your reconcile method.
