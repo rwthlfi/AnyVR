@@ -19,6 +19,7 @@ using FishNet.Component.Transforming;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Prediction;
+using System;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Transformers;
@@ -64,8 +65,12 @@ namespace AnyVR
         }
         public void OnGrabSelectExit()
         {
-            
             RemoveOwnerRPC();
+        }
+
+        private void FixedUpdate()
+        {
+            Debug.Log(OwnerId);
         }
 
         [ServerRpc(RequireOwnership = true)]

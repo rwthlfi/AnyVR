@@ -123,10 +123,10 @@ namespace FishNet.Editing
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            //if (GUILayout.Button("FishNet Pro", GUILayout.Width(this.position.width * 0.485f)))
-            //{
-            //    Application.OpenURL("https://fish-networking.gitbook.io/docs/master/pro");
-            //}
+            if (GUILayout.Button("FishNet Pro", GUILayout.Width(this.position.width * 0.485f)))
+            {
+                Application.OpenURL("https://fish-networking.gitbook.io/docs/master/pro");
+            }
 
             if (GUILayout.Button("Github", GUILayout.Width(this.position.width * 0.485f)))
             {
@@ -135,10 +135,10 @@ namespace FishNet.Editing
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
-            //if (GUILayout.Button("Pro Downloads", GUILayout.Width(this.position.width * 0.485f)))
-            //{
-            //    Application.OpenURL("https://www.firstgeargames.com/");
-            //}
+            if (GUILayout.Button("Pro Downloads", GUILayout.Width(this.position.width * 0.485f)))
+            {
+                Application.OpenURL("https://www.firstgeargames.com/");
+            }
 
             //if (GUILayout.Button("Examples", GUILayout.Width(this.position.width * 0.485f)))
             //{

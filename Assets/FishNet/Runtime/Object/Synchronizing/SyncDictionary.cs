@@ -153,6 +153,7 @@ namespace FishNet.Object.Synchronizing
             CollectionCaches<CachedOnChange>.StoreAndDefault(ref _clientOnChanges);
         }
         #endregion
+
         /// <summary>
         /// Gets the collection being used within this SyncList.
         /// </summary>
@@ -171,6 +172,15 @@ namespace FishNet.Object.Synchronizing
         protected override void Initialized()
         {
             base.Initialized();
+
+            //Initialize collections if needed. OdinInspector can cause them to become deinitialized.
+#if ODIN_INSPECTOR
+            if (_initialValues == null) _initialValues = new();
+            if (_changed == null) _changed = new();
+            if (_serverOnChanges == null) _serverOnChanges = new();
+            if (_clientOnChanges == null) _clientOnChanges = new();
+#endif
+
             foreach (KeyValuePair<TKey, TValue> item in Collection)
                 _initialValues[item.Key] = item.Value;
         }
@@ -184,7 +194,7 @@ namespace FishNet.Object.Synchronizing
         /// <param name="key"></param>
         /// <param name="value"></param>
         [APIExclude]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         private void AddOperation(SyncDictionaryOperation operation, TKey key, TValue value)
         {
             if (!base.IsInitialized)
@@ -259,7 +269,7 @@ namespace FishNet.Object.Synchronizing
                 for (int i = 0; i < _changed.Count; i++)
                 {
                     ChangeData change = _changed[i];
-                    writer.WriteByte((byte)change.Operation);
+                    writer.WriteUInt8Unpacked((byte)change.Operation);
 
                     //Clear does not need to write anymore data so it is not included in checks.
                     if (change.Operation == SyncDictionaryOperation.Add ||
@@ -297,7 +307,7 @@ namespace FishNet.Object.Synchronizing
             writer.WriteInt32(Collection.Count);
             foreach (KeyValuePair<TKey, TValue> item in Collection)
             {
-                writer.WriteByte((byte)SyncDictionaryOperation.Add);
+                writer.WriteUInt8Unpacked((byte)SyncDictionaryOperation.Add);
                 writer.Write(item.Key);
                 writer.Write(item.Value);
             }
@@ -308,7 +318,7 @@ namespace FishNet.Object.Synchronizing
         /// Reads and sets the current values for server or client.
         /// </summary>
         [APIExclude]
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         internal protected override void Read(PooledReader reader, bool asServer)
         {
             /* When !asServer don't make changes if server is running.
@@ -331,7 +341,7 @@ namespace FishNet.Object.Synchronizing
             int changes = reader.ReadInt32();
             for (int i = 0; i < changes; i++)
             {
-                SyncDictionaryOperation operation = (SyncDictionaryOperation)reader.ReadByte();
+                SyncDictionaryOperation operation = (SyncDictionaryOperation)reader.ReadUInt8Unpacked();
                 TKey key = default;
                 TValue value = default;
 
@@ -471,7 +481,7 @@ namespace FishNet.Object.Synchronizing
         /// </summary>
         /// <param name="item">Item to use.</param>
         /// <returns>True if found.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
             return TryGetValue(item.Key, out TValue value) && EqualityComparer<TValue>.Default.Equals(value, item.Value);
@@ -542,7 +552,7 @@ namespace FishNet.Object.Synchronizing
         /// <param name="key">Key to use.</param>
         /// <param name="value">Variable to output to.</param>
         /// <returns>True if able to output value.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public bool TryGetValue(TKey key, out TValue value)
         {
             return Collection.TryGetValueIL2CPP(key, out value);

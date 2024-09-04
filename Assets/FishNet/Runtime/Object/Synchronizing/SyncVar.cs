@@ -1,22 +1,43 @@
 ﻿using FishNet.CodeGenerating;
 using FishNet.Documenting;
+using FishNet.Managing;
 using FishNet.Object.Helping;
 using FishNet.Object.Synchronizing.Internal;
 using FishNet.Serializing;
 using FishNet.Serializing.Helping;
-using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace FishNet.Object.Synchronizing
 {
+
+    internal interface ISyncVar { }
+
     [APIExclude]
     [System.Serializable]
     [StructLayout(LayoutKind.Auto, CharSet = CharSet.Auto)]
-    public class SyncVar<T> : SyncBase
+    public class SyncVar<T> : SyncBase, ISyncVar
     {
         #region Types.
+        public struct InterpolationContainer
+        {
+            /// <summary>
+            /// Value prior to setting new.
+            /// </summary>
+            public T LastValue;
+            /// <summary>
+            /// Tick when LastValue was set.
+            /// </summary>
+            public float UpdateTime;
+
+            public void Update(T prevValue)
+            {
+                LastValue = prevValue;
+                UpdateTime = Time.unscaledTime;
+            }
+        }
+
         /// <summary>
         /// Information needed to invoke a callback.
         /// </summary>
@@ -34,6 +55,23 @@ namespace FishNet.Object.Synchronizing
         #endregion
 
         #region Public.
+        /// <summary>
+        /// Value interpolated between last received and current.
+        /// </summary>
+        /// <param name="useCurrentValue">True if to ignore interpolated calculations and use the current value.
+        /// This can be useful if you are able to write this SyncVars values in update.
+        /// </param>
+        public T InterpolatedValue(bool useCurrentValue = false)
+        {
+            if (useCurrentValue)
+                return _value;
+
+            float diff = (Time.unscaledTime - _interpolator.UpdateTime);
+            float percent = Mathf.InverseLerp(0f, base.Settings.SendRate, diff);
+
+            return Interpolate(_interpolator.LastValue, _value, percent);
+        }
+
         /// <summary>
         /// Gets and sets the current value for this SyncVar.
         /// </summary>
@@ -101,6 +139,10 @@ namespace FishNet.Object.Synchronizing
         [SerializeField]
         private T _value;
         /// <summary>
+        /// Holds information about interpolating between values.
+        /// </summary>
+        private InterpolationContainer _interpolator = new();
+        /// <summary>
         /// True if T IsValueType.
         /// </summary>
         private bool _isValueType;
@@ -147,13 +189,18 @@ namespace FishNet.Object.Synchronizing
         {
             if (updateClient)
                 _previousClientValue = next;
+
+            //If network initialized then update interpolator.
+            if (base.IsNetworkInitialized)
+                _interpolator.Update(_value);
+
             _value = next;
         }
         /// <summary>
         /// Sets current value and marks the SyncVar dirty when able to. Returns if able to set value.
         /// </summary>
         /// <param name="calledByUser">True if SetValue was called in response to user code. False if from automated code.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         internal void SetValue(T nextValue, bool calledByUser, bool sendRpc = false)
         {
             /* IsInitialized is only set after the script containing this SyncVar
@@ -203,11 +250,11 @@ namespace FishNet.Object.Synchronizing
                 }
                 else
                 {
-                    if (Comparers.EqualityCompare<T>(_value, nextValue))
+                    if (Comparers.EqualityCompare(_value, nextValue))
                         return;
 
                     T prev = _value;
-                    _value = nextValue;
+                    UpdateValues(nextValue, false);
                     InvokeOnChange(prev, _value, asServerInvoke);
                 }
 
@@ -221,12 +268,12 @@ namespace FishNet.Object.Synchronizing
                  * to update values locally while occasionally
                  * letting the syncvar adjust their side. */
                 T prev = _previousClientValue;
-                if (Comparers.EqualityCompare<T>(prev, nextValue))
+                if (Comparers.EqualityCompare(prev, nextValue))
                     return;
                 /* If also server do not update value.
                  * Server side has say of the current value. */
                 if (base.NetworkManager.IsServerStarted)
-                    _previousClientValue = nextValue; 
+                    _previousClientValue = nextValue;
                 /* If server is not started then update both. */
                 else
                     UpdateValues(nextValue, true);
@@ -250,6 +297,15 @@ namespace FishNet.Object.Synchronizing
                     base.Dirty();
                 //base.Dirty(sendRpc);
             }
+        }
+
+        /// <summary>
+        /// Returns interpolated values between previous and current using a percentage.
+        /// </summary>
+        protected virtual T Interpolate(T previous, T current, float percent)
+        {
+            base.NetworkManager.LogError($"Type {typeof(T).FullName} does not support interpolation. Implement a supported type class or create your own. See class FloatSyncVar for an example.");
+            return default;
         }
 
         /// <summary>
@@ -303,7 +359,7 @@ namespace FishNet.Object.Synchronizing
         /// Called after OnStartXXXX has occurred.
         /// </summary>
         /// <param name="asServer">True if OnStartServer was called, false if OnStartClient.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         [MakePublic]
         internal protected override void OnStartCallback(bool asServer)
         {
@@ -330,7 +386,7 @@ namespace FishNet.Object.Synchronizing
         internal protected override void WriteDelta(PooledWriter writer, bool resetSyncTick = true)
         {
             base.WriteDelta(writer, resetSyncTick);
-            writer.Write<T>(_value);
+            writer.Write(_value);
         }
 
         /// <summary>
@@ -342,12 +398,12 @@ namespace FishNet.Object.Synchronizing
             /* If a class then skip comparer check.
              * InitialValue and Value will be the same reference.
              * 
-             * If a struct then compare field changes, since the references
-             * will not be the same. Otherwise comparer normally. */
+             * If a value then compare field changes, since the references
+             * will not be the same. */
             //Compare if a value type.
             if (_isValueType)
             {
-                if (Comparers.EqualityCompare<T>(_initialValue, _value))
+                if (Comparers.EqualityCompare(_initialValue, _value))
                     return;
             }
             else
@@ -373,17 +429,19 @@ namespace FishNet.Object.Synchronizing
         /// Resets to initialized values.
         /// </summary>
         [MakePublic]
-        internal protected override void ResetState(bool asServer)
+        protected internal override void ResetState(bool asServer)
         {
             base.ResetState(asServer);
-
-            //todo: validate this improvement after new tests are made.
-            ////Let clientHost reset if the object containing this syncvar is initialized for them.
-            //if (asServer && base.IsNetworkInitialized && NetworkBehaviour.IsClientInitialized)
-            //    return;
-
-            _value = _initialValue;
-            _previousClientValue = _initialValue;
+            /* Only full reset under the following conditions:
+             * asServer is true.
+             * Is not network initialized.
+             * asServer is false, and server is not started. */
+            if ((asServer && !base.NetworkManager.IsClientStarted) ||
+                (!asServer && base.NetworkBehaviour.IsDeinitializing))
+            {
+                _value = _initialValue;
+                _previousClientValue = _initialValue;
+            }
         }
     }
 }
