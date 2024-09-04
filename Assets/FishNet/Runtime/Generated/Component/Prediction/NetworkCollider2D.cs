@@ -13,7 +13,6 @@ namespace FishNet.Component.Prediction
 
     public abstract class NetworkCollider2D : NetworkBehaviour
     {
-#if !PREDICTION_1
         #region Types.
         private struct Collider2DData : IResettable
         {
@@ -196,7 +195,7 @@ namespace FishNet.Component.Prediction
         /// <summary>
         /// Cleans history up to, while excluding tick.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         private void CleanHistory(uint tick)
         {
             if (_useCache)
@@ -230,7 +229,7 @@ namespace FishNet.Component.Prediction
         /// <summary>
         /// Checks for any trigger changes;
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         private void CheckColliders(uint tick, bool replay)
         {
             //Should not be possible as tick always starts on 1.
@@ -486,7 +485,7 @@ namespace FishNet.Component.Prediction
         /// <summary>
         /// Resets this NetworkBehaviour so that it may be added to an object pool.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public override void ResetState(bool asServer)
         {
             base.ResetState(asServer);
@@ -502,7 +501,6 @@ namespace FishNet.Component.Prediction
                 cd.ResetState();
             _colliderDataHistory.Clear();
         }
-#endif
     }
 
 

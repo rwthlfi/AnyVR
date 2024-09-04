@@ -314,7 +314,7 @@ namespace FishNet.Managing.Client
                 _lastPacketTime = Time.unscaledTime;
                 //Send version.
                 PooledWriter writer = WriterPool.Retrieve();
-                writer.WritePacketId(PacketId.Version);
+                writer.WritePacketIdUnpacked(PacketId.Version);
                 writer.WriteString(NetworkManager.FISHNET_VERSION);
                 NetworkManager.TransportManager.SendToServer((byte)Channel.Reliable, writer.GetArraySegment());
                 WriterPool.Store(writer);
@@ -327,7 +327,7 @@ namespace FishNet.Managing.Client
                 string socketInformation = string.Empty;
                 if (state == LocalConnectionState.Starting)
                     socketInformation = $" Server IP is {t.GetClientAddress()}, port is {t.GetPort()}.";
-                Debug.Log($"Local client is {state.ToString().ToLower()} for {tName}.{socketInformation}");
+                NetworkManager.Log($"Local client is {state.ToString().ToLower()} for {tName}.{socketInformation}");
             }
 
             NetworkManager.UpdateFramerate();
@@ -437,7 +437,7 @@ namespace FishNet.Managing.Client
                 if (spawnOrDespawn)
                 {
                     if (packetId == PacketId.ObjectSpawn)
-                        Objects.CacheSpawn(reader);
+                        Objects.ReadSpawn(reader);
                     else if (packetId == PacketId.ObjectDespawn)
                         Objects.CacheDespawn(reader);
                 }
@@ -454,12 +454,10 @@ namespace FishNet.Managing.Client
                     {
                         Objects.ParseRpcLink(reader, (ushort)packetId, channel);
                     }
-#if !PREDICTION_1
                     else if (packetId == PacketId.StateUpdate)
                     {
                         NetworkManager.PredictionManager.ParseStateUpdate(reader, channel);
                     }
-#endif
                     else if (packetId == PacketId.Replicate)
                     {
                         Objects.ParseReplicateRpc(reader, null, channel);
@@ -541,8 +539,7 @@ namespace FishNet.Managing.Client
             }
             catch (Exception e)
             {
-                if (NetworkManager.CanLog(LoggingType.Error))
-                    Debug.LogError($"Client encountered an error while parsing data for packetId {packetId}. Message: {e.Message}.");
+                NetworkManagerExtensions.LogError($"Client encountered an error while parsing data for packetId {packetId}. Message: {e.Message}.");
             }
 #endif
         }
@@ -609,7 +606,7 @@ namespace FishNet.Managing.Client
             //If predicted spawning is enabled also get reserved Ids.
             if (NetworkManager.ServerManager.GetAllowPredictedSpawning())
             {
-                byte count = reader.ReadByte();
+                byte count = reader.ReadUInt8Unpacked();
                 Queue<int> q = Connection.PredictedObjectIds;
                 for (int i = 0; i < count; i++)
                     q.Enqueue(reader.ReadNetworkObjectId());

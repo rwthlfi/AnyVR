@@ -27,7 +27,7 @@ namespace LobbySystem
             _sceneLoadData = new SceneLoadData(scene)
             {
                 ReplaceScenes = ReplaceOption.All,
-                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.Physics3D }
+                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None }
             };
         }
 
@@ -43,7 +43,7 @@ namespace LobbySystem
             SceneLoadData sceneLoadData = new((int)_sceneHandle)
             {
                 ReplaceScenes = ReplaceOption.All,
-                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.Physics3D }
+                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None }
             };
             return sceneLoadData;
         }
