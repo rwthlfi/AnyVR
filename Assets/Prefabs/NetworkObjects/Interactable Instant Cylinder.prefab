@@ -367,7 +367,7 @@ MonoBehaviour:
   _predictionType: 1
   _graphicalObject: {fileID: 7222530344469211747}
   _detachGraphicalObject: 0
-  _enableStateForwarding: 0
+  _enableStateForwarding: 1
   _networkTransform: {fileID: 7757332466356278936}
   _ownerInterpolation: 1
   _ownerSmoothedProperties: 255

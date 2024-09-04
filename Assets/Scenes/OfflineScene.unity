@@ -234,7 +234,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pcParent: {fileID: 1797401195}
   _vrParent: {fileID: 65253621}
-  _forceVr: 0
+  _forceVr: 1
   _pcConnectionPanel: {fileID: 1454189550}
   _pcLobbySelectionPanel: {fileID: 1454189549}
   _pcCreateLobbyPanel: {fileID: 1454189548}

@@ -19,6 +19,7 @@ using FishNet.Component.Transforming;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Prediction;
+using FishNet.Transporting;
 using System;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
@@ -31,11 +32,15 @@ namespace AnyVR
     {
         private XRGrabInteractable _grabInteractable;
         private XRGeneralGrabTransformer _grabTransformer;
+        private Rigidbody _body;
+
+        private bool _jump;
 
         private void Awake()
         {
             _grabInteractable = GetComponent<XRGrabInteractable>();
             _grabTransformer = GetComponent<XRGeneralGrabTransformer>();
+            _body = GetComponent<Rigidbody>();
         }
 
         public override void OnStartClient()
@@ -43,6 +48,21 @@ namespace AnyVR
             base.OnStartClient();
             Debug.Log("owner id on init: " + OwnerId);
         }
+
+        public override void OnStartNetwork()
+        {
+            base.OnStartNetwork();
+            TimeManager.OnPostTick += TimeManager_PostTick;
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                _jump = true;
+            }
+        }
+
 
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
@@ -70,7 +90,44 @@ namespace AnyVR
 
         private void FixedUpdate()
         {
-            Debug.Log(OwnerId);
+            if (!IsOwner)
+            {
+                return;
+            }
+
+            if (_jump)
+            {
+                _body.AddForce(Vector3.up);
+                _jump = false;
+            }
+
+            Debug.Log($"Calling Replicate: Velocity: {_body.velocity}, Position: {_body.position}");
+            GrabReplicateData data = new() { Position = _body.position, Rotation = _body.rotation };
+            RunInputs(data);
+        }
+
+        private void TimeManager_PostTick()
+        {
+            CreateReconcile();
+        }
+
+        [Replicate]
+        private void RunInputs(GrabReplicateData data, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
+        {
+            Debug.Log($"Replicating: Position: {data.Position}, Rotation: {data.Rotation}");
+        }
+
+        public override void CreateReconcile()
+        {
+            base.CreateReconcile();
+            GrabReconcileData data = new() { Position = _body.position, Rotation = _body.rotation };
+            Reconcile(data);
+        }
+
+        [Reconcile]
+        private void Reconcile(GrabReconcileData data, Channel channel = Channel.Unreliable)
+        {
+            Debug.Log($"Replicating: Position: {data.Position}, Rotation: {data.Rotation}");
         }
 
         [ServerRpc(RequireOwnership = true)]
@@ -99,5 +156,27 @@ namespace AnyVR
             }
             GiveOwnership(conn);
         }
+    }
+    
+    public struct GrabReconcileData : IReconcileData
+    {
+        public Vector3 Position;
+        public Quaternion Rotation;
+        
+        private uint _tick;
+        public void Dispose() { }
+        public uint GetTick() => _tick;
+        public void SetTick(uint value) => _tick = value;
+    }
+
+    public struct GrabReplicateData : IReplicateData
+    {
+        public Vector3 Position;
+        public Quaternion Rotation;
+        
+        private uint _tick;
+        public void Dispose() { }
+        public uint GetTick() => _tick;
+        public void SetTick(uint value) => _tick = value;
     }
 }
