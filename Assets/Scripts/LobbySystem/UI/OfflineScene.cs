@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using UnityEditor;
 using UnityEngine;
 
 namespace LobbySystem.UI
@@ -28,7 +27,11 @@ namespace LobbySystem.UI
 
         private void Start()
         {
-            bool isVr = _forceVr || Application.platform == RuntimePlatform.Android;
+            bool isServer = false;
+#if UNITY_SERVER
+            isServer = true;
+#endif
+            bool isVr = (_forceVr || Application.platform == RuntimePlatform.Android) && !isServer;
             _connectionPanel = isVr ? _vrConnectionPanel : _pcConnectionPanel;
             _lobbySelectionPanel = isVr ? _vrLobbySelectionPanel : _pcLobbySelectionPanel;
             _createLobbyPanel = isVr ? _vrCreateLobbyPanel : _pcCreateLobbyPanel;
