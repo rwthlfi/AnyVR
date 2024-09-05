@@ -96,10 +96,9 @@ GameObject:
   - component: {fileID: 6164605239141189459}
   - component: {fileID: 8782005366167885055}
   - component: {fileID: 2544487886413242317}
-  - component: {fileID: 7757332466356278936}
   - component: {fileID: 7389737949359055137}
   m_Layer: 0
-  m_Name: Interactable Instant Cylinder
+  m_Name: Interactable Instant CylinderStateForwarding
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -353,7 +352,7 @@ MonoBehaviour:
   <PredictedOwner>k__BackingField: {fileID: 0}
   _networkBehaviours:
   - {fileID: 8782005366167885055}
-  - {fileID: 7757332466356278936}
+  - {fileID: 0}
   - {fileID: 0}
   <SerializedRootNetworkBehaviour>k__BackingField: {fileID: 0}
   <SerializedNestedNetworkObjects>k__BackingField: []
@@ -368,7 +367,7 @@ MonoBehaviour:
   _graphicalObject: {fileID: 7222530344469211747}
   _detachGraphicalObject: 0
   _enableStateForwarding: 1
-  _networkTransform: {fileID: 7757332466356278936}
+  _networkTransform: {fileID: 0}
   _ownerInterpolation: 1
   _ownerSmoothedProperties: 255
   _adaptiveInterpolation: 3
@@ -378,55 +377,12 @@ MonoBehaviour:
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 3
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 10767058998089877122
+  <AssetPathHash>k__BackingField: 10982158558420464384
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
     LocalScale: {x: 1, y: 1, z: 1}
---- !u!114 &7757332466356278936
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5574773842409776274}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 1
-  _addedNetworkObject: {fileID: 2544487886413242317}
-  _networkObjectCache: {fileID: 2544487886413242317}
-  _componentConfiguration: 2
-  _synchronizeParent: 1
-  _packing:
-    Position: 1
-    Rotation: 1
-    Scale: 0
-  _interpolation: 2
-  _extrapolation: 2
-  _enableTeleport: 0
-  _teleportThreshold: 1
-  _clientAuthoritative: 1
-  _sendToOwner: 1
-  _interval: 1
-  _synchronizePosition: 1
-  _positionSnapping:
-    X: 0
-    Y: 0
-    Z: 0
-  _synchronizeRotation: 1
-  _rotationSnapping:
-    X: 0
-    Y: 0
-    Z: 0
-  _synchronizeScale: 1
-  _scaleSnapping:
-    X: 0
-    Y: 0
-    Z: 0
 --- !u!114 &7389737949359055137
 MonoBehaviour:
   m_ObjectHideFlags: 0

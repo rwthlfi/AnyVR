@@ -21,13 +21,14 @@ using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Transformers;
 
 namespace AnyVR
 {
-    [RequireComponent(typeof(NetworkTransform), typeof(XRGrabInteractable), typeof(XRGeneralGrabTransformer))]
+    [RequireComponent(typeof(XRGrabInteractable), typeof(XRGeneralGrabTransformer))]
     public class NetworkGrabInteractable : NetworkBehaviour
     {
         private XRGrabInteractable _grabInteractable;
@@ -52,6 +53,14 @@ namespace AnyVR
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
+            TimeManager.OnTick += TimeManager_Tick;
+            TimeManager.OnPostTick += TimeManager_PostTick;
+        }
+
+        public override void OnStopNetwork()
+        {
+            base.OnStopNetwork();
+            TimeManager.OnTick += TimeManager_Tick;
             TimeManager.OnPostTick += TimeManager_PostTick;
         }
 
@@ -88,46 +97,64 @@ namespace AnyVR
             RemoveOwnerRPC();
         }
 
-        private void FixedUpdate()
+        private void TimeManager_Tick()
         {
-            if (!IsOwner)
+            RunInputs(CreateReplicate());
+        }
+
+        private GrabReplicateData CreateReplicate()
+        {
+            if (!HasAuthority)
             {
-                return;
+                return default;
             }
 
             if (_jump)
             {
-                _body.AddForce(Vector3.up);
+                Debug.LogWarning("Jumping");
+                //_body.AddForce(Vector3.up);
                 _jump = false;
             }
 
-            Debug.Log($"Calling Replicate: Velocity: {_body.velocity}, Position: {_body.position}");
-            GrabReplicateData data = new() { Position = _body.position, Rotation = _body.rotation };
-            RunInputs(data);
+            GrabReplicateData data = new();
+            return data;
         }
 
         private void TimeManager_PostTick()
         {
-            CreateReconcile();
+            if (HasAuthority)
+            {
+                CreateReconcile();
+            }
         }
 
         [Replicate]
         private void RunInputs(GrabReplicateData data, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
         {
-            Debug.Log($"Replicating: Position: {data.Position}, Rotation: {data.Rotation}");
         }
 
         public override void CreateReconcile()
         {
-            base.CreateReconcile();
-            GrabReconcileData data = new() { Position = _body.position, Rotation = _body.rotation };
+            RigidbodyState data = new()
+            {
+                Position = _body.position, 
+                Rotation = _body.rotation,
+                Velocity = _body.velocity,
+                AngularVelocity = _body.angularVelocity
+            };
+            Debug.Log("Created Reconcile");
             Reconcile(data);
         }
 
         [Reconcile]
-        private void Reconcile(GrabReconcileData data, Channel channel = Channel.Unreliable)
+        private void Reconcile(RigidbodyState data, Channel channel = Channel.Unreliable)
         {
-            Debug.Log($"Replicating: Position: {data.Position}, Rotation: {data.Rotation}");
+            Debug.Log("Reconciling");
+            return;
+            _body.position = data.Position;
+            _body.rotation = data.Rotation;
+            _body.velocity = data.Velocity;
+            _body.angularVelocity = data.AngularVelocity;
         }
 
         [ServerRpc(RequireOwnership = true)]
@@ -158,10 +185,12 @@ namespace AnyVR
         }
     }
     
-    public struct GrabReconcileData : IReconcileData
+    public struct RigidbodyState : IReconcileData
     {
         public Vector3 Position;
         public Quaternion Rotation;
+        public Vector3 Velocity;
+        public Vector3 AngularVelocity;
         
         private uint _tick;
         public void Dispose() { }
@@ -171,9 +200,6 @@ namespace AnyVR
 
     public struct GrabReplicateData : IReplicateData
     {
-        public Vector3 Position;
-        public Quaternion Rotation;
-        
         private uint _tick;
         public void Dispose() { }
         public uint GetTick() => _tick;
