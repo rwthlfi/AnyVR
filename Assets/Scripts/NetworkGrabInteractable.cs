@@ -15,13 +15,8 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using FishNet.Component.Transforming;
 using FishNet.Connection;
 using FishNet.Object;
-using FishNet.Object.Prediction;
-using FishNet.Transporting;
-using System;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Transformers;
@@ -46,22 +41,9 @@ namespace AnyVR
 
         public override void OnStartClient()
         {
+            _body.isKinematic = true;
             base.OnStartClient();
             Debug.Log("owner id on init: " + OwnerId);
-        }
-
-        public override void OnStartNetwork()
-        {
-            base.OnStartNetwork();
-            TimeManager.OnTick += TimeManager_Tick;
-            TimeManager.OnPostTick += TimeManager_PostTick;
-        }
-
-        public override void OnStopNetwork()
-        {
-            base.OnStopNetwork();
-            TimeManager.OnTick += TimeManager_Tick;
-            TimeManager.OnPostTick += TimeManager_PostTick;
         }
 
         private void Update()
@@ -70,6 +52,8 @@ namespace AnyVR
             {
                 _jump = true;
             }
+
+            _body.isKinematic = !IsServerInitialized || OwnerId != -1;
         }
 
 
@@ -78,7 +62,7 @@ namespace AnyVR
             base.OnOwnershipClient(prevOwner);
 
             Debug.Log($"Current owner: {OwnerId}");
-            
+
             if (IsOwner)
             {
                 return;
@@ -88,6 +72,29 @@ namespace AnyVR
             _grabTransformer.enabled = OwnerId == -1;
         }
 
+        private void OnGUI()
+        {
+            if (IsServerInitialized)
+            {
+                return;
+            }
+
+            if (IsOwner)
+            {
+                if (GUILayout.Button("Abandon Ownership"))
+                {
+                    RemoveOwnerRPC();
+                }
+            }
+            else
+            {
+                if (GUILayout.Button("Request Ownership"))
+                {
+                    RequestOwnershipRPC();
+                }
+            }
+        }
+
         public void OnGrabSelectEnter()
         {
             RequestOwnershipRPC();
@@ -95,66 +102,6 @@ namespace AnyVR
         public void OnGrabSelectExit()
         {
             RemoveOwnerRPC();
-        }
-
-        private void TimeManager_Tick()
-        {
-            RunInputs(CreateReplicate());
-        }
-
-        private GrabReplicateData CreateReplicate()
-        {
-            if (!HasAuthority)
-            {
-                return default;
-            }
-
-            if (_jump)
-            {
-                Debug.LogWarning("Jumping");
-                //_body.AddForce(Vector3.up);
-                _jump = false;
-            }
-
-            GrabReplicateData data = new();
-            return data;
-        }
-
-        private void TimeManager_PostTick()
-        {
-            if (HasAuthority)
-            {
-                CreateReconcile();
-            }
-        }
-
-        [Replicate]
-        private void RunInputs(GrabReplicateData data, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable)
-        {
-        }
-
-        public override void CreateReconcile()
-        {
-            RigidbodyState data = new()
-            {
-                Position = _body.position, 
-                Rotation = _body.rotation,
-                Velocity = _body.velocity,
-                AngularVelocity = _body.angularVelocity
-            };
-            Debug.Log("Created Reconcile");
-            Reconcile(data);
-        }
-
-        [Reconcile]
-        private void Reconcile(RigidbodyState data, Channel channel = Channel.Unreliable)
-        {
-            Debug.Log("Reconciling");
-            return;
-            _body.position = data.Position;
-            _body.rotation = data.Rotation;
-            _body.velocity = data.Velocity;
-            _body.angularVelocity = data.AngularVelocity;
         }
 
         [ServerRpc(RequireOwnership = true)]
@@ -168,8 +115,11 @@ namespace AnyVR
             {
                 return;
             }
+            _body.isKinematic = false;
+            Debug.Log($"Kinematic = {_body.isKinematic}");
             RemoveOwnership();
         }
+        
         [ServerRpc (RequireOwnership = false)]
         private void RequestOwnershipRPC(NetworkConnection conn = null)
         {
@@ -181,28 +131,10 @@ namespace AnyVR
             {
                 return;
             }
+
+            _body.isKinematic = true;
+            Debug.Log($"Kinematic = {_body.isKinematic}");
             GiveOwnership(conn);
         }
-    }
-    
-    public struct RigidbodyState : IReconcileData
-    {
-        public Vector3 Position;
-        public Quaternion Rotation;
-        public Vector3 Velocity;
-        public Vector3 AngularVelocity;
-        
-        private uint _tick;
-        public void Dispose() { }
-        public uint GetTick() => _tick;
-        public void SetTick(uint value) => _tick = value;
-    }
-
-    public struct GrabReplicateData : IReplicateData
-    {
-        private uint _tick;
-        public void Dispose() { }
-        public uint GetTick() => _tick;
-        public void SetTick(uint value) => _tick = value;
     }
 }
