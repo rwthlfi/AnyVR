@@ -18,6 +18,7 @@
 using FishNet.Component.Prediction;
 using FishNet.Connection;
 using FishNet.Object;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Transformers;
@@ -31,13 +32,25 @@ namespace AnyVR
         private XRGeneralGrabTransformer _grabTransformer;
         private Rigidbody _body;
 
-        private bool _jump;
-
         private void Awake()
         {
             _grabInteractable = GetComponent<XRGrabInteractable>();
             _grabTransformer = GetComponent<XRGeneralGrabTransformer>();
             _body = GetComponent<Rigidbody>();
+        }
+
+        private void FixedUpdate()
+        {
+            if (IsServerInitialized && OwnerId == -1 && _body.isKinematic)
+            {
+                _body.isKinematic = false;
+            }
+        }
+
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            _body.isKinematic = false;
         }
 
         public override void OnStartClient()
@@ -47,29 +60,11 @@ namespace AnyVR
             Debug.Log("owner id on init: " + OwnerId);
         }
 
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                _jump = true;
-            }
-
-            if (IsServerInitialized)
-            {
-                _body.isKinematic = OwnerId != -1;
-            }
-            else
-            {
-                _body.isKinematic = !IsOwner;
-            }
-        }
-
-
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
 
-            Debug.Log($"Current owner: {OwnerId}");
+            _body.isKinematic = !IsOwner;
 
             if (IsOwner)
             {
@@ -105,6 +100,7 @@ namespace AnyVR
             }
             _body.isKinematic = false;
             RemoveOwnership();
+            Debug.Log($"Throwing {name}: v: {state.Velocity}"); //BUG
             _body.position = state.Position;
             _body.rotation = state.Rotation;
             _body.velocity = state.Velocity;
@@ -124,6 +120,7 @@ namespace AnyVR
             }
 
             GiveOwnership(conn);
+            _body.isKinematic = true;
         }
     }
 }
