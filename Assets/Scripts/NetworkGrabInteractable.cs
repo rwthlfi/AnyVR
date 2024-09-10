@@ -15,6 +15,7 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using FishNet.Component.Prediction;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
@@ -53,7 +54,14 @@ namespace AnyVR
                 _jump = true;
             }
 
-            _body.isKinematic = !IsServerInitialized || OwnerId != -1;
+            if (IsServerInitialized)
+            {
+                _body.isKinematic = OwnerId != -1;
+            }
+            else
+            {
+                _body.isKinematic = !IsOwner;
+            }
         }
 
 
@@ -72,40 +80,20 @@ namespace AnyVR
             _grabTransformer.enabled = OwnerId == -1;
         }
 
-        private void OnGUI()
-        {
-            if (IsServerInitialized)
-            {
-                return;
-            }
-
-            if (IsOwner)
-            {
-                if (GUILayout.Button("Abandon Ownership"))
-                {
-                    RemoveOwnerRPC();
-                }
-            }
-            else
-            {
-                if (GUILayout.Button("Request Ownership"))
-                {
-                    RequestOwnershipRPC();
-                }
-            }
-        }
-
         public void OnGrabSelectEnter()
         {
             RequestOwnershipRPC();
         }
         public void OnGrabSelectExit()
         {
-            RemoveOwnerRPC();
+            RigidbodyState bodyState = new() { Position = _body.position, Rotation = _body.rotation };
+            bodyState.Velocity = bodyState.Velocity;
+            bodyState.AngularVelocity = bodyState.AngularVelocity;
+            RemoveOwnerRPC(bodyState);
         }
 
         [ServerRpc(RequireOwnership = true)]
-        private void RemoveOwnerRPC(NetworkConnection conn = null)
+        private void RemoveOwnerRPC(RigidbodyState state, NetworkConnection conn = null)
         {
             if (conn == null)
             {
@@ -116,8 +104,11 @@ namespace AnyVR
                 return;
             }
             _body.isKinematic = false;
-            Debug.Log($"Kinematic = {_body.isKinematic}");
             RemoveOwnership();
+            _body.position = state.Position;
+            _body.rotation = state.Rotation;
+            _body.velocity = state.Velocity;
+            _body.angularVelocity = state.AngularVelocity;
         }
         
         [ServerRpc (RequireOwnership = false)]
@@ -132,8 +123,6 @@ namespace AnyVR
                 return;
             }
 
-            _body.isKinematic = true;
-            Debug.Log($"Kinematic = {_body.isKinematic}");
             GiveOwnership(conn);
         }
     }
