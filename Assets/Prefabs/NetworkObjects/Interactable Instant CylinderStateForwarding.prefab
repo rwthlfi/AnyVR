@@ -353,6 +353,7 @@ MonoBehaviour:
   <PredictedOwner>k__BackingField: {fileID: 0}
   _networkBehaviours:
   - {fileID: 8782005366167885055}
+  - {fileID: -3312478916796771977}
   <SerializedRootNetworkBehaviour>k__BackingField: {fileID: 0}
   <SerializedNestedNetworkObjects>k__BackingField: []
   _isNetworked: 1
@@ -394,9 +395,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 1
   _addedNetworkObject: {fileID: 2544487886413242317}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 2544487886413242317}
   _componentConfiguration: 2
   _synchronizeParent: 0
   _packing:
