@@ -599,10 +599,6 @@ PrefabInstance:
     m_TransformParent: {fileID: 65253622}
     m_Modifications:
     - target: {fileID: 2314523925997562660, guid: 763522a439f36ac4d881f5652181a2ee, type: 3}
-      propertyPath: m_RootOrder
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 2314523925997562660, guid: 763522a439f36ac4d881f5652181a2ee, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -645,14 +641,6 @@ PrefabInstance:
     - target: {fileID: 2314523925997562666, guid: 763522a439f36ac4d881f5652181a2ee, type: 3}
       propertyPath: m_Name
       value: Global Keyboard Manager
-      objectReference: {fileID: 0}
-    - target: {fileID: 2314523925997562667, guid: 763522a439f36ac4d881f5652181a2ee, type: 3}
-      propertyPath: PlayerRoot
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 2314523925997562667, guid: 763522a439f36ac4d881f5652181a2ee, type: 3}
-      propertyPath: m_PlayerRoot
-      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

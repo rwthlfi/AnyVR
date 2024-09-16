@@ -5,12 +5,14 @@ using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TextChat;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Voicechat;
 
 namespace LobbySystem
 {
+    [RequireComponent(typeof(TextChatManager))]
     public class LobbyHandler : NetworkBehaviour
     {
         private readonly SyncHashSet<int> _clientIds = new();
@@ -31,6 +33,11 @@ namespace LobbySystem
         // Only assigned on client
         [CanBeNull] private static LobbyHandler s_instance;
         
+        // Only invoked on client after ClientStart
+        public static event Action PostInit;
+        
+        public TextChatManager TextChat { get; private set; }
+
         [Server]
         internal void Init(string lobbyId, int adminId)
         {
@@ -40,11 +47,16 @@ namespace LobbySystem
         }
 
         /// <summary>
-        /// Returns the client's id of the admin
+        /// Returns the client id of the admin
         /// </summary>
         public int GetAdminId()
         {
             return _adminId.Value;
+        }
+
+        private void Awake()
+        {
+            TextChat = GetComponent<TextChatManager>();
         }
 
         public override void OnStartServer()
@@ -78,6 +90,8 @@ namespace LobbySystem
                 (current, micName) => current + "\t" + micName + "\n");
             Debug.Log(msg);
             LiveKitManager.s_instance.SetActiveMicrophone(micNames[1]);
+            
+            PostInit?.Invoke();
         }
 
         private void OnClientUpdate(SyncHashSetOperation op, int item, bool asServer)
