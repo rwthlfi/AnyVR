@@ -44,9 +44,9 @@ namespace TextChat
         
         private readonly CircularBuffer<TextMessage> _buffer = new(100);
 
-        internal event Action<TextMessage> TextMessageReceived;
+        public event Action<TextMessage> TextMessageReceived;
 
-        internal event Action MessagesSynced;
+        public event Action MessagesSynced;
 
         private void Awake()
         {
@@ -67,11 +67,16 @@ namespace TextChat
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void SendTextMessage(string msg, NetworkConnection sender)
+        public void SendTextMessage(string msg, NetworkConnection sender = null)
         {
-            TextMessage textMessage = new(sender.ClientId, msg);
-            _buffer.Push(textMessage);
-            ReceiveTextMessage(textMessage);
+            if (sender == null)
+            {
+                return;
+            }
+            TextMessage tm = new(sender.ClientId, msg);
+            _buffer.Push(tm);
+            Debug.Log("forwarding text message");
+            ReceiveTextMessage(tm);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -86,7 +91,7 @@ namespace TextChat
             TextMessage[] buffer = _buffer.GetAll();
             for(int i = 0; i < buffer.Length; i++)
             {
-                Debug.Log($"{i}'th element: {buffer[i]._message}");
+                Debug.Log($"{i}'th element: {buffer[i].Message}");
                 
             }
             SyncBuffer(conn, buffer);
@@ -102,7 +107,7 @@ namespace TextChat
             }
             for(int i = 0; i < buffer.Length; i++)
             {
-                Debug.Log($"{i}'th element: {buffer[i]._message}");
+                Debug.Log($"{i}'th element: {buffer[i].Message}");
             }
             MessagesSynced?.Invoke();
         }
@@ -112,6 +117,7 @@ namespace TextChat
         {
             _buffer.Push(msg);
             TextMessageReceived?.Invoke(msg);
+            Debug.Log("received text message");
         }
 
         public CircularBuffer<TextMessage> GetBuffer()
@@ -122,13 +128,13 @@ namespace TextChat
     
     public struct TextMessage
     {
-        internal readonly int _senderId;
-        internal readonly string _message;
+        public readonly int SenderId;
+        public readonly string Message;
 
         public TextMessage(int senderId, string message)
         {
-            _senderId = senderId;
-            _message = message;
+            SenderId = senderId;
+            Message = message;
         }
     }
 

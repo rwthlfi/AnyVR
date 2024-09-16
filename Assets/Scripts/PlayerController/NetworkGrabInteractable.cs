@@ -57,7 +57,6 @@ namespace AnyVR
         {
             _body.isKinematic = true;
             base.OnStartClient();
-            Debug.Log("owner id on init: " + OwnerId);
         }
 
         public override void OnOwnershipClient(NetworkConnection prevOwner)
