@@ -16,8 +16,6 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections;
-using UnityEngine;
 
 namespace TextChat
 {
