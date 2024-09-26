@@ -89,7 +89,9 @@ namespace LobbySystem
             string msg = micNames.Aggregate("Available Microphones:\n",
                 (current, micName) => current + "\t" + micName + "\n");
             Debug.Log(msg);
-            LiveKitManager.s_instance.SetActiveMicrophone(micNames[1]);
+            const int defaultMic = 0;
+            Debug.Log($"Selected Microphone: {micNames[defaultMic]}");
+            LiveKitManager.s_instance.SetActiveMicrophone(micNames[defaultMic]);
             
             PostInit?.Invoke();
         }

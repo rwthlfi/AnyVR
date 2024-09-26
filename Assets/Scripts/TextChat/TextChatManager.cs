@@ -105,10 +105,6 @@ namespace TextChat
             {
                 _buffer.Push(textMessage);
             }
-            for(int i = 0; i < buffer.Length; i++)
-            {
-                Debug.Log($"{i}'th element: {buffer[i].Message}");
-            }
             MessagesSynced?.Invoke();
         }
 
@@ -117,7 +113,6 @@ namespace TextChat
         {
             _buffer.Push(msg);
             TextMessageReceived?.Invoke(msg);
-            Debug.Log("received text message");
         }
 
         public CircularBuffer<TextMessage> GetBuffer()

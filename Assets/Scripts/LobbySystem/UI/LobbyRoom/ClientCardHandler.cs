@@ -1,10 +1,9 @@
-using LobbySystem.UI.LobbyRoom;
 using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace LobbySystem.UI
+namespace LobbySystem.UI.LobbyRoom
 {
     internal class ClientCardHandler : MonoBehaviour
     {

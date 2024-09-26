@@ -234,7 +234,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _pcParent: {fileID: 1797401195}
   _vrParent: {fileID: 65253621}
-  _forceVr: 1
+  _forceVr: 0
   _pcConnectionPanel: {fileID: 1454189550}
   _pcLobbySelectionPanel: {fileID: 1454189549}
   _pcCreateLobbyPanel: {fileID: 1454189548}
@@ -778,6 +778,10 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 937867499447006288, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1538536720026760055, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -1166,6 +1170,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -267.34146
       objectReference: {fileID: 0}
+    - target: {fileID: 7151035184843506632, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7288167353047565106, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -1229,6 +1237,10 @@ PrefabInstance:
     - target: {fileID: 8661642126533385636, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -45
+      objectReference: {fileID: 0}
+    - target: {fileID: 8778041758303224270, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9101661142048010479, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
       propertyPath: m_AnchorMax.x

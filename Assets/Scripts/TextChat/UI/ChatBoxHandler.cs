@@ -75,7 +75,6 @@ namespace TextChat.UI
 
         private void SyncMessages(CircularBuffer<TextMessage> buffer)
         {
-            Debug.Log($"Syncing messages, count {buffer.Count}");
             foreach (Transform child in _chatMessagesParent.transform)
             {
                 Destroy(child.gameObject);
