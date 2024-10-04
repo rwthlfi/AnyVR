@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,6 +32,12 @@ namespace LobbySystem.UI.LobbyRoom
 
             _panels.Add(_clientListHandler.gameObject);
             _panels.Add(_pausePanelHandler.gameObject);
+
+            foreach (GameObject panel in _panels)
+            {
+                panel.SetActive(false);
+            }
+            
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
             
@@ -113,6 +118,7 @@ namespace LobbySystem.UI.LobbyRoom
                 e.SetActive(false);
             }
 
+            Debug.Log($"Toggle {panel.name}. active: {active}");
             panel.SetActive(active);
         }
 
