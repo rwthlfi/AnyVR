@@ -75,7 +75,6 @@ namespace TextChat
             }
             TextMessage tm = new(sender.ClientId, msg);
             _buffer.Push(tm);
-            Debug.Log("forwarding text message");
             ReceiveTextMessage(tm);
         }
 
@@ -87,13 +86,7 @@ namespace TextChat
                 return;
             }
 
-            Debug.Log("Syncing Buffer");
             TextMessage[] buffer = _buffer.GetAll();
-            for(int i = 0; i < buffer.Length; i++)
-            {
-                Debug.Log($"{i}'th element: {buffer[i].Message}");
-                
-            }
             SyncBuffer(conn, buffer);
         }
 
