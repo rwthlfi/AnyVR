@@ -1,3 +1,5 @@
+using FishNet.Managing.Client;
+using FishNet.Managing.Timing;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -76,14 +78,18 @@ namespace LobbySystem.UI.LobbySelection
             _connectionManager.LeaveServer();
         }
 
-        // TODO
-        // private void FixedUpdate()
-        // {
-        //     long ping = _tm == null ? 0 : _tm.RoundTripTime;
-        //     long deduction = (long)(_tm.TickDelta * 2000d);
-        //     ping = (long)Mathf.Max(1, ping - deduction);
-        //     _pingLabel.text = $"{ping}ms";
-        // }
+        private void FixedUpdate()
+        {
+            if (_lobbyManager == null || _lobbyManager.TimeManager == null)
+            {
+                return;
+            }
+
+            long ping = _lobbyManager.TimeManager == null ? 0 : _lobbyManager.TimeManager.RoundTripTime;
+            long deduction = (long)(_lobbyManager.TimeManager.TickDelta * Time.fixedDeltaTime);
+            ping = (long)Mathf.Max(1, ping - deduction);
+            _pingLabel.text = $"{ping}ms";
+        }
 
         public void UpdatePingValue(ushort ms)
         {
