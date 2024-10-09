@@ -95,11 +95,11 @@ namespace LobbySystem
         /// <summary>
         /// Invoked when the local client joined a lobby
         /// </summary>
-        public event Action<LobbyMetaData> LobbyJoined;
+        public event Action<string, int> ClientJoin;
         /// <summary>
         /// Invoked when the local client left a lobby
         /// </summary>
-        public event Action LobbyLeft;
+        public event Action<string, int> ClientLeave;
         
         public override void OnStartServer()
         {
@@ -143,11 +143,36 @@ namespace LobbySystem
             LobbyHandler lobbyHandler = Instantiate(_lobbyHandlerPrefab);
             Spawn(lobbyHandler.NetworkObject, null, loadArgs.LoadedScenes[0]);
             lobbyHandler.Init(lobbyId, loadArgs.QueueData.Connections[0].ClientId);
+            lobbyHandler.ClientJoin += (clientId, _) =>
+            {
+                OnLobbyConnectionEvent(lobbyId, clientId, ConnectionEvent.k_joinEvent );
+            };
+            lobbyHandler.ClientLeft += clientId =>
+            {
+                OnLobbyConnectionEvent(lobbyId, clientId, ConnectionEvent.k_leaveEvent );
+            };
             
             _lobbies[lobbyId].SetSceneHandle(loadArgs.LoadedScenes[0].handle);
             _lobbyHandlers.Add(lobbyId, lobbyHandler);
+
             
             Log($"LobbyHandler with lobbyId '{lobbyId}' is registered");
+        }
+
+        [ObserversRpc]
+        private void OnLobbyConnectionEvent(string lobbyId, int clientId, ConnectionEvent type)
+        {
+            switch (type)
+            {
+                case ConnectionEvent.k_joinEvent:
+                    ClientJoin?.Invoke(lobbyId, clientId);
+                    break;
+                case ConnectionEvent.k_leaveEvent:
+                    ClientLeave?.Invoke(lobbyId, clientId);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
         }
 
         private string CreateUniqueLobbyId(string scene)
@@ -155,7 +180,7 @@ namespace LobbySystem
             int i = 1;
             while (i > 0)
             {
-                string id = scene + i.ToString();
+                string id = scene + i;
                 if (!_lobbies.ContainsKey(id))
                 {
                     return id;
@@ -209,6 +234,12 @@ namespace LobbySystem
                 LeaveLobby();
             }
 
+            int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
+            if (currentPlayerCount >= lobby.MaxClients)
+            {
+                return;
+            }
+
             if (!_clientLobbyDict.TryAdd(conn.ClientId, lobbyId))
             {
                 Debug.LogError($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'");
@@ -235,7 +266,6 @@ namespace LobbySystem
             {
                 Debug.LogWarning("LivKitManager is not initialized");
             }
-            LobbyJoined?.Invoke(lmd);
         }
         
         /// <summary>
@@ -248,7 +278,6 @@ namespace LobbySystem
             LiveKitManager.s_instance.Disconnect(); // Disconnecting from voicechat
             UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("UIScene");
             UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(_offlineScene, LoadSceneMode.Additive);
-            LobbyLeft?.Invoke();
         }
 
         private void lobbies_OnChange(SyncDictionaryOperation op, string key, LobbyMetaData value, bool asServer)
@@ -407,5 +436,10 @@ namespace LobbySystem
         {
             return _lobbies.Collection;
         }
+    }
+    
+    internal enum ConnectionEvent
+    {
+        k_joinEvent = 0, k_leaveEvent
     }
 }

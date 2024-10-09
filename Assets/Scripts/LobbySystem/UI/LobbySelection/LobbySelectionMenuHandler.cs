@@ -65,7 +65,18 @@ namespace LobbySystem.UI.LobbySelection
             }
             _lobbyManager.LobbyOpened += AddLobbyCard;
             _lobbyManager.LobbyClosed += RemoveLobbyCard;
+            
+            RefreshLobbyList();
+        }
 
+        public void RefreshLobbyList()
+        {
+            foreach (LobbyCardHandler card in _lobbyCards.Values)
+            {
+                Destroy(card.gameObject);
+            }
+            _lobbyCards.Clear();
+            
             Dictionary<string, LobbyMetaData> lobbies =  _lobbyManager.GetAvailableLobbies();
             foreach (LobbyMetaData lobby in lobbies.Values)
             {
@@ -89,11 +100,6 @@ namespace LobbySystem.UI.LobbySelection
             long deduction = (long)(_lobbyManager.TimeManager.TickDelta * Time.fixedDeltaTime);
             ping = (long)Mathf.Max(1, ping - deduction);
             _pingLabel.text = $"{ping}ms";
-        }
-
-        public void UpdatePingValue(ushort ms)
-        {
-            _pingLabel.text = $"{ms}ms";
         }
 
         public void Client_OpenCreateRoomScene()
