@@ -7,6 +7,7 @@ namespace LobbySystem.UI.LobbySelection
         public readonly int Creator;
         public readonly string Location;
         public readonly ushort MaxClients;
+        public readonly ushort CurrentPlayerCount;
 
         public UILobbyMetaData(string name, int creator, string location, ushort maxClients)
         {

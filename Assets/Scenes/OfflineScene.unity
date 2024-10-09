@@ -1358,6 +1358,18 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -540
       objectReference: {fileID: 0}
+    - target: {fileID: 2309571668274745808, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1894221040}
+    - target: {fileID: 2309571668274745808, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: RefreshLobbyList
+      objectReference: {fileID: 0}
+    - target: {fileID: 2309571668274745808, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: LobbySystem.UI.LobbySelection.LobbySelectionMenuHandler, LobbySystem.UI
+      objectReference: {fileID: 0}
     - target: {fileID: 2573586623628190194, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -2018,6 +2030,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2314523925997562660, guid: 763522a439f36ac4d881f5652181a2ee, type: 3}
   m_PrefabInstance: {fileID: 1127958336}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1894221040 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1838408323034497811, guid: 5dadaab8d7a246d4786c0be30aaeafd0, type: 3}
+  m_PrefabInstance: {fileID: 1458470986}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1458470989}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2a406cee2f7b76499dc1f4365512130, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2040625848
 GameObject:
   m_ObjectHideFlags: 0

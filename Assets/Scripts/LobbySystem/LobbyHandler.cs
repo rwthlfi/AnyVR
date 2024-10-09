@@ -21,7 +21,8 @@ namespace LobbySystem
         private readonly SyncVar<bool> _initialized = new(false);
 
         /// <summary>
-        /// Invoked when an remote client joined the lobby of the local client
+        /// Invoked when a remote client joined the lobby of the local client
+        /// |clientId, clientName|
         /// </summary>
         public event Action<int, string> ClientJoin;
         
@@ -37,6 +38,8 @@ namespace LobbySystem
         public static event Action PostInit;
         
         public TextChatManager TextChat { get; private set; }
+
+        public ushort CurrentClientCount => (ushort) _clientIds.Count;
 
         [Server]
         internal void Init(string lobbyId, int adminId)
