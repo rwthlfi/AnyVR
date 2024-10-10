@@ -196,6 +196,7 @@ namespace LobbySystem
         [ServerRpc(RequireOwnership = false)]
         public void CreateLobby(string lobbyName, string scene, ushort maxClients, NetworkConnection conn = null)
         {
+            maxClients = (ushort)Mathf.Max(1, maxClients);
             if (conn == null)
             {
                 return;
@@ -237,6 +238,7 @@ namespace LobbySystem
             int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
             if (currentPlayerCount >= lobby.MaxClients)
             {
+                Debug.LogError($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The lobby is already full");
                 return;
             }
 

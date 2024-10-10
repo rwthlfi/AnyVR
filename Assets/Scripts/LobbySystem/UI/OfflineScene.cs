@@ -95,12 +95,6 @@ namespace LobbySystem.UI
             }
 
             string[] arr = address.Split(':'); // [ip, port]
-            const string ipPattern =
-                @"^(\b25[0-5]|\b2[0-4][0-9]|\b[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}";
-            if (!Regex.IsMatch(arr[0], ipPattern))
-            {
-                return false;
-            }
 
             uint port = uint.Parse(arr[1]);
             if (port > ushort.MaxValue)
