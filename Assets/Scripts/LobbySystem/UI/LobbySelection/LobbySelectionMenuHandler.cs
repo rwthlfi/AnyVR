@@ -67,6 +67,15 @@ namespace LobbySystem.UI.LobbySelection
             _lobbyManager.LobbyClosed += RemoveLobbyCard;
             
             RefreshLobbyList();
+
+            _lobbyManager.ClientJoin += (s, i) =>
+            {
+                Debug.Log("Client Joint");
+            };
+            _lobbyManager.ClientLeave += (s, i) =>
+            {
+                Debug.Log("Client Leave");
+            };
         }
 
         public void RefreshLobbyList()
