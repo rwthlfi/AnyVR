@@ -2179,6 +2179,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: NetworkManager
       objectReference: {fileID: 0}
+    - target: {fileID: 4796949022164278234, guid: 3ddcb3f2af042ed49a23956de1cb4893, type: 3}
+      propertyPath: _enableIpv6
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5009998975569126252, guid: 3ddcb3f2af042ed49a23956de1cb4893, type: 3}
       propertyPath: _physicsMode
       value: 1
