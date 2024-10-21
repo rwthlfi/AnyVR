@@ -21,7 +21,7 @@ using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-namespace AnyVR.BuildPlayerPipeline
+namespace AnyVR.BuildScripts
 {
     public class BuildScript
     {
@@ -111,7 +111,7 @@ namespace AnyVR.BuildPlayerPipeline
         [MenuItem("Build/Build Linux Server")]
         public static void BuildLinuxServer()
         {
-            string path = Path.Combine(k_linuxServerBuildPath, k_name);
+            string path = Path.Combine(k_linuxServerBuildPath, $"{k_name}.x86_64");
             BuildPlayer(path, BuildTarget.StandaloneWindows64, true);
         }
     }

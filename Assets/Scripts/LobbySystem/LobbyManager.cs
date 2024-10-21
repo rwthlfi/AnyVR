@@ -92,21 +92,18 @@ namespace LobbySystem
         /// Invoked when a remote client closed a lobby
         /// </summary>
         public event Action<LobbyMetaData> LobbyClosed;
-        /// <summary>
-        /// Invoked when the local client joined a lobby
-        /// </summary>
-        public event Action<string, int> ClientJoin;
-        /// <summary>
-        /// Invoked when the local client left a lobby
-        /// </summary>
-        public event Action<string, int> ClientLeave;
         
+        /// <summary>
+        /// Invoked when the player-count of a lobby changes.
+        /// The local user does not have to be connected to the lobby.
+        /// (string: lobbyId, int: playerCount)
+        /// </summary>
+        public event Action<string, int> PlayerCountUpdate;
         public override void OnStartServer()
         {
             base.OnStartServer();
             _lobbyHandlers = new Dictionary<string, LobbyHandler>();
             _clientLobbyDict = new Dictionary<int, string>();
-            ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
             SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
             string logging = _loggingEnabled ? "enabled" : "disabled";
             Debug.Log($"Server started. Logging {logging}");
@@ -145,34 +142,25 @@ namespace LobbySystem
             lobbyHandler.Init(lobbyId, loadArgs.QueueData.Connections[0].ClientId);
             lobbyHandler.ClientJoin += (clientId, _) =>
             {
-                OnLobbyConnectionEvent(lobbyId, clientId, ConnectionEvent.k_joinEvent );
+                int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
+                OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
             };
             lobbyHandler.ClientLeft += clientId =>
             {
-                OnLobbyConnectionEvent(lobbyId, clientId, ConnectionEvent.k_leaveEvent );
+                int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
+                OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
             };
             
             _lobbies[lobbyId].SetSceneHandle(loadArgs.LoadedScenes[0].handle);
             _lobbyHandlers.Add(lobbyId, lobbyHandler);
-
             
             Log($"LobbyHandler with lobbyId '{lobbyId}' is registered");
         }
 
         [ObserversRpc]
-        private void OnLobbyConnectionEvent(string lobbyId, int clientId, ConnectionEvent type)
+        private void OnLobbyPlayerCountUpdate(string lobby, ushort playerCount)
         {
-            switch (type)
-            {
-                case ConnectionEvent.k_joinEvent:
-                    ClientJoin?.Invoke(lobbyId, clientId);
-                    break;
-                case ConnectionEvent.k_leaveEvent:
-                    ClientLeave?.Invoke(lobbyId, clientId);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
-            }
+            PlayerCountUpdate?.Invoke(lobby, playerCount);
         }
 
         private string CreateUniqueLobbyId(string scene)
@@ -348,23 +336,27 @@ namespace LobbySystem
             {
                 return false;
             }
-            
+
+            Debug.Log("1");
             if (!TryGetLobbyOfClient(clientConnection.ClientId, out string lobbyId))
             {
                 return false;
             }
 
+            Debug.Log("2");
             if (!_lobbyHandlers.TryGetValue(lobbyId, out LobbyHandler handler))
             {
                 return false;
             }
             
+            Debug.Log("3");
             handler.Server_RemoveClient(clientConnection.ClientId);
             _clientLobbyDict.Remove(clientConnection.ClientId);
 
             if (_lobbies.TryGetValue(lobbyId, out LobbyMetaData lmd))
             {
                 SceneUnloadData sud = new(new[] { lmd.Scene });
+                Debug.Log($"unloading {PlayerNameTracker.GetPlayerName(clientConnection)}, {sud}");
                 SceneManager.UnloadConnectionScenes(clientConnection, sud);
             }
 
@@ -378,26 +370,13 @@ namespace LobbySystem
         }
 
         [Server]
-        private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
-        {
-            switch (args.ConnectionState)
-            {
-                case RemoteConnectionState.Stopped:
-                    Debug.Log($"Client {conn.ClientId} left the server");
-                    TryRemoveClientFromLobby(conn);
-                    break;
-                case RemoteConnectionState.Started:
-                    Debug.Log($"Client {conn.ClientId} joined the server");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-
-        [Server]
         private bool TryGetLobbyOfClient(int clientId, out string lobbyId)
         {
+            Debug.Log($"active lobbies: ({_lobbyHandlers.Count})");
+            foreach (KeyValuePair<string, LobbyHandler> pair in _lobbyHandlers)
+            {
+                Debug.Log(pair.Key);
+            }
             foreach (KeyValuePair<string, LobbyHandler> lobbyPair in from lobbyPair in _lobbyHandlers
                      let clients = lobbyPair.Value.GetClients()
                      where clients.Any(client => client.Item1 == clientId)
@@ -438,10 +417,5 @@ namespace LobbySystem
         {
             return _lobbies.Collection;
         }
-    }
-    
-    internal enum ConnectionEvent
-    {
-        k_joinEvent = 0, k_leaveEvent
     }
 }

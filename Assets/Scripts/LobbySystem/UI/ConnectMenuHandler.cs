@@ -17,13 +17,14 @@
 
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace LobbySystem.UI
 {
     public class ConnectMenuHandler : MonoBehaviour
     {
-        [SerializeField] private OfflineScene _offlineScene;
+        [FormerlySerializedAs("_offlineScene")] [SerializeField] private WelcomeScene _welcomeScene;
         [Header("UI")] [SerializeField] private Button _goBtn;
         [SerializeField] private TMP_InputField _fishnetIpInputField;
         [SerializeField] private TMP_InputField _livekitIpInputField;
@@ -41,7 +42,7 @@ namespace LobbySystem.UI
             string fishnetAddress = _fishnetIpInputField.text.Trim();
             string liveKitAddress = _livekitIpInputField.text.Trim();
             string userName = _usernameInputField.text.Trim();
-            _offlineScene.OnConnectBtn(fishnetAddress, liveKitAddress, userName);
+            _welcomeScene.OnConnectBtn(fishnetAddress, liveKitAddress, userName);
         }
     }
 }

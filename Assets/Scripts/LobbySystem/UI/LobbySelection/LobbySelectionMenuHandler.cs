@@ -20,7 +20,7 @@ namespace LobbySystem.UI.LobbySelection
 
         private bool _isRoomCreationSceneActive;
 
-        private Dictionary<UILobbyMetaData, LobbyCardHandler> _lobbyCards;
+        private Dictionary<string, LobbyCardHandler> _lobbyCards;
 
         private LobbyManager _lobbyManager;
 
@@ -31,7 +31,7 @@ namespace LobbySystem.UI.LobbySelection
 
         private void Start()
         {
-            _lobbyCards = new Dictionary<UILobbyMetaData, LobbyCardHandler>();
+            _lobbyCards = new Dictionary<string, LobbyCardHandler>();
             _isRoomCreationSceneActive = false;
 
             _connectionManager = ConnectionManager.GetInstance();
@@ -65,17 +65,17 @@ namespace LobbySystem.UI.LobbySelection
             }
             _lobbyManager.LobbyOpened += AddLobbyCard;
             _lobbyManager.LobbyClosed += RemoveLobbyCard;
+
+            _lobbyManager.PlayerCountUpdate += (lobbyId, count) =>
+            {
+                Debug.Log($"Lobby with id={lobbyId} has now {count} connected players");
+                if(_lobbyCards.TryGetValue(lobbyId, out LobbyCardHandler cardHandler))
+                {
+                    cardHandler.SetCurrentPlayerCount(count);
+                }
+            };
             
             RefreshLobbyList();
-
-            _lobbyManager.ClientJoin += (s, i) =>
-            {
-                Debug.Log("Client Joint");
-            };
-            _lobbyManager.ClientLeave += (s, i) =>
-            {
-                Debug.Log("Client Leave");
-            };
         }
 
         public void RefreshLobbyList()
@@ -153,23 +153,23 @@ namespace LobbySystem.UI.LobbySelection
             {   
                 _lobbyManager.JoinLobby(card.MetaData.ID);
             };
-            _lobbyCards.Add(uiLobby, card);
+            _lobbyCards.Add(uiLobby.ID, card);
         }
         
         private void RemoveLobbyCard(LobbyMetaData lobby)
         {
             UILobbyMetaData uiLobby = new(lobby);
-            if (!_lobbyCards.TryGetValue(uiLobby, out LobbyCardHandler card))
+            if (!_lobbyCards.TryGetValue(uiLobby.ID, out LobbyCardHandler card))
             {
                 return;
             }
 
             if (card != null)
             {
-                Destroy(_lobbyCards[uiLobby].gameObject);
+                Destroy(_lobbyCards[uiLobby.ID].gameObject);
             }
 
-            _lobbyCards.Remove(uiLobby);
+            _lobbyCards.Remove(uiLobby.ID);
         }
 
         private void OnDestroy()
