@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace LobbySystem.UI
 {
-    public class OfflineScene : MonoBehaviour
+    public class WelcomeScene : MonoBehaviour
     {
         [Header("Platform Setup")] 
         [SerializeField] private GameObject _pcParent;
