@@ -81,8 +81,7 @@ namespace AnyVR
         public void OnGrabSelectExit()
         {
             RigidbodyState bodyState = new() { Position = _body.position, Rotation = _body.rotation };
-            bodyState.Velocity = bodyState.Velocity;
-            bodyState.AngularVelocity = bodyState.AngularVelocity;
+            // TODO
             RemoveOwnerRPC(bodyState);
         }
 

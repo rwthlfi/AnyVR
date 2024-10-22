@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 7371100047868426117}
   - component: {fileID: 5808065475186452488}
   - component: {fileID: 5009998975569126252}
-  - component: {fileID: 3234022162834440505}
   - component: {fileID: 4520142844469642319}
   - component: {fileID: 4796949022164278234}
   - component: {fileID: 1134836361371865964}
@@ -77,19 +76,6 @@ MonoBehaviour:
   _tickRate: 30
   _pingInterval: 1
   _physicsMode: 1
---- !u!114 &3234022162834440505
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1087981268889951963}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e838fcb1542f77b4aace907895a68966, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _globalScene: Assets/Scenes/GlobalScene.unity
 --- !u!114 &4520142844469642319
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121,7 +107,7 @@ MonoBehaviour:
   _dontRoute: 0
   _unreliableMtu: 1023
   _ipv4BindAddress: 
-  _enableIpv6: 1
+  _enableIpv6: 0
   _ipv6BindAddress: 
   _port: 7777
   _maximumClients: 4095

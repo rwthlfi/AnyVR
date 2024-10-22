@@ -22,7 +22,8 @@ namespace Voicechat
         {
             if (s_instance != null)
             {
-                Debug.LogWarning("Instance of LiveKitManager is already active");
+                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
 

@@ -1,5 +1,6 @@
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace LobbySystem.UI
 {
@@ -10,6 +11,7 @@ namespace LobbySystem.UI
         [SerializeField] [TextArea] private string _description;
         [SerializeField] private Sprite _thumbnail;
         public string Scene => _scene;
+
         public string Description => _description;
         public Sprite Thumbnail => _thumbnail;
     }
