@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _scene: Assets/Scenes/LobbyScenes/PhysicsDemo.unity
   _description: PhysicsDemo
-  _thumbnail: {fileID: 21300000, guid: ae4177cc588eb8942a2e536f2789d8ac, type: 3}
+  _thumbnail: {fileID: 21300000, guid: 5a9aa51518091054f8ae9a4ea861149e, type: 3}

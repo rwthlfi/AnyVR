@@ -13,6 +13,11 @@ namespace LobbySystem.UI.LobbySelection
         public LobbySceneMetaData MetaData { get; private set; }
         public event Action Click;
 
+        public void ScaleTo(float value)
+        {
+            LeanTween.scale(gameObject, Vector3.one * value, .1f);
+        }
+        
         internal void SetMetaData(LobbySceneMetaData meta)
         {
             MetaData = meta;
@@ -25,5 +30,6 @@ namespace LobbySystem.UI.LobbySelection
         {
             Click?.Invoke();
         }
+        
     }
 }

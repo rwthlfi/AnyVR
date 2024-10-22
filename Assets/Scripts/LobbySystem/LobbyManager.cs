@@ -266,8 +266,8 @@ namespace LobbySystem
         {
             _currentLobby = null;
             LiveKitManager.s_instance.Disconnect(); // Disconnecting from voicechat
-            UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("UIScene");
-            UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(_offlineScene, LoadSceneMode.Additive);
+            UnityEngine.SceneManagement.SceneManager.UnloadScene("UIScene");
+            UnityEngine.SceneManagement.SceneManager.LoadScene(_offlineScene, LoadSceneMode.Additive);
         }
 
         private void lobbies_OnChange(SyncDictionaryOperation op, string key, LobbyMetaData value, bool asServer)

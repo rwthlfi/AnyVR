@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace LobbySystem.UI.LobbySelection
 {
@@ -10,10 +11,13 @@ namespace LobbySystem.UI.LobbySelection
     {
         [Header("UI")]
         [SerializeField] private TMP_InputField _nameInputField;
-        [SerializeField] private TMP_InputField _userLimitInputField;
+        [SerializeField] private Slider _userLimitSlider;
 
-        [SerializeField] private Toggle _usePasswordToggle;
-        [SerializeField] private TMP_InputField _passwordInputField;
+        [SerializeField] private Toggle _usePinToggle;
+        [SerializeField] private TMP_InputField _pinInputField;
+        [SerializeField] private Button _randomizePinBtn, _copyPinBtn;
+
+        [SerializeField] private Button _openRoomBtn;
 
         [Header("Prefab Setup")]
         [SerializeField] private LocationCardHandler _locationCardPrefab;
@@ -23,6 +27,8 @@ namespace LobbySystem.UI.LobbySelection
         [SerializeField] private LobbySceneMetaData[] _lobbySceneMetaData;
 
         private string _selectedRoom;
+        
+        private const ushort k_maxUserLimit = 99;
 
         private void Start()
         {
@@ -33,31 +39,50 @@ namespace LobbySystem.UI.LobbySelection
                 card.Click += () =>
                 {
                     _selectedRoom = card.MetaData.Scene;
+                    Debug.Log(_selectedRoom);
+                    UpdateUI();
                 };
-                _userLimitInputField.characterLimit = 2;
             }
+            
+            _pinInputField.characterLimit = 8;
+            _randomizePinBtn.onClick.AddListener(() =>
+            {
+                _pinInputField.text = (Random.Range(0, ushort.MaxValue) % 9999).ToString();
+            });
+            _nameInputField.onValueChanged.AddListener(_ => UpdateUI());
+            _pinInputField.onValueChanged.AddListener(_ => UpdateUI());
+            _usePinToggle.onValueChanged.AddListener(_ =>
+            {
+                UpdateUI();
+            });
+            _userLimitSlider.maxValue = k_maxUserLimit;
+            _copyPinBtn.onClick.AddListener(() =>
+            {
+                if (!string.IsNullOrWhiteSpace(_pinInputField.text))
+                {
+                    GUIUtility.systemCopyBuffer = _pinInputField.text;
+                }
+            });
+            UpdateUI();
         }
 
-        // private char ValidateInput(string text, int charindex, char addedchar)
-        // {
-        //     string newText = text + addedchar;
-        //     if (!int.TryParse(newText, out int res))
-        //     {
-        //         return '\0';
-        //     }
-        //
-        //     switch (res)
-        //     {
-        //         case < 0:
-        //             _userLimitInputField.text = "0";
-        //             return '\0';
-        //         case > 20:
-        //             _userLimitInputField.text = "20";
-        //             return '\0';
-        //         default:
-        //             return addedchar;
-        //     }
-        // }
+        private bool CanOpenRoom()
+        {
+            bool intractable = true;
+            intractable &= !string.IsNullOrEmpty(_nameInputField.text);
+            intractable &= !string.IsNullOrEmpty(_selectedRoom);
+            intractable &= !_usePinToggle.isOn || _pinInputField.text.Length >= 4;
+            return intractable;
+        }
+
+        private void UpdateUI()
+        {
+            _pinInputField.interactable = _usePinToggle.isOn;
+            _randomizePinBtn.interactable = _usePinToggle.isOn;
+            _copyPinBtn.interactable = _usePinToggle.isOn;
+            _openRoomBtn.interactable = CanOpenRoom();
+        }
+
 
         public void OnBackBtn()
         {
@@ -82,12 +107,9 @@ namespace LobbySystem.UI.LobbySelection
 
             string lobbyName = _nameInputField.text;
             string location = match.Groups[1].Value;
-            ushort maxClients = 99;
-            if (_userLimitInputField.text != string.Empty)
-            {
-                 maxClients = (ushort)Math.Max(Convert.ToInt32(_userLimitInputField.text), 1);   
-            }
-            UILobbyMetaData uiLobbyMeta = new(lobbyName, -1, location, maxClients);
+            ushort userLimit = (ushort)Math.Clamp(Convert.ToInt32(_userLimitSlider.value), 1, k_maxUserLimit);
+             
+            UILobbyMetaData uiLobbyMeta = new(lobbyName, -1, location, userLimit);
             LobbySelectionMenuHandler.s_instance.CloseCreateRoomScene(uiLobbyMeta);
         }
     }

@@ -193,7 +193,7 @@ PrefabInstance:
       objectReference: {fileID: 728109941706048309}
     - target: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
       propertyPath: _offlineScene
-      value: Assets/Scenes/OfflineScene.unity
+      value: Assets/Scenes/WelcomeScene.unity
       objectReference: {fileID: 0}
     - target: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
       propertyPath: _loggingEnabled
