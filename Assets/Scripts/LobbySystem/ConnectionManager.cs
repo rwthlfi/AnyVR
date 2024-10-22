@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using System;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Voicechat;
 
 #if UNITY_SERVER
@@ -25,7 +26,8 @@ namespace LobbySystem
         {
             if (s_instance != null)
             {
-                Debug.Log("Instance of ConnectionManager already exists");
+                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
 
@@ -39,7 +41,7 @@ namespace LobbySystem
         
         [SerializeField] [Scene] private string _globalScene;
         private NetworkManager _networkManager;
-        
+
         public static string UserName { get; private set; }
 
         public event Action<bool> ConnectionState;
@@ -52,13 +54,11 @@ namespace LobbySystem
 
         private void Start()
         {
-            _networkManager = GetComponent<NetworkManager>();
-#if UNITY_SERVER
-            if (_networkManager == null)
+            if (NetworkManager.Instances.Any())
             {
-                return;
+                _networkManager = NetworkManager.Instances.First();
             }
-
+#if UNITY_SERVER
             Debug.Log("Starting server!");
             _networkManager.ServerManager.StartConnection();
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;

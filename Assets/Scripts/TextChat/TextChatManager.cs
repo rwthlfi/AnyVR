@@ -56,7 +56,6 @@ namespace TextChat
         public override void OnStartClient()
         {
             base.OnStartClient();
-            Debug.Log("Requesting Buffer");
             RequestBuffer();
         }
 

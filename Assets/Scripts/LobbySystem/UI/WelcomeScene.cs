@@ -19,7 +19,7 @@ namespace LobbySystem.UI
         [SerializeField] private GameObject _vrConnectionPanel;
         [SerializeField] private GameObject _vrLobbySelectionPanel;
         [SerializeField] private GameObject _vrCreateLobbyPanel;
-
+        
         private ConnectionManager _connectionManager;
         private GameObject _connectionPanel;
         private GameObject _lobbySelectionPanel;
@@ -63,7 +63,10 @@ namespace LobbySystem.UI
 
         private void OnDestroy()
         {
-            _connectionManager.ConnectionState -= OnConnectionState;
+            if(_connectionManager != null)
+            {
+                _connectionManager.ConnectionState -= OnConnectionState;
+            }
         }
 
         internal void OnConnectBtn(string fishnetAddress, string liveKitAddress, string userName)

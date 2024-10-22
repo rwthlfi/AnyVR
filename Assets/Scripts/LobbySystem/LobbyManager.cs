@@ -2,10 +2,10 @@ using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using FishNet.Transporting;
 using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -109,6 +109,30 @@ namespace LobbySystem
             Debug.Log($"Server started. Logging {logging}");
         }
 
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
+        }
+
+        private void Client_OnUnloadEnd(SceneUnloadEndEventArgs args)
+        {
+            if(_currentLobby == null)
+            {
+                return;
+            }
+            
+            string unloadLobbyPath = args.QueueData.SceneUnloadData.SceneLookupDatas.First().Name;
+            string currentLobbyPath = _currentLobby.Value.Scene;
+
+            if (unloadLobbyPath != currentLobbyPath)
+            {
+                return;
+            }
+
+            StartCoroutine(LoadWelcomeScene());
+        }
+
         [Server]
         private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
         {
@@ -190,6 +214,7 @@ namespace LobbySystem
                 return;
             }
 
+            Log($"Creating lobby. Scene = {scene}");
             LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, conn.ClientId, scene, maxClients);
             _lobbies.Add(lobbyMetaData.ID, lobbyMetaData);
             Log($"Lobby created. {lobbyMetaData.ToString()}");
@@ -264,9 +289,17 @@ namespace LobbySystem
         [TargetRpc]
         private void OnLobbyLeftRpc(NetworkConnection _)
         {
-            _currentLobby = null;
             LiveKitManager.s_instance.Disconnect(); // Disconnecting from voicechat
-            UnityEngine.SceneManagement.SceneManager.UnloadScene("UIScene");
+            // StartCoroutine(LoadWelcomeScene());
+        }
+
+        private IEnumerator LoadWelcomeScene()
+        {
+            AsyncOperation op = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("UIScene");
+            while (!op.isDone)
+            {
+                yield return null;
+            }
             UnityEngine.SceneManagement.SceneManager.LoadScene(_offlineScene, LoadSceneMode.Additive);
         }
 
@@ -337,26 +370,22 @@ namespace LobbySystem
                 return false;
             }
 
-            Debug.Log("1");
             if (!TryGetLobbyOfClient(clientConnection.ClientId, out string lobbyId))
             {
                 return false;
             }
 
-            Debug.Log("2");
             if (!_lobbyHandlers.TryGetValue(lobbyId, out LobbyHandler handler))
             {
                 return false;
             }
             
-            Debug.Log("3");
             handler.Server_RemoveClient(clientConnection.ClientId);
             _clientLobbyDict.Remove(clientConnection.ClientId);
 
             if (_lobbies.TryGetValue(lobbyId, out LobbyMetaData lmd))
             {
                 SceneUnloadData sud = new(new[] { lmd.Scene });
-                Debug.Log($"unloading {PlayerNameTracker.GetPlayerName(clientConnection)}, {sud}");
                 SceneManager.UnloadConnectionScenes(clientConnection, sud);
             }
 

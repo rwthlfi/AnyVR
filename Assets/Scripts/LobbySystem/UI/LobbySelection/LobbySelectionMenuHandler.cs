@@ -1,5 +1,3 @@
-using FishNet.Managing.Client;
-using FishNet.Managing.Timing;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -68,7 +66,6 @@ namespace LobbySystem.UI.LobbySelection
 
             _lobbyManager.PlayerCountUpdate += (lobbyId, count) =>
             {
-                Debug.Log($"Lobby with id={lobbyId} has now {count} connected players");
                 if(_lobbyCards.TryGetValue(lobbyId, out LobbyCardHandler cardHandler))
                 {
                     cardHandler.SetCurrentPlayerCount(count);

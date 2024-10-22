@@ -1,7 +1,9 @@
+using JetBrains.Annotations;
 using System;
 using System.Text.RegularExpressions;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -39,7 +41,6 @@ namespace LobbySystem.UI.LobbySelection
                 card.Click += () =>
                 {
                     _selectedRoom = card.MetaData.Scene;
-                    Debug.Log(_selectedRoom);
                     UpdateUI();
                 };
             }
@@ -70,7 +71,7 @@ namespace LobbySystem.UI.LobbySelection
         {
             bool intractable = true;
             intractable &= !string.IsNullOrEmpty(_nameInputField.text);
-            intractable &= !string.IsNullOrEmpty(_selectedRoom);
+            intractable &= _selectedRoom != null;
             intractable &= !_usePinToggle.isOn || _pinInputField.text.Length >= 4;
             return intractable;
         }
@@ -91,25 +92,30 @@ namespace LobbySystem.UI.LobbySelection
 
         public void OnOpenRoomBtn()
         {
-            if (string.IsNullOrEmpty(_selectedRoom))
-            {
-                return;
-            }
+            // if (string.IsNullOrEmpty(_selectedRoom))
+            // {
+            //     return;
+            // }
+            //
+            // const string pattern = @"([^/]+)\.unity$";
+            // Match match = Regex.Match(_selectedRoom, pattern);
+            //
+            // if (!match.Success)
+            // {
+            //     Debug.LogError("Error parsing location name");
+            //     return;
+            // }
 
-            const string pattern = @"([^/]+)\.unity$";
-            Match match = Regex.Match(_selectedRoom, pattern);
-
-            if (!match.Success)
+            if (_selectedRoom == null)
             {
-                Debug.LogError("Error parsing location name");
                 return;
             }
 
             string lobbyName = _nameInputField.text;
-            string location = match.Groups[1].Value;
+            // string location = match.Groups[1].Value;
             ushort userLimit = (ushort)Math.Clamp(Convert.ToInt32(_userLimitSlider.value), 1, k_maxUserLimit);
              
-            UILobbyMetaData uiLobbyMeta = new(lobbyName, -1, location, userLimit);
+            UILobbyMetaData uiLobbyMeta = new(lobbyName, -1, _selectedRoom, userLimit);
             LobbySelectionMenuHandler.s_instance.CloseCreateRoomScene(uiLobbyMeta);
         }
     }
