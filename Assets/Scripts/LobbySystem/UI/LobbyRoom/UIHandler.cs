@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -72,13 +73,14 @@ namespace LobbySystem.UI.LobbyRoom
 
         private void Update()
         {
-            if (!Input.GetKeyDown(KeyCode.Tab))
+            if (Input.GetKeyDown(KeyCode.Escape))
             {
-                return;
+                TogglePanel(Panel.PausePanel);
             }
-
-            Cursor.visible = !Cursor.visible;
-            Cursor.lockState = Cursor.visible ? CursorLockMode.None : CursorLockMode.Locked;
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                TogglePanel(Panel.ClientListPanel);
+            }
         }
 
         public void SetLocalClientIsAdmin(bool b)
@@ -96,32 +98,44 @@ namespace LobbySystem.UI.LobbyRoom
             return _isLocalAdmin;
         }
 
-        public void TogglePauseMenu()
+        internal void TogglePanel(Panel panel)
         {
-            TogglePanel(_pausePanelHandler.gameObject);
+            switch (panel)
+            {
+                case Panel.PausePanel:
+                    SetPanelActive(panel, !_pausePanelHandler.gameObject.activeSelf);
+                    break;
+                case Panel.ClientListPanel:
+                    SetPanelActive(panel, !_clientListHandler.gameObject.activeSelf);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(panel), panel, null);
+            }
         }
-
-        public void ToggleClientListPanel()
-        {
-            TogglePanel(_clientListHandler.gameObject);
-        }
-
-        private void TogglePanel(GameObject panel)
-        {
-            SetPanelActive(panel, !panel.activeSelf);
-        }
-
-        private void SetPanelActive(GameObject panel, bool active)
+        
+        internal void SetPanelActive(Panel panel, bool active)
         {
             foreach (GameObject e in _panels)
             {
                 e.SetActive(false);
             }
 
-            Debug.Log($"Toggle {panel.name}. active: {active}");
-            panel.SetActive(active);
-        }
+            Cursor.visible = active;
+            Cursor.lockState = active ? CursorLockMode.Confined : CursorLockMode.Locked;
 
+            switch (panel)
+            {
+                case Panel.PausePanel:
+                    _pausePanelHandler.gameObject.SetActive(active);
+                    break;
+                case Panel.ClientListPanel:
+                    _clientListHandler.gameObject.SetActive(active);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(panel), panel, null);
+            }
+        }
+        
         private void UpdateClientList((int, string)[] clientIds, int adminId) =>
             _clientListHandler.UpdateClientList(clientIds, adminId);
 
@@ -142,5 +156,10 @@ namespace LobbySystem.UI.LobbyRoom
 
         #endregion
 
+    }
+
+    internal enum Panel
+    {
+        PausePanel, ClientListPanel
     }
 }
