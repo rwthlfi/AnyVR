@@ -130,6 +130,7 @@ namespace LobbySystem
                 return;
             }
 
+            Debug.Log("Loading Welcome Scene");
             StartCoroutine(LoadWelcomeScene());
         }
 
@@ -202,11 +203,16 @@ namespace LobbySystem
             return null;
         }
         
+        public void Client_CreateLobby(string lobbyName, string scene, ushort maxClients)
+        {
+            CreateLobby(lobbyName, scene, maxClients, ClientManager.Connection);
+        }
+
         /// <summary>
         /// Server Rpc to create a new lobby on the server.
         /// </summary>
         [ServerRpc(RequireOwnership = false)]
-        public void CreateLobby(string lobbyName, string scene, ushort maxClients, NetworkConnection conn = null)
+        private void CreateLobby(string lobbyName, string scene, ushort maxClients, NetworkConnection conn = null)
         {
             maxClients = (ushort)Mathf.Max(1, maxClients);
             if (conn == null)
@@ -219,6 +225,7 @@ namespace LobbySystem
             _lobbies.Add(lobbyMetaData.ID, lobbyMetaData);
             Log($"Lobby created. {lobbyMetaData.ToString()}");
             AddClientToLobby(lobbyMetaData.ID, conn); // Auto join lobby
+            
         }
         
         /// <summary>
@@ -249,7 +256,7 @@ namespace LobbySystem
             }
 
             int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
-            if (currentPlayerCount >= lobby.MaxClients)
+            if (currentPlayerCount >= lobby.LobbyCapacity)
             {
                 Debug.LogError($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The lobby is already full");
                 return;
@@ -261,7 +268,7 @@ namespace LobbySystem
                 return;
             }
             
-            Log($"Client '{conn.ClientId}' joined lobby with id '{lobbyId}");
+            Log($"Client '{PlayerNameTracker.GetPlayerName(conn.ClientId)}' joined lobby with id '{lobbyId}");
             OnLobbyJoinedRpc(conn, lobby);
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
         }
