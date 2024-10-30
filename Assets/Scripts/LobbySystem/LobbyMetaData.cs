@@ -12,21 +12,21 @@ namespace LobbySystem
         public readonly string Name;
         public readonly int Creator;
         public readonly string Scene;
-        public readonly ushort MaxClients;
+        public readonly ushort LobbyCapacity;
         private readonly SceneLoadData _sceneLoadData;
         private int? _sceneHandle;
 
-        public LobbyMetaData(string id, string name, int creator, string scene, ushort maxClients)
+        public LobbyMetaData(string id, string name, int creator, string scene, ushort lobbyCapacity)
         {
             Name = name;
             Scene = scene;
             Creator = creator;
-            MaxClients = maxClients;
+            LobbyCapacity = lobbyCapacity;
             ID = id;
             _sceneHandle = null;
             _sceneLoadData = new SceneLoadData(scene)
             {
-                ReplaceScenes = ReplaceOption.All,
+                ReplaceScenes = ReplaceOption.OnlineOnly,
                 Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None }
             };
         }
@@ -42,7 +42,7 @@ namespace LobbySystem
             }
             SceneLoadData sceneLoadData = new((int)_sceneHandle)
             {
-                ReplaceScenes = ReplaceOption.All,
+                ReplaceScenes = ReplaceOption.OnlineOnly,
                 Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None }
             };
             return sceneLoadData;
@@ -55,7 +55,7 @@ namespace LobbySystem
 
         public override string ToString()
         {
-            return $"LobbyMetaData (Id={ID}, Name={Name}, Scene={Scene}, Creator={Creator}, MaxClients={MaxClients})";
+            return $"LobbyMetaData (Id={ID}, Name={Name}, Scene={Scene}, Creator={Creator}, MaxClients={LobbyCapacity})";
         }
     }
 }

@@ -24,7 +24,7 @@ namespace LobbySystem.UI.LobbySelection
             Name = lobby.Name;
             Creator = lobby.Creator;
             Location = lobby.Scene;
-            MaxClients = lobby.MaxClients;
+            MaxClients = lobby.LobbyCapacity;
             ID = lobby.ID;
         }
     }

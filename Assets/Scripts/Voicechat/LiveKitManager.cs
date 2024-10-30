@@ -135,7 +135,7 @@ namespace Voicechat
         {
             if (_chatClient == null)
             {
-                Debug.LogError("VoiceChatClient is not initialized!");
+                Debug.LogWarning("VoiceChatClient is not initialized!");
                 return;
             }
             // TODO: ensure that the passed names will result in a valid url for token server
@@ -161,7 +161,10 @@ namespace Voicechat
         /// </summary>
         public void Disconnect()
         {
-            _chatClient.Disconnect();
+            if(_chatClient != null)
+            {
+                _chatClient.Disconnect();
+            }
         }
 
         public void SetMicrophoneEnabled(bool b)
@@ -282,7 +285,7 @@ namespace Voicechat
 
         public bool TryGetAvailableMicrophoneNames(out string[] micNames)
         {
-            if (_chatClient.TryGetAvailableMicrophoneNames(out string[] names))
+            if (_chatClient != null && _chatClient.TryGetAvailableMicrophoneNames(out string[] names))
             {
                 micNames = names;
                 return true;

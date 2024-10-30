@@ -5,19 +5,14 @@ using JetBrains.Annotations;
 using System;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Voicechat;
-
-#if UNITY_SERVER
 using FishNet.Managing.Scened;
 using System.IO;
-#endif
 
 namespace LobbySystem
 {
     public class ConnectionManager : MonoBehaviour
     {
-
         #region Singleton
 
         private static ConnectionManager s_instance;
@@ -27,24 +22,44 @@ namespace LobbySystem
             if (s_instance != null)
             {
                 Destroy(gameObject);
-                Destroy(this);
                 return;
             }
 
             DontDestroyOnLoad(gameObject);
             s_instance = this;
         }
-
         #endregion
         
-        public bool IsConnected => _networkManager != null && _networkManager.ClientManager.Started;
-        
         [SerializeField] [Scene] private string _globalScene;
+
+        public ConnectionState State
+        {
+            get
+            {
+                if (_networkManager == null)
+                {
+                    return LobbySystem.ConnectionState.Disconnected;
+                }
+
+                ConnectionState state = LobbySystem.ConnectionState.Disconnected;
+                if (_networkManager.ClientManager.Started)
+                {
+                    state |= LobbySystem.ConnectionState.Client;
+                }
+                if (_networkManager.ServerManager.Started)
+                {
+                    state |= LobbySystem.ConnectionState.Server;
+                }
+
+                return state;
+            }
+        }
+        
         private NetworkManager _networkManager;
 
         public static string UserName { get; private set; }
 
-        public event Action<bool> ConnectionState;
+        public event Action<ConnectionState> ConnectionState;
         public event Action GlobalSceneLoaded;
 
         private void Awake()
@@ -58,63 +73,29 @@ namespace LobbySystem
             {
                 _networkManager = NetworkManager.Instances.First();
             }
-#if UNITY_SERVER
-            Debug.Log("Starting server!");
-            _networkManager.ServerManager.StartConnection();
-            _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
-#else
-            _networkManager.ClientManager.OnClientConnectionState += state =>
-            {
-                switch (state.ConnectionState)
-                {
-                    case LocalConnectionState.Started:
-                        ConnectionState?.Invoke(true);
-                        break;
-                    case LocalConnectionState.Stopped:
-                        ConnectionState?.Invoke(false);
-                        break;
-                    case LocalConnectionState.Starting:
-                        break;
-                    case LocalConnectionState.Stopping:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            };
-            _networkManager.SceneManager.OnLoadEnd += args =>
-            {
-                if (args.LoadedScenes.Any(scene => _globalScene.Contains(scene.name)))
-                {
-                    GlobalSceneLoaded?.Invoke();
-                }
-            };
-#endif
-    }
 
-        private void OnDestroy()
-        {
+            _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
+            _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
+            _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
+
 #if UNITY_SERVER
-            _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
+            StartServer();
 #endif
         }
 
-        public void ConnectToServer((string ip, ushort port) fishnetAddress, (string ip, ushort port) liveKitAddress, string userName)
+
+        public void StartServer()
         {
-            if (_networkManager == null)
+            if (State.HasFlag(LobbySystem.ConnectionState.Server))
             {
                 return;
             }
-
-            _networkManager.TransportManager.Transport.SetClientAddress(fishnetAddress.ip);
-            _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
-            _networkManager.ClientManager.StartConnection();
-            UserName = userName;
-            LiveKitManager.s_instance.SetTokenServerAddress(liveKitAddress.ip, liveKitAddress.port);
+            _networkManager.ServerManager.StartConnection();
         }
-
+        
         public void LeaveServer()
         {
-            if (_networkManager == null)
+            if (State is LobbySystem.ConnectionState.Disconnected or LobbySystem.ConnectionState.Client)
             {
                 return;
             }
@@ -128,8 +109,31 @@ namespace LobbySystem
         {
             return s_instance;
         }
+        
+        public void ConnectToServer((string ip, ushort port) fishnetAddress, (string ip, ushort port) liveKitAddress, string userName)
+        {
+            if (_networkManager == null)
+            {
+                return;
+            }
 
-#if UNITY_SERVER
+            if (State.HasFlag(LobbySystem.ConnectionState.Client))
+            {
+                return;
+            }
+
+            _networkManager.TransportManager.Transport.SetClientAddress(fishnetAddress.ip);
+            _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
+            _networkManager.ClientManager.StartConnection();
+            UserName = userName;
+            LiveKitManager.s_instance.SetTokenServerAddress(liveKitAddress.ip, liveKitAddress.port);
+        }
+
+        private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs state)
+        {
+            ConnectionState?.Invoke(State);
+        }
+        
         private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs state)
         {
             if (state.ConnectionState != LocalConnectionState.Started)
@@ -140,8 +144,38 @@ namespace LobbySystem
             string scene = Path.GetFileNameWithoutExtension(_globalScene);
             SceneLoadData sld = new(scene); 
             _networkManager.SceneManager.LoadGlobalScenes(sld);
-            ConnectionState?.Invoke(true);
+            ConnectionState?.Invoke(State);
         }
-#endif
+
+        private void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
+        {
+            if (args.LoadedScenes.Any(scene => _globalScene.Contains(scene.name)))
+            {
+                GlobalSceneLoaded?.Invoke();
+            }
+        }
+        
+        private void OnDestroy()
+        {
+            if (_networkManager == null)
+            {
+                return;
+            }
+
+            _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
+            _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
+            _networkManager.SceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
+        }
+
+        public void StopServer()
+        {
+            _networkManager.ServerManager.StopConnection(false);
+        }
+    }
+
+    [Flags]
+    public enum ConnectionState
+    {
+        Disconnected = 0, Client = 1 << 0, Server = 1 << 1, 
     }
 }

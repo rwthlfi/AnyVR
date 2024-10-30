@@ -21,11 +21,20 @@ namespace LobbySystem
 {
     public class DestroyOnServer : MonoBehaviour
     {
-#if UNITY_SERVER
         private void Awake()
         {
-            Destroy(gameObject);
+            ConnectionManager connectionManager = ConnectionManager.GetInstance();
+
+            if (connectionManager == null)
+            {
+                Debug.LogError($"Could not find instance of {nameof(connectionManager)}");
+                return;
+            }
+            
+            if(connectionManager.State == ConnectionState.Server)
+            {
+                Destroy(gameObject);
+            }
         }
-#endif
     }
 }

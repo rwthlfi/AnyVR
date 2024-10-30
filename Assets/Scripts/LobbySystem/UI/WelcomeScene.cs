@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
@@ -19,6 +21,8 @@ namespace LobbySystem.UI
         [SerializeField] private GameObject _vrConnectionPanel;
         [SerializeField] private GameObject _vrLobbySelectionPanel;
         [SerializeField] private GameObject _vrCreateLobbyPanel;
+
+        private readonly Dictionary<WelcomeScenePanel, GameObject> _panels = new();
         
         private ConnectionManager _connectionManager;
         private GameObject _connectionPanel;
@@ -46,19 +50,44 @@ namespace LobbySystem.UI
                 Debug.LogError("Instance of ConnectionManager not found");
                 return;    
             }
+
+            _panels.Add(WelcomeScenePanel.ConnectionPanel, _connectionPanel);
+            _panels.Add(WelcomeScenePanel.LobbySelectionPanel, _lobbySelectionPanel);
+            _panels.Add(WelcomeScenePanel.CreateLobbyPanel, _createLobbyPanel);
             
+            SetActivePanel(WelcomeScenePanel.ConnectionPanel);
             _connectionManager.ConnectionState += OnConnectionState;
-            _connectionPanel.SetActive(true);
-            _createLobbyPanel.SetActive(false);
-            _lobbySelectionPanel.SetActive(false);
-            
-            OnConnectionState(_connectionManager.IsConnected);
         }
 
-        private void OnConnectionState(bool isConnected)
+        private void SetActivePanel(WelcomeScenePanel panel)
         {
-            _connectionPanel.SetActive(!isConnected);
-            _lobbySelectionPanel.SetActive(isConnected);
+            foreach (KeyValuePair<WelcomeScenePanel,GameObject> pair in _panels)
+            {
+                pair.Value.SetActive(false);
+            }
+
+            switch (panel)
+            {
+                case WelcomeScenePanel.ConnectionPanel: 
+                    _connectionPanel.SetActive(true);
+                    break;
+                case WelcomeScenePanel.LobbySelectionPanel: 
+                    _lobbySelectionPanel.SetActive(true);
+                    break;
+                case WelcomeScenePanel.CreateLobbyPanel: 
+                    _createLobbyPanel.SetActive(true);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(panel), panel, null);
+            }
+        }
+        
+        private void OnConnectionState(ConnectionState state)
+        {
+            Debug.Log($"Connection State Update: {state}");
+            SetActivePanel(state == ConnectionState.Disconnected
+                ? WelcomeScenePanel.ConnectionPanel
+                : WelcomeScenePanel.LobbySelectionPanel);
         }
 
         private void OnDestroy()
@@ -107,6 +136,11 @@ namespace LobbySystem.UI
 
             res = (arr[0], (ushort)port);
             return true;
+        }
+        
+        private enum WelcomeScenePanel
+        {
+            ConnectionPanel, LobbySelectionPanel, CreateLobbyPanel
         }
     }
 }

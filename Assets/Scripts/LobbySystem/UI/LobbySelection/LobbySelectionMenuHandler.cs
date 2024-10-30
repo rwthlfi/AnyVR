@@ -127,7 +127,7 @@ namespace LobbySystem.UI.LobbySelection
             }
 
             CloseCreateRoomScene();
-            _lobbyManager.CreateLobby(uiLobbyMetaData.Name, uiLobbyMetaData.Location, uiLobbyMetaData.MaxClients);
+            _lobbyManager.Client_CreateLobby(uiLobbyMetaData.Name, uiLobbyMetaData.Location, uiLobbyMetaData.MaxClients);
         }
 
         public void CloseCreateRoomScene()
