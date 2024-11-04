@@ -47,6 +47,8 @@ namespace LobbySystem
 
         #region ServerOnly
 
+        private event Action<string> LobbyHandlerRegistered;
+
         /// <summary>
         /// The actual lobby handlers.
         /// Only initialized on the server.
@@ -90,7 +92,7 @@ namespace LobbySystem
         /// <summary>
         /// Invoked when a remote client closed a lobby
         /// </summary>
-        public event Action<LobbyMetaData> LobbyClosed;
+        public event Action<string> LobbyClosed;
         
         /// <summary>
         /// Invoked when the player-count of a lobby changes.
@@ -101,7 +103,6 @@ namespace LobbySystem
         public override void OnStartServer()
         {
             base.OnStartServer();
-            _lobbies.OnChange += lobbies_OnChange;
             _lobbyHandlers = new Dictionary<string, LobbyHandler>();
             _clientLobbyDict = new Dictionary<int, string>();
             SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
@@ -136,21 +137,25 @@ namespace LobbySystem
         [Server]
         private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
         {
-            // Lobbies only have one scene
-            if(loadArgs.LoadedScenes.Length != 1)
+            object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
+            // Lobbies must have this flag
+            if (serverParams.Length < 3 || serverParams[0] as string != "lobby")
             {
                 return;
             }
-
-            // Lobby scenes are always loaded with exactly one client (creator)
-            if (loadArgs.QueueData.Connections.Length != 1)
+            
+            // Lobby scenes have to be loaded with exactly 0 clients
+            if (loadArgs.QueueData.Connections.Length != 0)
             {
+                Debug.LogWarning("Can't register LobbyHandler. The lobby scene must be empty.");
                 return;
             }
 
             // Try get corresponding lobbyId
-            if (!_clientLobbyDict.TryGetValue(loadArgs.QueueData.Connections[0].ClientId, out string lobbyId))
+            string lobbyId = serverParams[1] as string;
+            if (string.IsNullOrEmpty(lobbyId))
             {
+                Debug.LogWarning("Can't register LobbyHandler. The passed lobbyId is null.");
                 return;
             }
 
@@ -160,10 +165,25 @@ namespace LobbySystem
                 return;
             }
             
+            // Check that the creating client is passed as param
+            if (serverParams[2] is not int)
+            {
+                Debug.LogWarning("Can't register LobbyHandler. The clientId should be passed as an int.");
+                return;
+            }
+            int adminId = (int) serverParams[2];
+
+            if (!ServerManager.Clients.ContainsKey(adminId))
+            {
+                Debug.LogWarning("Can't register LobbyHandler. The passed clientId is not connected to the server.");
+                return;
+            }
+
             // Spawn and register the LobbyHandler
+            Log($"Instantiating LobbyHandler for lobby with id = {lobbyId}");
             LobbyHandler lobbyHandler = Instantiate(_lobbyHandlerPrefab);
             Spawn(lobbyHandler.NetworkObject, null, loadArgs.LoadedScenes[0]);
-            lobbyHandler.Init(lobbyId, loadArgs.QueueData.Connections[0].ClientId);
+            lobbyHandler.Init(lobbyId, adminId);
             lobbyHandler.ClientJoin += (clientId, _) =>
             {
                 int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
@@ -179,6 +199,7 @@ namespace LobbySystem
             _lobbyHandlers.Add(lobbyId, lobbyHandler);
             
             Log($"LobbyHandler with lobbyId '{lobbyId}' is registered");
+            LobbyHandlerRegistered?.Invoke(lobbyId);
         }
 
         [ObserversRpc]
@@ -214,18 +235,59 @@ namespace LobbySystem
         [ServerRpc(RequireOwnership = false)]
         private void CreateLobby(string lobbyName, string scene, ushort maxClients, NetworkConnection conn = null)
         {
-            maxClients = (ushort)Mathf.Max(1, maxClients);
             if (conn == null)
             {
                 return;
             }
 
-            Log($"Creating lobby. Scene = {scene}");
-            LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, conn.ClientId, scene, maxClients);
-            _lobbies.Add(lobbyMetaData.ID, lobbyMetaData);
-            Log($"Lobby created. {lobbyMetaData.ToString()}");
-            AddClientToLobby(lobbyMetaData.ID, conn); // Auto join lobby
+            StartCoroutine(Co_CreateLobby(lobbyName, scene, maxClients, conn));
+        }
+
+        [Server]
+        private IEnumerator Co_CreateLobby(string lobbyName, string scene, ushort maxClients,
+            NetworkConnection conn = null)
+        {
+            if (conn is null)
+            {
+                yield break;
+            }
             
+            maxClients = (ushort)Mathf.Max(1, maxClients);
+            LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, conn.ClientId, scene, maxClients);
+            _lobbies.Add(lobbyMetaData.LobbyId, lobbyMetaData);
+            
+            // Starts the lobby scene without clients. When loaded, the LoadEnd callback will be called and we spawn a LobbyHandler. After that clients are able to join.
+            Log("Loading lobby scene. Waiting for lobby handler");
+            SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), lobbyMetaData.GetSceneLoadData());
+
+            // Wait for Lobby Handler
+            float timeout = 20f;
+            bool receivedLobbyHandler = false;
+            LobbyHandlerRegistered += lobbyId =>
+            {
+                if (lobbyId == lobbyMetaData.LobbyId)
+                {
+                    receivedLobbyHandler = true;
+                }
+            };
+            
+            while (!receivedLobbyHandler && timeout > 0)
+            {
+                yield return null;
+                timeout -= Time.deltaTime;
+            }
+
+            if (!receivedLobbyHandler)
+            {
+                CloseLobby(lobbyMetaData.LobbyId);
+                Debug.LogWarning($"Lobby (id={lobbyMetaData.LobbyId}) could not be created. LobbyHandler was not received.");
+                yield break;
+            }
+
+            Log($"Lobby created. {lobbyMetaData.ToString()}");
+            AddClientToLobby(lobbyMetaData.LobbyId, conn); // Auto join lobby
+            
+            LobbyOpened?.Invoke(lobbyMetaData);
         }
         
         /// <summary>
@@ -247,24 +309,26 @@ namespace LobbySystem
 
             if (!_lobbies.TryGetValue(lobbyId, out LobbyMetaData lobby))
             {
+                Debug.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Lobby was not found.");
                 return;
             }
             
-            if (_currentLobby != null)
+            if (!_lobbyHandlers.TryGetValue(lobbyId, out LobbyHandler _))
             {
-                LeaveLobby();
+                Debug.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The corresponding lobby handler does not exist.");
+                return;
             }
 
             int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
             if (currentPlayerCount >= lobby.LobbyCapacity)
             {
-                Debug.LogError($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The lobby is already full");
+                Debug.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The lobby is already full.");
                 return;
             }
 
             if (!_clientLobbyDict.TryAdd(conn.ClientId, lobbyId))
             {
-                Debug.LogError($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'");
+                Debug.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'.");
                 return;
             }
             
@@ -282,7 +346,7 @@ namespace LobbySystem
             _currentLobby = lmd;
             if (LiveKitManager.s_instance != null)
             {
-                LiveKitManager.s_instance.TryConnectToRoom(lmd.ID, ConnectionManager.UserName);
+                LiveKitManager.s_instance.TryConnectToRoom(lmd.LobbyId, ConnectionManager.UserName);
             }
             else
             {
@@ -310,31 +374,6 @@ namespace LobbySystem
             UnityEngine.SceneManagement.SceneManager.LoadScene(_offlineScene, LoadSceneMode.Additive);
         }
 
-        private void lobbies_OnChange(SyncDictionaryOperation op, string key, LobbyMetaData value, bool asServer)
-        {
-            if (asServer)
-            {
-                return;
-            }
-            switch (op)
-            {
-                case SyncDictionaryOperation.Add:
-                    LobbyOpened?.Invoke(value);
-                    break;
-                case SyncDictionaryOperation.Clear:
-                    break;
-                case SyncDictionaryOperation.Remove:
-                    LobbyClosed?.Invoke(value);
-                    break;
-                case SyncDictionaryOperation.Set:
-                    break;
-                case SyncDictionaryOperation.Complete:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(op), op, null);
-            }
-        }
-
         [Server]
         private void CloseLobby(string lobbyId)
         {
@@ -357,6 +396,7 @@ namespace LobbySystem
             
             _lobbyHandlers.Remove(lobbyId);
             _lobbies.Remove(lobbyId);
+            LobbyClosed?.Invoke(lobbyId);
             Log($"Lobby with id '{lobbyId}' is closed");
         }
         
@@ -426,16 +466,9 @@ namespace LobbySystem
         [Server]
         public bool TryGetLobbyHandlerById(string lobbyId, out LobbyHandler res)
         {
-            Debug.Log($"Lobby Handler: {_lobbyHandlers.Count}");
             return _lobbyHandlers.TryGetValue(lobbyId, out res);
         }
         
-        public override void OnStopServer()
-        {
-            base.OnStopServer();
-            _lobbies.OnChange -= lobbies_OnChange;
-        }
-
         [CanBeNull]
         public static LobbyManager GetInstance()
         {

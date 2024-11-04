@@ -196,5 +196,10 @@ namespace LobbySystem
         {
             LobbyManager.s_instance.LeaveLobby();
         }
+
+        public string GetLobbyId()
+        {
+            return _lobbyId.Value;
+        }
     }
 }
