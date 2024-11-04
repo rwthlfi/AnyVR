@@ -22,10 +22,10 @@ namespace LobbySystem.UI.LobbySelection
         public UILobbyMetaData(LobbyMetaData lobby)
         {
             Name = lobby.Name;
-            Creator = lobby.Creator;
+            Creator = lobby.CreatorId;
             Location = lobby.Scene;
             MaxClients = lobby.LobbyCapacity;
-            ID = lobby.ID;
+            ID = lobby.LobbyId;
         }
     }
 }

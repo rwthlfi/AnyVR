@@ -153,20 +153,19 @@ namespace LobbySystem.UI.LobbySelection
             _lobbyCards.Add(uiLobby.ID, card);
         }
         
-        private void RemoveLobbyCard(LobbyMetaData lobby)
+        private void RemoveLobbyCard(string lobbyId)
         {
-            UILobbyMetaData uiLobby = new(lobby);
-            if (!_lobbyCards.TryGetValue(uiLobby.ID, out LobbyCardHandler card))
+            if (!_lobbyCards.TryGetValue(lobbyId, out LobbyCardHandler card))
             {
                 return;
             }
 
             if (card != null)
             {
-                Destroy(_lobbyCards[uiLobby.ID].gameObject);
+                Destroy(_lobbyCards[lobbyId].gameObject);
             }
 
-            _lobbyCards.Remove(uiLobby.ID);
+            _lobbyCards.Remove(lobbyId);
         }
 
         private void OnDestroy()
