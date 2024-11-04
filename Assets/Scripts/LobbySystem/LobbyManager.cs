@@ -444,18 +444,6 @@ namespace LobbySystem
         public bool TryGetLobbyIdOfClient(int clientId, out string lobbyId)
         {
             return _clientLobbyDict.TryGetValue(clientId, out lobbyId);
-            // foreach (KeyValuePair<string, LobbyHandler> lobbyPair in _lobbyHandlers)
-            // {
-            //     (int, string)[] clients = lobbyPair.Value.GetClients();
-            //     if (clients.Any(client => client.Item1 == clientId))
-            //     {
-            //         lobbyId = lobbyPair.Key;
-            //         return true;
-            //     }
-            // }
-            //
-            // lobbyId = default;
-            // return false;
         }
 
         [Server]
