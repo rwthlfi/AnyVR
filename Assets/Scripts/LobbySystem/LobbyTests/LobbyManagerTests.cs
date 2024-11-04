@@ -1,8 +1,7 @@
-#define UNIT_TESTS
-
-using System;
 using UnityEngine.TestTools;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
@@ -55,6 +54,8 @@ namespace LobbySystem.LobbyTests
             Assert.IsNotNull(_lobbyManager);
             Assert.IsNotNull(_lobbyManager.ServerManager);
             Assert.IsNotNull(_lobbyManager.ClientManager);
+            Assert.AreEqual(_lobbyManager.GetAvailableLobbies().Count, 0);
+            yield return new WaitForSeconds(1f);
         }
         
         [UnityTest]
@@ -75,7 +76,6 @@ namespace LobbySystem.LobbyTests
             };
             
             float timeout = 5f;
-            // while !(client && loaded) && !timeout
             while (!receivedCallback && timeout > 0)
             {
                 yield return null;
@@ -83,6 +83,27 @@ namespace LobbySystem.LobbyTests
             }
             
             Assert.IsTrue(receivedCallback);
+            Assert.AreEqual(_lobbyManager.GetAvailableLobbies().Count, 1);
+
+            KeyValuePair<string, LobbyMetaData> lobbyMetaPair = _lobbyManager.GetAvailableLobbies().First();
+            Assert.AreEqual(lobbyName, lobbyMetaPair.Value.Name);
+            Assert.AreEqual(scene, lobbyMetaPair.Value.Scene);
+            Assert.AreEqual(lobbyCapacity, lobbyMetaPair.Value.LobbyCapacity);
+
+            bool lobbyFound = _lobbyManager.TryGetLobbyIdOfClient(_lobbyManager.ClientManager.Connection.ClientId,
+                out string lobbyId);
+            
+            Assert.IsTrue(lobbyFound);
+            Assert.AreEqual(lobbyId, lobbyMetaPair.Key);
+
+            bool lobbyHandlerFound = _lobbyManager.TryGetLobbyHandlerById(lobbyId, out LobbyHandler lobbyHandler);
+            
+            Assert.IsTrue(lobbyHandlerFound);
+            Assert.AreEqual(lobbyHandler.CurrentClientCount, (ushort)1);
+            (int id, string name) client = lobbyHandler.GetClients().First();
+            Assert.AreEqual(_lobbyManager.ClientManager.Connection.ClientId, client.id);
+            
+            
             
             yield return null;
         }
