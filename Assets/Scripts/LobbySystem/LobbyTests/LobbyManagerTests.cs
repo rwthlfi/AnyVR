@@ -75,7 +75,7 @@ namespace LobbySystem.LobbyTests
                 receivedCallback = true;
             };
             
-            float timeout = 25f;
+            float timeout = 10f;
             while (!receivedCallback && timeout > 0)
             {
                 yield return null;
@@ -99,10 +99,25 @@ namespace LobbySystem.LobbyTests
             bool lobbyHandlerFound = _lobbyManager.TryGetLobbyHandlerById(lobbyId, out LobbyHandler lobbyHandler);
             Assert.IsTrue(lobbyHandlerFound);
 
-            // Assert.AreEqual(_lobbyManager.clientLobbyDict.Count = 1)
-            // Assert.AreEqual(lobbyHandler.CurrentClientCount, (ushort)1);
-            // (int id, string name) client = lobbyHandler.GetClients().First();
-            // Assert.AreEqual(_lobbyManager.ClientManager.Connection.ClientId, client.id);
+            int creatorId = lobbyMetaPair.Value.CreatorId;
+            // The creator should be registered to that lobby in the Lobby Manager
+            Assert.IsTrue(_lobbyManager.TryGetLobbyIdOfClient(creatorId, out lobbyId));
+            // The creator should NOT have the lobby scene already loaded. I.e the scene should have no client connections.
+            Assert.IsTrue(lobbyHandler.GetClients().Length == 0);
+
+            bool creatorJoined = false;
+            lobbyHandler.ClientJoin += (i, s) =>
+            {
+                Assert.AreEqual(creatorId, i);
+                creatorJoined = true;
+            };
+            timeout = 10f;
+            while (!creatorJoined && timeout > 0)
+            {
+                yield return null;
+                timeout -= Time.deltaTime;
+            }
+            Assert.IsTrue(creatorJoined);
         }
 
         [UnityTearDown]

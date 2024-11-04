@@ -47,7 +47,8 @@ namespace LobbySystem
             SceneLoadData sceneLoadData = new((int)_sceneHandle)
             {
                 ReplaceScenes = ReplaceOption.OnlineOnly,
-                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None }
+                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None },
+                Params = { ServerParams = new object[] { "lobby", LobbyId, CreatorId} } 
             };
             return sceneLoadData;
         }
