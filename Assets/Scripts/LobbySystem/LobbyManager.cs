@@ -81,7 +81,6 @@ namespace LobbySystem
         private void Awake()
         {
             InitSingleton();
-            _lobbies.OnChange += lobbies_OnChange;
         }
 
         /// <summary>
@@ -102,6 +101,7 @@ namespace LobbySystem
         public override void OnStartServer()
         {
             base.OnStartServer();
+            _lobbies.OnChange += lobbies_OnChange;
             _lobbyHandlers = new Dictionary<string, LobbyHandler>();
             _clientLobbyDict = new Dictionary<int, string>();
             SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
@@ -130,7 +130,6 @@ namespace LobbySystem
                 return;
             }
 
-            Debug.Log("Loading Welcome Scene");
             StartCoroutine(LoadWelcomeScene());
         }
 
@@ -188,6 +187,7 @@ namespace LobbySystem
             PlayerCountUpdate?.Invoke(lobby, playerCount);
         }
 
+        [Server]
         private string CreateUniqueLobbyId(string scene)
         {
             int i = 1;
@@ -377,7 +377,7 @@ namespace LobbySystem
                 return false;
             }
 
-            if (!TryGetLobbyOfClient(clientConnection.ClientId, out string lobbyId))
+            if (!TryGetLobbyIdOfClient(clientConnection.ClientId, out string lobbyId))
             {
                 return false;
             }
@@ -406,28 +406,33 @@ namespace LobbySystem
         }
 
         [Server]
-        private bool TryGetLobbyOfClient(int clientId, out string lobbyId)
+        public bool TryGetLobbyIdOfClient(int clientId, out string lobbyId)
         {
-            Debug.Log($"active lobbies: ({_lobbyHandlers.Count})");
-            foreach (KeyValuePair<string, LobbyHandler> pair in _lobbyHandlers)
-            {
-                Debug.Log(pair.Key);
-            }
-            foreach (KeyValuePair<string, LobbyHandler> lobbyPair in from lobbyPair in _lobbyHandlers
-                     let clients = lobbyPair.Value.GetClients()
-                     where clients.Any(client => client.Item1 == clientId)
-                     select lobbyPair)
-            {
-                lobbyId = lobbyPair.Key;
-                return true;
-            }
-
-            lobbyId = default;
-            return false;
+            return _clientLobbyDict.TryGetValue(clientId, out lobbyId);
+            // foreach (KeyValuePair<string, LobbyHandler> lobbyPair in _lobbyHandlers)
+            // {
+            //     (int, string)[] clients = lobbyPair.Value.GetClients();
+            //     if (clients.Any(client => client.Item1 == clientId))
+            //     {
+            //         lobbyId = lobbyPair.Key;
+            //         return true;
+            //     }
+            // }
+            //
+            // lobbyId = default;
+            // return false;
         }
 
-        private void OnDestroy()
+        [Server]
+        public bool TryGetLobbyHandlerById(string lobbyId, out LobbyHandler res)
         {
+            Debug.Log($"Lobby Handler: {_lobbyHandlers.Count}");
+            return _lobbyHandlers.TryGetValue(lobbyId, out res);
+        }
+        
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
             _lobbies.OnChange -= lobbies_OnChange;
         }
 
@@ -449,6 +454,7 @@ namespace LobbySystem
             }
         }
 
+        [Server]
         public Dictionary<string, LobbyMetaData> GetAvailableLobbies()
         {
             return _lobbies.Collection;
