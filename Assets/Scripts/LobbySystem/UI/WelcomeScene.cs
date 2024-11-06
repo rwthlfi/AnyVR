@@ -54,8 +54,10 @@ namespace LobbySystem.UI
             _panels.Add(WelcomeScenePanel.ConnectionPanel, _connectionPanel);
             _panels.Add(WelcomeScenePanel.LobbySelectionPanel, _lobbySelectionPanel);
             _panels.Add(WelcomeScenePanel.CreateLobbyPanel, _createLobbyPanel);
-            
-            SetActivePanel(WelcomeScenePanel.ConnectionPanel);
+
+            SetActivePanel(_connectionManager.State == ConnectionState.Disconnected
+                ? WelcomeScenePanel.ConnectionPanel
+                : WelcomeScenePanel.LobbySelectionPanel);
             _connectionManager.ConnectionState += OnConnectionState;
         }
 

@@ -138,8 +138,13 @@ namespace LobbySystem
         private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
         {
             object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
+            if (serverParams.Length < 3 || serverParams[0] is not SceneLoadParam)
+            {
+                return;
+            }
+            
             // Lobbies must have this flag
-            if (serverParams.Length < 3 || serverParams[0] as string != "lobby")
+            if ((SceneLoadParam)serverParams[0] != SceneLoadParam.Lobby)
             {
                 return;
             }
@@ -470,7 +475,6 @@ namespace LobbySystem
             }
         }
 
-        [Server]
         public Dictionary<string, LobbyMetaData> GetAvailableLobbies()
         {
             return _lobbies.Collection;

@@ -8,6 +8,7 @@ using UnityEngine;
 using Voicechat;
 using FishNet.Managing.Scened;
 using System.IO;
+using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace LobbySystem
 {
@@ -60,7 +61,8 @@ namespace LobbySystem
         public static string UserName { get; private set; }
 
         public event Action<ConnectionState> ConnectionState;
-        public event Action GlobalSceneLoaded;
+        public event Action<bool> GlobalSceneLoaded;
+        private event Action<bool> LobbySceneLoaded;
 
         private void Awake()
         {
@@ -78,11 +80,20 @@ namespace LobbySystem
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
 
-#if UNITY_SERVER
-            StartServer();
+#if UNITY_SERVER && !UNITY_EDITOR
+            StartServer(); // Autostart server in server builds
+#else
+            // The WelcomeScene gets only unloaded for clients
+            LobbySceneLoaded += asServer =>
+            {
+                if(!asServer)
+                {
+                    SceneManager.UnloadSceneAsync("WelcomeScene");
+                }
+            };
 #endif
         }
-
+        
 
         public void StartServer()
         {
@@ -90,6 +101,7 @@ namespace LobbySystem
             {
                 return;
             }
+            Debug.LogWarning("Starting Server");
             _networkManager.ServerManager.StartConnection();
         }
         
@@ -142,16 +154,50 @@ namespace LobbySystem
             }
 
             string scene = Path.GetFileNameWithoutExtension(_globalScene);
-            SceneLoadData sld = new(scene); 
+            SceneLoadData sld = new(scene) { Params =
+                {
+                    ServerParams = new[] { (object)SceneLoadParam.Global }, 
+                    ClientParams = new[] { (byte) SceneLoadParam.Global }
+                }
+            };
             _networkManager.SceneManager.LoadGlobalScenes(sld);
             ConnectionState?.Invoke(State);
         }
 
         private void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
         {
-            if (args.LoadedScenes.Any(scene => _globalScene.Contains(scene.name)))
+            SceneLoadParam param;
+            if (args.QueueData.AsServer)
             {
-                GlobalSceneLoaded?.Invoke();
+                object[] serverParams = args.QueueData.SceneLoadData.Params.ServerParams;
+                if (serverParams.Length < 1 || serverParams[0] is not SceneLoadParam)
+                {
+                    return;
+                }
+
+                param = (SceneLoadParam)serverParams[0];
+            }
+            else
+            {
+                byte[] clientParams = args.QueueData.SceneLoadData.Params.ClientParams;
+                if (clientParams.Length < 1)
+                {
+                    return;
+                }
+
+                param = (SceneLoadParam)clientParams[0];
+            }
+
+            switch (param)
+            {
+                case SceneLoadParam.Global:
+                    GlobalSceneLoaded?.Invoke(args.QueueData.AsServer);
+                    break;
+                case SceneLoadParam.Lobby:
+                    LobbySceneLoaded?.Invoke(args.QueueData.AsServer);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
         
@@ -177,5 +223,10 @@ namespace LobbySystem
     public enum ConnectionState
     {
         Disconnected = 0, Client = 1 << 0, Server = 1 << 1, 
+    }
+
+    public enum SceneLoadParam
+    {
+        Global = 0, Lobby
     }
 }

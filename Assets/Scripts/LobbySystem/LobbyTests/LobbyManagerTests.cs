@@ -36,7 +36,7 @@ namespace LobbySystem.LobbyTests
 
             bool globalSceneLoaded = false;
             
-            _connectionManager.GlobalSceneLoaded += () =>
+            _connectionManager.GlobalSceneLoaded += _ =>
             {
                 globalSceneLoaded = true;
             };

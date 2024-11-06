@@ -40,21 +40,36 @@ namespace LobbySystem.UI.LobbySelection
                 return;    
             }
             
+            // LobbyManager.GetInstance() != null iff the client is unloading from a lobby.
             if (LobbyManager.GetInstance() != null)
             {
-                InitLobby(LobbyManager.GetInstance());
+                // So here we initialize the lobby when reloading the WelcomeScene
+                InitLobbyManager(LobbyManager.GetInstance());
             }
 
-            _connectionManager.GlobalSceneLoaded += GlobalSceneLoaded;
+            // The global scene never unloads (on server and on client)
+            // When the GlobalSceneLoaded callback fires 
+            //      - on the server on startup
+            //      - on the client when connecting to a server.
+            // The LobbyManager is in the GlobalScene.
+            // So here we wait for the LobbyManager to be instantiated and then init the selection menu.
+            _connectionManager.GlobalSceneLoaded += asServer =>
+            {
+                if (!asServer) // On the server we don't need to update the ui
+                {
+                    InitLobbyManager(LobbyManager.GetInstance());
+                }
+            };
         }
 
-        private void GlobalSceneLoaded()
+        private void InitLobbyManager(LobbyManager lobbyManager)
         {
-            InitLobby(LobbyManager.GetInstance());
-        }
-
-        private void InitLobby(LobbyManager lobbyManager)
-        {
+            if (_lobbyManager == lobbyManager)
+            {
+                Debug.LogWarning("The LobbyManager is already initialized");
+                return;
+            }
+            
             _lobbyManager = lobbyManager;
             if (_lobbyManager == null)
             {
@@ -144,6 +159,11 @@ namespace LobbySystem.UI.LobbySelection
         private void AddLobbyCard(LobbyMetaData lobby)
         {
             UILobbyMetaData uiLobby = new(lobby);
+            if (_lobbyCards.ContainsKey(uiLobby.ID))
+            {
+                Debug.LogWarning("A card with the same id has already been added.");
+                return;
+            }
             LobbyCardHandler card = Instantiate(_lobbyCardPrefab, _lobbyCardParent);
             card.SetLobbyMeta(uiLobby);
             card.JoinBtn += () =>
