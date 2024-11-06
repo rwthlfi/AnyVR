@@ -28,10 +28,14 @@ namespace LobbySystem
             {
                 ReplaceScenes = ReplaceOption.OnlineOnly,
                 Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None },
-                // By adding the string "lobby" the LobbyManager knows this scene is a lobby when the SceneManager.LoadEnd callback fires.
+                // By adding SceneLoadParam.Lobby the LobbyManager knows this scene is a lobby when the SceneManager.LoadEnd callback fires.
                 // By adding the lobbyId the LobbyManager can register a corresponding LobbyHandler.
                 // By adding the creatorId the LobbyManager can give that client administration rights in the lobby
-                Params = { ServerParams = new object[] { "lobby", lobbyId, creatorId} } 
+                Params =
+                {
+                    ServerParams = new object[] { SceneLoadParam.Lobby, lobbyId, creatorId},
+                    ClientParams = new[] {(byte) SceneLoadParam.Lobby}
+                } 
             };
         }
 
@@ -48,7 +52,11 @@ namespace LobbySystem
             {
                 ReplaceScenes = ReplaceOption.OnlineOnly,
                 Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None },
-                Params = { ServerParams = new object[] { "lobby", LobbyId, CreatorId} } 
+                Params =
+                {
+                    ServerParams = new object[] { SceneLoadParam.Lobby , LobbyId, CreatorId},
+                    ClientParams = new[] {(byte) SceneLoadParam.Lobby}
+                } 
             };
             return sceneLoadData;
         }
