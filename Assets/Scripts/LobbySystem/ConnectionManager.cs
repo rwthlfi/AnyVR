@@ -57,6 +57,8 @@ namespace LobbySystem
         }
         
         private NetworkManager _networkManager;
+        
+        private bool _isServerInitialized;
 
         public static string UserName { get; private set; }
 
@@ -75,7 +77,7 @@ namespace LobbySystem
             {
                 _networkManager = NetworkManager.Instances.First();
             }
-
+            
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
@@ -148,6 +150,13 @@ namespace LobbySystem
         
         private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs state)
         {
+            // The OnServerConnectionState will be called for each transport. 
+            // But we only want to load the global scene once
+            if(_isServerInitialized)
+            {
+                return;
+            }
+
             if (state.ConnectionState != LocalConnectionState.Started)
             {
                 return;
@@ -160,6 +169,9 @@ namespace LobbySystem
                     ClientParams = new[] { (byte) SceneLoadParam.Global }
                 }
             };
+
+            _isServerInitialized = true;
+            
             _networkManager.SceneManager.LoadGlobalScenes(sld);
             ConnectionState?.Invoke(State);
         }
