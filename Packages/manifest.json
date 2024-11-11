@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.baracuda.runtime-monitoring": "3.6.0",
+    "com.firstgeargames.fishnet": "https://github.com/FirstGearGames/FishNet.git?path=Assets/FishNet",
     "com.unity.collab-proxy": "2.2.0",
     "com.unity.feature.development": "1.0.1",
     "com.unity.feature.vr": "1.0.0",
