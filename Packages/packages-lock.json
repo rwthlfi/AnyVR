@@ -7,6 +7,22 @@
       "dependencies": {},
       "url": "https://package.openupm.com"
     },
+    "com.firstgeargames.fishnet": {
+      "version": "https://github.com/FirstGearGames/FishNet.git?path=Assets/FishNet",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.2.1",
+        "com.unity.ugui": "1.0.0",
+        "com.unity.modules.animation": "1.0.0",
+        "com.unity.modules.imgui": "1.0.0",
+        "com.unity.modules.particlesystem": "1.0.0",
+        "com.unity.modules.physics": "1.0.0",
+        "com.unity.modules.physics2d": "1.0.0",
+        "com.unity.modules.ui": "1.0.0"
+      },
+      "hash": "16635741350f1d865232f3db45b1dac4bbfbb207"
+    },
     "com.unity.burst": {
       "version": "1.8.12",
       "depth": 1,
