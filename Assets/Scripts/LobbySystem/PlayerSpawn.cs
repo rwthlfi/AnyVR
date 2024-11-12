@@ -1,5 +1,6 @@
 using FishNet.Connection;
 using FishNet.Object;
+using System;
 using UnityEngine;
 
 namespace LobbySystem
@@ -19,7 +20,6 @@ namespace LobbySystem
         {
             base.OnStartClient();
             SpawnPlayer();
-            
         }
 
         [ServerRpc(RequireOwnership = false)]
