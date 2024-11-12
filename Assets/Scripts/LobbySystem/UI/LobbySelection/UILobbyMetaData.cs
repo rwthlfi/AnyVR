@@ -1,5 +1,3 @@
-using UnityEngine.SceneManagement;
-
 namespace LobbySystem.UI.LobbySelection
 {
     public sealed class UILobbyMetaData
