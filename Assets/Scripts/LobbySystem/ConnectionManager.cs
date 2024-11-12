@@ -109,7 +109,7 @@ namespace LobbySystem
         
         public void LeaveServer()
         {
-            if (State is LobbySystem.ConnectionState.Disconnected or LobbySystem.ConnectionState.Client)
+            if (!State.HasFlag(LobbySystem.ConnectionState.Client))
             {
                 return;
             }

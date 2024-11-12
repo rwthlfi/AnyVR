@@ -117,10 +117,10 @@ namespace LobbySystem.UI.LobbySelection
                 return;
             }
 
-            long ping = _lobbyManager.TimeManager == null ? 0 : _lobbyManager.TimeManager.RoundTripTime;
+            long latency = _lobbyManager.TimeManager == null ? 0 : _lobbyManager.TimeManager.RoundTripTime;
             long deduction = (long)(_lobbyManager.TimeManager.TickDelta * Time.fixedDeltaTime);
-            ping = (long)Mathf.Max(1, ping - deduction);
-            _pingLabel.text = $"{ping}ms";
+            latency = (long)Mathf.Max(1, latency - deduction);
+            _pingLabel.text = $"{latency}ms";
         }
 
         public void Client_OpenCreateRoomScene()
