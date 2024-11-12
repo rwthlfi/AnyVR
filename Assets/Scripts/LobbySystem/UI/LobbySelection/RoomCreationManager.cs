@@ -92,30 +92,24 @@ namespace LobbySystem.UI.LobbySelection
 
         public void OnOpenRoomBtn()
         {
-            // if (string.IsNullOrEmpty(_selectedRoom))
-            // {
-            //     return;
-            // }
-            //
-            // const string pattern = @"([^/]+)\.unity$";
-            // Match match = Regex.Match(_selectedRoom, pattern);
-            //
-            // if (!match.Success)
-            // {
-            //     Debug.LogError("Error parsing location name");
-            //     return;
-            // }
-
-            if (_selectedRoom == null)
+            if (string.IsNullOrEmpty(_selectedRoom))
             {
+                return;
+            }
+            
+            const string pattern = @"([^/]+)\.unity$";
+            Match match = Regex.Match(_selectedRoom, pattern);
+            
+            if (!match.Success)
+            {
+                Debug.LogError("Error parsing location name");
                 return;
             }
 
             string lobbyName = _nameInputField.text;
-            // string location = match.Groups[1].Value;
             ushort userLimit = (ushort)Math.Clamp(Convert.ToInt32(_userLimitSlider.value), 1, k_maxUserLimit);
              
-            UILobbyMetaData uiLobbyMeta = new(lobbyName, -1, _selectedRoom, userLimit);
+            UILobbyMetaData uiLobbyMeta = new(lobbyName, -1, match.Groups[1].Value, userLimit);
             LobbySelectionMenuHandler.s_instance.CloseCreateRoomScene(uiLobbyMeta);
         }
     }
