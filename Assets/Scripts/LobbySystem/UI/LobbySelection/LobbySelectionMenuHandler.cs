@@ -1,3 +1,6 @@
+using FishNet;
+using FishNet.Connection;
+using FishNet.Transporting;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -53,13 +56,21 @@ namespace LobbySystem.UI.LobbySelection
             //      - on the client when connecting to a server.
             // The LobbyManager is in the GlobalScene.
             // So here we wait for the LobbyManager to be instantiated and then init the selection menu.
-            _connectionManager.GlobalSceneLoaded += asServer =>
+            _connectionManager.GlobalSceneLoaded += _ =>
             {
-                if (!asServer) // On the server we don't need to update the ui
-                {
-                    InitLobbyManager(LobbyManager.GetInstance());
-                }
+                InitLobbyManager(LobbyManager.GetInstance());
             };
+
+            InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState +=
+                ServerManager_OnRemoteConnectionState;
+        }
+
+        private void ServerManager_OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        {
+            if (args.ConnectionState is RemoteConnectionState.Stopped)
+            {
+                _lobbyManager.HandleClientDisconnect(conn);
+            }
         }
 
         private void InitLobbyManager(LobbyManager lobbyManager)
@@ -78,7 +89,7 @@ namespace LobbySystem.UI.LobbySelection
             }
             _lobbyManager.LobbyOpened += AddLobbyCard;
             _lobbyManager.LobbyClosed += RemoveLobbyCard;
-
+            
             _lobbyManager.PlayerCountUpdate += (lobbyId, count) =>
             {
                 if(_lobbyCards.TryGetValue(lobbyId, out LobbyCardHandler cardHandler))
@@ -196,6 +207,8 @@ namespace LobbySystem.UI.LobbySelection
             }
             _lobbyManager.LobbyOpened -= AddLobbyCard;
             _lobbyManager.LobbyClosed -= RemoveLobbyCard;
+            InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState -=
+                ServerManager_OnRemoteConnectionState;
         }
 
         #region Singleton

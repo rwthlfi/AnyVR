@@ -114,6 +114,18 @@ namespace LobbySystem
         {
             base.OnStartClient();
             SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
+            _lobbies.OnChange += (op, key, value, server) =>
+            {
+                switch (op)
+                {
+                    case SyncDictionaryOperation.Add:
+                        LobbyOpened?.Invoke(value);
+                        break;
+                    case SyncDictionaryOperation.Remove:
+                        LobbyClosed?.Invoke(key);
+                        break;
+                }
+            };
         }
 
         private void Client_OnUnloadEnd(SceneUnloadEndEventArgs args)
@@ -455,6 +467,12 @@ namespace LobbySystem
         public bool TryGetLobbyHandlerById(string lobbyId, out LobbyHandler res)
         {
             return _lobbyHandlers.TryGetValue(lobbyId, out res);
+        }
+
+        [Server]
+        public void HandleClientDisconnect(NetworkConnection conn)
+        {
+            TryRemoveClientFromLobby(conn);
         }
         
         [CanBeNull]
