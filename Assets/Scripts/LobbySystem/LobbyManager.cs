@@ -114,18 +114,6 @@ namespace LobbySystem
         {
             base.OnStartClient();
             SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
-            _lobbies.OnChange += (op, key, value, server) =>
-            {
-                switch (op)
-                {
-                    case SyncDictionaryOperation.Add:
-                        LobbyOpened?.Invoke(value);
-                        break;
-                    case SyncDictionaryOperation.Remove:
-                        LobbyClosed?.Invoke(key);
-                        break;
-                }
-            };
         }
 
         private void Client_OnUnloadEnd(SceneUnloadEndEventArgs args)
@@ -303,7 +291,12 @@ namespace LobbySystem
 
             Log($"Lobby created. {lobbyMetaData.ToString()}");
             AddClientToLobby(lobbyMetaData.LobbyId, conn); // Auto join lobby
-            
+            InvokeLobbyOpened(lobbyMetaData);
+        }
+
+        [ObserversRpc(ExcludeServer = false)]
+        private void InvokeLobbyOpened(LobbyMetaData lobbyMetaData)
+        {
             LobbyOpened?.Invoke(lobbyMetaData);
         }
         
@@ -378,7 +371,6 @@ namespace LobbySystem
         private void OnLobbyLeftRpc(NetworkConnection _)
         {
             LiveKitManager.s_instance.Disconnect(); // Disconnecting from voicechat
-            // StartCoroutine(LoadWelcomeScene());
         }
 
         private IEnumerator LoadWelcomeScene()
