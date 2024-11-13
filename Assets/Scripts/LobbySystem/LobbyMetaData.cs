@@ -1,9 +1,11 @@
 ﻿using FishNet.Managing.Scened;
+using System;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace LobbySystem
 {
-    public struct LobbyMetaData
+    public class LobbyMetaData
     {
         /// <summary>
         /// Unique identifier
@@ -15,6 +17,8 @@ namespace LobbySystem
         public readonly ushort LobbyCapacity;
         private readonly SceneLoadData _sceneLoadData;
         private int? _sceneHandle;
+
+        public LobbyMetaData() { }
 
         public LobbyMetaData(string lobbyId, string name, int creatorId, string scene, ushort lobbyCapacity)
         {
@@ -69,6 +73,23 @@ namespace LobbySystem
         public override string ToString()
         {
             return $"LobbyMetaData (Id={LobbyId}, Name={Name}, Scene={Scene}, Creator={CreatorId}, MaxClients={LobbyCapacity})";
+        }
+
+        public override bool Equals(object obj)
+        {
+            Debug.LogWarning("Equal invoke");
+            if (obj is not LobbyMetaData other)
+            {
+                return false;
+            }
+
+            return GetHashCode() == other.GetHashCode();
+        }
+
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(LobbyId, Name, CreatorId, Scene, LobbyCapacity);
         }
     }
 }

@@ -58,8 +58,12 @@ namespace LobbySystem.LobbyTests
             yield return new WaitForSeconds(1f);
         }
         
+        /// <summary>
+        /// The client creates a lobby and connects to it.
+        /// The client then leaves the lobby.
+        /// </summary>
         [UnityTest]
-        public IEnumerator CreateLobbyTest()
+        public IEnumerator SimpleLobbyCreationTest()
         {
             const string lobbyName = "TestLobby";
             const string scene = "Assets/Scenes/LobbyScenes/InputModality_DemoScene.unity";
@@ -118,6 +122,11 @@ namespace LobbySystem.LobbyTests
                 timeout -= Time.deltaTime;
             }
             Assert.IsTrue(creatorJoined);
+            LobbyMetaData currentLobby = _lobbyManager.Client_GetCurrentLobby();
+            Assert.IsNotNull(currentLobby);
+            Assert.AreEqual(currentLobby, lobbyMetaPair.Value);
+            
+            _lobbyManager.LeaveLobby(_lobbyManager.ClientManager.Connection);
         }
 
         [UnityTearDown]
