@@ -103,7 +103,6 @@ namespace LobbySystem
             {
                 return;
             }
-            Debug.LogWarning("Starting Server");
             _networkManager.ServerManager.StartConnection();
         }
         

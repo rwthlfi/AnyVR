@@ -99,7 +99,7 @@ namespace LobbySystem
         /// <summary>
         /// Invoked when the local client starts loading a lobby scene
         /// </summary>
-        public event Action Client_LobbyLoadStart;
+        public event Action ClientLobbyLoadStart;
         
         /// <summary>
         /// Invoked when the player-count of a lobby changes.
@@ -128,7 +128,7 @@ namespace LobbySystem
         {
             if (IsLoadingLobby(args.QueueData, false, out _))
             {
-                Client_LobbyLoadStart?.Invoke();
+                ClientLobbyLoadStart?.Invoke();
             }
         }
 
@@ -172,24 +172,15 @@ namespace LobbySystem
             
             if (loadParams.Length < 3 || loadParams[0] is not SceneLoadParam)
             {
-                errorMsg = "Invalid load parameters: expected at least three parameters, with the first being a SceneLoadParam.";
                 return false;
             }
             
             // Lobbies must have this flag
             if ((SceneLoadParam)loadParams[0] != SceneLoadParam.Lobby)
             {
-                errorMsg = "The 'Lobby' flag is not set.";
                 return false;
             }
             
-            // Lobby scenes have to be loaded with exactly 0 clients
-            if (queueData.Connections.Length != 0)
-            {
-                errorMsg = "The lobby scene must be empty.";
-                return false;
-            }
-
             // Try get corresponding lobbyId
             string lobbyId = loadParams[1] as string;
             if (string.IsNullOrEmpty(lobbyId))
@@ -221,12 +212,28 @@ namespace LobbySystem
 
             if (!IsLoadingLobby(loadArgs.QueueData, true, out string errorMsg))
             {
-                Debug.LogWarning($"Can't register LobbyHandler. {errorMsg}");
+                if(!string.IsNullOrEmpty(errorMsg))
+                {
+                    Debug.LogWarning($"Can't register LobbyHandler. {errorMsg}");
+                }
+
+                return;
+            }
+            
+            // Lobby scenes have to be loaded with exactly 0 clients
+            if (loadArgs.QueueData.Connections.Length != 0)
+            {
+                Debug.LogWarning($"Can't register LobbyHandler. The lobby scene must be empty.");
                 return;
             }
             
             object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
-            string lobbyId = serverParams[1] as string;
+
+            if (serverParams[1] is not string lobbyId)
+            {
+                return; 
+            }
+            
             int adminId = (int)serverParams[2];
 
             if (!ServerManager.Clients.ContainsKey(adminId))
@@ -239,12 +246,12 @@ namespace LobbySystem
             LobbyHandler lobbyHandler = Instantiate(_lobbyHandlerPrefab);
             Spawn(lobbyHandler.NetworkObject, null, loadArgs.LoadedScenes[0]);
             lobbyHandler.Init(lobbyId, adminId);
-            lobbyHandler.ClientJoin += (clientId, _) =>
+            lobbyHandler.ClientJoin += (_, _) =>
             {
                 int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
                 OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
             };
-            lobbyHandler.ClientLeft += clientId =>
+            lobbyHandler.ClientLeft += _ =>
             {
                 int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
                 OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
@@ -302,6 +309,11 @@ namespace LobbySystem
         private IEnumerator Co_CreateLobby(string lobbyName, string scene, ushort maxClients,
             NetworkConnection conn = null)
         {
+            if (conn is null)
+            {
+                yield break;
+            }
+            
             maxClients = (ushort)Mathf.Max(1, maxClients);
             LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, conn.ClientId, scene, maxClients);
             _lobbies.Add(lobbyMetaData.LobbyId, lobbyMetaData);
@@ -334,7 +346,7 @@ namespace LobbySystem
                 yield break;
             }
 
-            Log($"Lobby created. {lobbyMetaData.ToString()}");
+            Log($"Lobby created. {lobbyMetaData}");
             AddClientToLobby(lobbyMetaData.LobbyId, conn); // Auto join lobby
             InvokeLobbyOpened(lobbyMetaData);
         }

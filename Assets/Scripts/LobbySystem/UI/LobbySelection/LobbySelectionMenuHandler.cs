@@ -78,7 +78,6 @@ namespace LobbySystem.UI.LobbySelection
         {
             if (_lobbyManager == lobbyManager)
             {
-                Debug.LogWarning("The LobbyManager is already initialized");
                 return;
             }
             
@@ -99,7 +98,7 @@ namespace LobbySystem.UI.LobbySelection
                 }
             };
 
-            _lobbyManager.Client_LobbyLoadStart += () =>
+            _lobbyManager.ClientLobbyLoadStart += () =>
             {
                 AudioListener al = FindObjectOfType<AudioListener>();
                 al.enabled = false;
