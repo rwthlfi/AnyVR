@@ -77,7 +77,6 @@ namespace LobbySystem
 
         public override bool Equals(object obj)
         {
-            Debug.LogWarning("Equal invoke");
             if (obj is not LobbyMetaData other)
             {
                 return false;
