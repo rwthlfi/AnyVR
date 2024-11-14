@@ -1,5 +1,7 @@
 ﻿using FishNet.Managing.Scened;
 using System;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -37,10 +39,10 @@ namespace LobbySystem
                 // By adding the creatorId the LobbyManager can give that client administration rights in the lobby
                 Params =
                 {
-                    ServerParams = new object[] { SceneLoadParam.Lobby, lobbyId, creatorId},
-                    ClientParams = new[] {(byte) SceneLoadParam.Lobby}
+                    ServerParams = new object[] { SceneLoadParam.Lobby, lobbyId, creatorId}
                 } 
             };
+            _sceneLoadData.Params.ClientParams = SerializeObjects(_sceneLoadData.Params.ServerParams);
         }
 
         /// <summary>
@@ -59,12 +61,25 @@ namespace LobbySystem
                 Params =
                 {
                     ServerParams = new object[] { SceneLoadParam.Lobby , LobbyId, CreatorId},
-                    ClientParams = new[] {(byte) SceneLoadParam.Lobby}
                 } 
             };
+            _sceneLoadData.Params.ClientParams = SerializeObjects(_sceneLoadData.Params.ServerParams);
             return sceneLoadData;
         }
 
+        private static byte[] SerializeObjects(object[] objects)
+        {
+            if (objects == null)
+            {
+                return null;
+            }
+
+            using MemoryStream stream = new();
+            BinaryFormatter formatter = new();
+            formatter.Serialize(stream, objects);
+            return stream.ToArray();
+        }
+        
         internal void SetSceneHandle(int sceneHandle)
         {
             _sceneHandle = sceneHandle;

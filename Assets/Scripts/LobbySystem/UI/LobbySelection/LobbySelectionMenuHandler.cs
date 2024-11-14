@@ -4,6 +4,7 @@ using FishNet.Transporting;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace LobbySystem.UI.LobbySelection
 {
@@ -96,6 +97,14 @@ namespace LobbySystem.UI.LobbySelection
                 {
                     cardHandler.SetCurrentPlayerCount(count);
                 }
+            };
+
+            _lobbyManager.Client_LobbyLoadStart += () =>
+            {
+                AudioListener al = FindObjectOfType<AudioListener>();
+                al.enabled = false;
+                EventSystem es = FindObjectOfType<EventSystem>();
+                es.enabled = false;
             };
             
             RefreshLobbyList();

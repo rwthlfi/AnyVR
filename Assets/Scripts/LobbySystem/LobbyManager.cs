@@ -7,8 +7,10 @@ using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Voicechat;
@@ -93,6 +95,11 @@ namespace LobbySystem
         /// Invoked when a remote client closed a lobby
         /// </summary>
         public event Action<string> LobbyClosed;
+
+        /// <summary>
+        /// Invoked when the local client starts loading a lobby scene
+        /// </summary>
+        public event Action Client_LobbyLoadStart;
         
         /// <summary>
         /// Invoked when the player-count of a lobby changes.
@@ -113,7 +120,16 @@ namespace LobbySystem
         public override void OnStartClient()
         {
             base.OnStartClient();
+            SceneManager.OnLoadStart += Client_OnLoadStart;
             SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
+        }
+
+        private void Client_OnLoadStart(SceneLoadStartEventArgs args)
+        {
+            if (IsLoadingLobby(args.QueueData, false, out _))
+            {
+                Client_LobbyLoadStart?.Invoke();
+            }
         }
 
         private void Client_OnUnloadEnd(SceneUnloadEndEventArgs args)
@@ -134,49 +150,84 @@ namespace LobbySystem
             StartCoroutine(LoadWelcomeScene());
         }
 
-        [Server]
-        private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
+        private static object[] DeserializeClientParams(byte[] bytes)
         {
-            object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
-            if (serverParams.Length < 3 || serverParams[0] is not SceneLoadParam)
+            if (bytes == null || bytes.Length == 0)
             {
-                return;
+                return Array.Empty<object>();
+            }
+
+            using MemoryStream stream = new(bytes);
+            BinaryFormatter formatter = new();
+            return (object[])formatter.Deserialize(stream);
+        }
+        
+        private bool IsLoadingLobby(LoadQueueData queueData, bool asServer, out string errorMsg)
+        {
+            object[] loadParams = asServer
+                ? queueData.SceneLoadData.Params.ServerParams
+                : DeserializeClientParams(queueData.SceneLoadData.Params.ClientParams);
+            
+            errorMsg = string.Empty;
+            
+            if (loadParams.Length < 3 || loadParams[0] is not SceneLoadParam)
+            {
+                errorMsg = "Invalid load parameters: expected at least three parameters, with the first being a SceneLoadParam.";
+                return false;
             }
             
             // Lobbies must have this flag
-            if ((SceneLoadParam)serverParams[0] != SceneLoadParam.Lobby)
+            if ((SceneLoadParam)loadParams[0] != SceneLoadParam.Lobby)
             {
-                return;
+                errorMsg = "The 'Lobby' flag is not set.";
+                return false;
             }
             
             // Lobby scenes have to be loaded with exactly 0 clients
-            if (loadArgs.QueueData.Connections.Length != 0)
+            if (queueData.Connections.Length != 0)
             {
-                Debug.LogWarning("Can't register LobbyHandler. The lobby scene must be empty.");
-                return;
+                errorMsg = "The lobby scene must be empty.";
+                return false;
             }
 
             // Try get corresponding lobbyId
-            string lobbyId = serverParams[1] as string;
+            string lobbyId = loadParams[1] as string;
             if (string.IsNullOrEmpty(lobbyId))
             {
-                Debug.LogWarning("Can't register LobbyHandler. The passed lobbyId is null.");
-                return;
+                errorMsg = "The passed lobbyId is null.";
+                return false;
             }
 
             // Check if lobby exists
             if (!_lobbies.ContainsKey(lobbyId))
             {
-                return;
+                errorMsg = $"Lobby with ID '{lobbyId}' does not exist.";
+                return false;
             }
             
             // Check that the creating client is passed as param
-            if (serverParams[2] is not int)
+            if (loadParams[2] is not int)
             {
-                Debug.LogWarning("Can't register LobbyHandler. The clientId should be passed as an int.");
+                errorMsg = "The clientId should be passed as an int.";
+                return false;
+            }
+
+            return true;
+        }
+
+        [Server]
+        private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
+        {
+
+            if (!IsLoadingLobby(loadArgs.QueueData, true, out string errorMsg))
+            {
+                Debug.LogWarning($"Can't register LobbyHandler. {errorMsg}");
                 return;
             }
-            int adminId = (int) serverParams[2];
+            
+            object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
+            string lobbyId = serverParams[1] as string;
+            int adminId = (int)serverParams[2];
 
             if (!ServerManager.Clients.ContainsKey(adminId))
             {
@@ -185,7 +236,6 @@ namespace LobbySystem
             }
 
             // Spawn and register the LobbyHandler
-            Log($"Instantiating LobbyHandler for lobby with id = {lobbyId}");
             LobbyHandler lobbyHandler = Instantiate(_lobbyHandlerPrefab);
             Spawn(lobbyHandler.NetworkObject, null, loadArgs.LoadedScenes[0]);
             lobbyHandler.Init(lobbyId, adminId);
