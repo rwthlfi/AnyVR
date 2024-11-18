@@ -150,23 +150,11 @@ namespace LobbySystem
             StartCoroutine(LoadWelcomeScene());
         }
 
-        private static object[] DeserializeClientParams(byte[] bytes)
-        {
-            if (bytes == null || bytes.Length == 0)
-            {
-                return Array.Empty<object>();
-            }
-
-            using MemoryStream stream = new(bytes);
-            BinaryFormatter formatter = new();
-            return (object[])formatter.Deserialize(stream);
-        }
-        
         private bool IsLoadingLobby(LoadQueueData queueData, bool asServer, out string errorMsg)
         {
             object[] loadParams = asServer
                 ? queueData.SceneLoadData.Params.ServerParams
-                : DeserializeClientParams(queueData.SceneLoadData.Params.ClientParams);
+                : LobbyMetaData.DeserializeClientParams(queueData.SceneLoadData.Params.ClientParams);
             
             errorMsg = string.Empty;
             
