@@ -2,6 +2,7 @@ using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using GameKit.Dependencies.Utilities;
 using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
 using System;
@@ -124,6 +125,7 @@ namespace LobbySystem
             SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
         }
 
+        [Client]
         private void Client_OnLoadStart(SceneLoadStartEventArgs args)
         {
             if (IsLoadingLobby(args.QueueData, false, out _))
@@ -132,24 +134,53 @@ namespace LobbySystem
             }
         }
 
+        [Client]
         private void Client_OnUnloadEnd(SceneUnloadEndEventArgs args)
         {
+            if(args.QueueData.AsServer)
+            {
+                return;
+            }
+
             if(_currentLobby == null)
             {
                 return;
             }
-            
-            string unloadLobbyPath = args.QueueData.SceneUnloadData.SceneLookupDatas.First().Name;
-            string currentLobbyPath = _currentLobby.Scene;
 
-            if (unloadLobbyPath != currentLobbyPath)
+            if (IsUnloadingLobby(args.QueueData, false, out string _))
             {
-                return;
+                StartCoroutine(LoadWelcomeScene());
             }
-
-            StartCoroutine(LoadWelcomeScene());
         }
 
+        private static bool IsUnloadingLobby(UnloadQueueData queueData, bool asServer, out string lobbyId)
+        {
+            object[] loadParams = asServer
+                ? queueData.SceneUnloadData.Params.ServerParams
+                : LobbyMetaData.DeserializeClientParams(queueData.SceneUnloadData.Params.ClientParams);
+            
+            lobbyId = string.Empty;
+            
+            if (loadParams.Length < 2 || loadParams[0] is not SceneLoadParam)
+            {
+                return false;
+            }
+            
+            // Lobbies must have this flag
+            if ((SceneLoadParam)loadParams[0] != SceneLoadParam.Lobby)
+            {
+                return false;
+            }
+
+            if (loadParams[1] is not string)
+            {
+                return false;
+            }
+            
+            lobbyId = loadParams[1] as string;
+            return true;
+        }
+        
         private bool IsLoadingLobby(LoadQueueData queueData, bool asServer, out string errorMsg)
         {
             object[] loadParams = asServer
@@ -486,7 +517,9 @@ namespace LobbySystem
 
             if (_lobbies.TryGetValue(lobbyId, out LobbyMetaData lmd))
             {
-                SceneUnloadData sud = new(new[] { lmd.Scene });
+                SceneUnloadData sud = new(new[] { lmd.Scene }) { Params = { ServerParams = new object[] { SceneLoadParam.Lobby, lmd.LobbyId } } };
+                sud.Params.ClientParams = LobbyMetaData.SerializeObjects(sud.Params.ServerParams);
+                Debug.LogWarning("Unloading Connection scenes");
                 SceneManager.UnloadConnectionScenes(clientConnection, sud);
             }
 
