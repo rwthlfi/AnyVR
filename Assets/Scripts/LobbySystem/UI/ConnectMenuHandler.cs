@@ -32,8 +32,8 @@ namespace LobbySystem.UI
 
         private void Start()
         {
-            _fishnetIpInputField.text = "192.168.0.86:7777";
-            _livekitIpInputField.text = "192.168.0.192:3030";
+            _fishnetIpInputField.text = "134.130.88.71:7777";
+            _livekitIpInputField.text = "134.130.88.71:3030";
             _goBtn.onClick.AddListener(OnGoBtn);
         }
         
