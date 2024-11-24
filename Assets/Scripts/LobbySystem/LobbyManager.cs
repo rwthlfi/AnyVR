@@ -70,7 +70,7 @@ namespace LobbySystem
         /// Can be null if local client is not connected to a lobby
         /// Only initialized on the client.
         /// </summary>
-        private LobbyMetaData? _currentLobby;
+        private LobbyMetaData _currentLobby;
 
         #endregion
         
@@ -124,7 +124,7 @@ namespace LobbySystem
             }
             
             string unloadLobbyPath = args.QueueData.SceneUnloadData.SceneLookupDatas.First().Name;
-            string currentLobbyPath = _currentLobby.Value.Scene;
+            string currentLobbyPath = _currentLobby.Scene;
 
             if (unloadLobbyPath != currentLobbyPath)
             {
@@ -417,7 +417,7 @@ namespace LobbySystem
                 Debug.LogWarning("Client could not be removed from lobby");
             }
         }
-        
+
         [Server]
         private bool TryRemoveClientFromLobby(NetworkConnection clientConnection)
         {
@@ -476,6 +476,12 @@ namespace LobbySystem
         public static LobbyManager GetInstance()
         {
             return s_instance;
+        }
+
+        [CanBeNull, Client]
+        public LobbyMetaData Client_GetCurrentLobby()
+        {
+            return _currentLobby;
         }
         
         /// <summary>
