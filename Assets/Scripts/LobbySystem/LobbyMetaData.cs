@@ -63,11 +63,11 @@ namespace LobbySystem
                     ServerParams = new object[] { SceneLoadParam.Lobby , LobbyId, CreatorId},
                 } 
             };
-            _sceneLoadData.Params.ClientParams = SerializeObjects(_sceneLoadData.Params.ServerParams);
+            sceneLoadData.Params.ClientParams = SerializeObjects(sceneLoadData.Params.ServerParams);
             return sceneLoadData;
         }
 
-        private static byte[] SerializeObjects(object[] objects)
+        internal static byte[] SerializeObjects(object[] objects)
         {
             if (objects == null)
             {
@@ -79,6 +79,18 @@ namespace LobbySystem
             formatter.Serialize(stream, objects);
             return stream.ToArray();
         }
+        internal static object[] DeserializeClientParams(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0)
+            {
+                return Array.Empty<object>();
+            }
+
+            using MemoryStream stream = new(bytes);
+            BinaryFormatter formatter = new();
+            return (object[])formatter.Deserialize(stream);
+        }
+        
         
         internal void SetSceneHandle(int sceneHandle)
         {

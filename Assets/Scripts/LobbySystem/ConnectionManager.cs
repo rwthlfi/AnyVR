@@ -166,7 +166,7 @@ namespace LobbySystem
             SceneLoadData sld = new(scene) { Params =
                 {
                     ServerParams = new[] { (object)SceneLoadParam.Global }, 
-                    ClientParams = new[] { (byte) SceneLoadParam.Global }
+                    ClientParams = LobbyMetaData.SerializeObjects(new[] { (object) SceneLoadParam.Global })
                 }
             };
 
@@ -191,7 +191,9 @@ namespace LobbySystem
             }
             else
             {
-                byte[] clientParams = args.QueueData.SceneLoadData.Params.ClientParams;
+                byte[] arr = args.QueueData.SceneLoadData.Params.ClientParams;
+                object[] clientParams = LobbyMetaData.DeserializeClientParams(arr);
+                
                 if (clientParams.Length < 1)
                 {
                     return;

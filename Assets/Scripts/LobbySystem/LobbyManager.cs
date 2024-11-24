@@ -150,49 +150,79 @@ namespace LobbySystem
             StartCoroutine(LoadWelcomeScene());
         }
 
-        [Server]
-        private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
+        private bool IsLoadingLobby(LoadQueueData queueData, bool asServer, out string errorMsg)
         {
-            object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
-            if (serverParams.Length < 3 || serverParams[0] is not SceneLoadParam)
+            object[] loadParams = asServer
+                ? queueData.SceneLoadData.Params.ServerParams
+                : LobbyMetaData.DeserializeClientParams(queueData.SceneLoadData.Params.ClientParams);
+            
+            errorMsg = string.Empty;
+            
+            if (loadParams.Length < 3 || loadParams[0] is not SceneLoadParam)
             {
-                return;
+                return false;
             }
             
             // Lobbies must have this flag
-            if ((SceneLoadParam)serverParams[0] != SceneLoadParam.Lobby)
+            if ((SceneLoadParam)loadParams[0] != SceneLoadParam.Lobby)
             {
+                return false;
+            }
+            
+            // Try get corresponding lobbyId
+            string lobbyId = loadParams[1] as string;
+            if (string.IsNullOrEmpty(lobbyId))
+            {
+                errorMsg = "The passed lobbyId is null.";
+                return false;
+            }
+
+            // Check if lobby exists
+            if (!_lobbies.ContainsKey(lobbyId))
+            {
+                errorMsg = $"Lobby with ID '{lobbyId}' does not exist.";
+                return false;
+            }
+            
+            // Check that the creating client is passed as param
+            if (loadParams[2] is not int)
+            {
+                errorMsg = "The clientId should be passed as an int.";
+                return false;
+            }
+
+            return true;
+        }
+
+        [Server]
+        private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
+        {
+
+            if (!IsLoadingLobby(loadArgs.QueueData, true, out string errorMsg))
+            {
+                if(!string.IsNullOrEmpty(errorMsg))
+                {
+                    Debug.LogWarning($"Can't register LobbyHandler. {errorMsg}");
+                }
+
                 return;
             }
             
             // Lobby scenes have to be loaded with exactly 0 clients
             if (loadArgs.QueueData.Connections.Length != 0)
             {
-                Debug.LogWarning("Can't register LobbyHandler. The lobby scene must be empty.");
-                return;
-            }
-
-            // Try get corresponding lobbyId
-            string lobbyId = serverParams[1] as string;
-            if (string.IsNullOrEmpty(lobbyId))
-            {
-                Debug.LogWarning("Can't register LobbyHandler. The passed lobbyId is null.");
-                return;
-            }
-
-            // Check if lobby exists
-            if (!_lobbies.ContainsKey(lobbyId))
-            {
+                Debug.LogWarning($"Can't register LobbyHandler. The lobby scene must be empty.");
                 return;
             }
             
-            // Check that the creating client is passed as param
-            if (serverParams[2] is not int)
+            object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
+
+            if (serverParams[1] is not string lobbyId)
             {
-                Debug.LogWarning("Can't register LobbyHandler. The clientId should be passed as an int.");
-                return;
+                return; 
             }
-            int adminId = (int) serverParams[2];
+            
+            int adminId = (int)serverParams[2];
 
             if (!ServerManager.Clients.ContainsKey(adminId))
             {
@@ -201,16 +231,15 @@ namespace LobbySystem
             }
 
             // Spawn and register the LobbyHandler
-            Log($"Instantiating LobbyHandler for lobby with id = {lobbyId}");
             LobbyHandler lobbyHandler = Instantiate(_lobbyHandlerPrefab);
             Spawn(lobbyHandler.NetworkObject, null, loadArgs.LoadedScenes[0]);
             lobbyHandler.Init(lobbyId, adminId);
-            lobbyHandler.ClientJoin += (clientId, _) =>
+            lobbyHandler.ClientJoin += (_, _) =>
             {
                 int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
                 OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
             };
-            lobbyHandler.ClientLeft += clientId =>
+            lobbyHandler.ClientLeft += _ =>
             {
                 int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
                 OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
