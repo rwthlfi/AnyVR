@@ -7,8 +7,10 @@ using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Voicechat;
@@ -93,6 +95,11 @@ namespace LobbySystem
         /// Invoked when a remote client closed a lobby
         /// </summary>
         public event Action<string> LobbyClosed;
+
+        /// <summary>
+        /// Invoked when the local client starts loading a lobby scene
+        /// </summary>
+        public event Action ClientLobbyLoadStart;
         
         /// <summary>
         /// Invoked when the player-count of a lobby changes.
@@ -113,7 +120,16 @@ namespace LobbySystem
         public override void OnStartClient()
         {
             base.OnStartClient();
+            SceneManager.OnLoadStart += Client_OnLoadStart;
             SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
+        }
+
+        private void Client_OnLoadStart(SceneLoadStartEventArgs args)
+        {
+            if (IsLoadingLobby(args.QueueData, false, out _))
+            {
+                ClientLobbyLoadStart?.Invoke();
+            }
         }
 
         private void Client_OnUnloadEnd(SceneUnloadEndEventArgs args)
