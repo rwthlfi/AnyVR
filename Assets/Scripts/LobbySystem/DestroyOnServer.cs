@@ -23,18 +23,9 @@ namespace LobbySystem
     {
         private void Awake()
         {
-            ConnectionManager connectionManager = ConnectionManager.GetInstance();
-
-            if (connectionManager == null)
-            {
-                Debug.LogError($"Could not find instance of {nameof(connectionManager)}");
-                return;
-            }
-            
-            if(connectionManager.State == ConnectionState.Server)
-            {
+            #if UNITY_SERVER
                 Destroy(gameObject);
-            }
+            #endif
         }
     }
 }
