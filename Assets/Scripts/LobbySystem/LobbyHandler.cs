@@ -160,5 +160,11 @@ namespace LobbySystem
         {
             _clientIds.OnChange -= OnClientUpdate;
         }
+
+        [Client]
+        public void Leave()
+        {
+            LobbyManager.s_instance.LeaveLobby();
+        }
     }
 }
