@@ -15,7 +15,6 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using System;
 using UnityEngine;
 
 namespace LobbySystem
@@ -30,7 +29,7 @@ namespace LobbySystem
         {
             if (s_interactionHandler != null)
             {
-                Debug.LogError("There already is a PlayerInteractionHandler!");
+                Destroy(s_interactionHandler.gameObject);
                 return;
             }
 
