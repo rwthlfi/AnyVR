@@ -56,6 +56,7 @@ namespace LobbySystem.LobbyTests
                 yield return null;
                 timeout -= Time.deltaTime;
             }
+
             _connectionManager.GlobalSceneLoaded -= EventHandler;
 
             Assert.IsFalse(timeout <= 0);
@@ -63,9 +64,10 @@ namespace LobbySystem.LobbyTests
             Assert.IsTrue(_connectionManager.State.HasFlag(ConnectionState.Server));
             LobbyManager = LobbyManager.GetInstance();
             Assert.IsNotNull(LobbyManager);
-            
+
             yield break;
-            void EventHandler (bool b)
+
+            void EventHandler(bool b)
             {
                 globalSceneLoaded = true;
             }
@@ -75,13 +77,13 @@ namespace LobbySystem.LobbyTests
         {
             (string, ushort) liveKitServerAddress = ("127.0.0.1", 7880);
             (string, ushort) fishnetServerAddress = ("127.0.0.1", 7777);
-            
+
             _connectionManager.ConnectToServer(fishnetServerAddress, liveKitServerAddress, "TestUser");
 
             bool globalSceneLoaded = false;
 
             _connectionManager.GlobalSceneLoaded += EventHandler;
-            
+
             float timeout = 5f;
             // while !(client && loaded) && !timeout
             while (!globalSceneLoaded && timeout > 0)
@@ -89,18 +91,20 @@ namespace LobbySystem.LobbyTests
                 yield return null;
                 timeout -= Time.deltaTime;
             }
+
             _connectionManager.GlobalSceneLoaded -= EventHandler;
-            
+
             Assert.IsFalse(timeout <= 0);
             Assert.IsTrue(globalSceneLoaded);
             Assert.IsTrue(_connectionManager.State.HasFlag(ConnectionState.Client));
-            
+
             LobbyManager = LobbyManager.GetInstance();
             Assert.IsNotNull(LobbyManager);
             yield return new WaitForSecondsRealtime(1);
-            
+
             yield break;
-            void EventHandler (bool b)
+
+            void EventHandler(bool b)
             {
                 globalSceneLoaded = true;
             }

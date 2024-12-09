@@ -10,14 +10,14 @@ namespace TextChat.Tests
         {
             CircularBuffer<int> buffer = new(3);
             Assert.IsTrue(buffer.IsEmpty());
-            
+
             buffer.Push(1);
             buffer.Push(2);
 
             Assert.AreEqual(2, buffer[0]);
             Assert.AreEqual(1, buffer[1]);
         }
-        
+
         [Test]
         public void WhereInputEqualsCapacity()
         {
@@ -30,7 +30,7 @@ namespace TextChat.Tests
             Assert.AreEqual(2, buffer[1]);
             Assert.AreEqual(1, buffer[2]);
         }
-        
+
         [Test]
         public void WhereInputExceedsCapacity()
         {
@@ -44,7 +44,7 @@ namespace TextChat.Tests
             Assert.AreEqual(3, buffer[1]);
             Assert.AreEqual(2, buffer[2]);
         }
-        
+
         [Test]
         public void WhereInputExceedsCapacityByLot()
         {
@@ -57,7 +57,7 @@ namespace TextChat.Tests
             {
                 buffer.Push(i);
             }
-            
+
             for (byte i = 0; i < capacity; i++)
             {
                 Assert.AreEqual(count - i - 1, buffer[i]);

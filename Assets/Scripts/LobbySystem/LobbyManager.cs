@@ -36,15 +36,19 @@ namespace LobbySystem
         }
 
         #endregion
-        
+
         #region SerializedFields
 
         [Tooltip("The Scene to load when the local client leaves their current lobby")]
-        [SerializeField] [Scene] private string _offlineScene;
+        [SerializeField]
+        [Scene]
+        private string _offlineScene;
+
         [SerializeField] private bool _loggingEnabled;
-        
+
         [Header("Prefab Setup")]
-        [SerializeField] private LobbyHandler _lobbyHandlerPrefab;
+        [SerializeField]
+        private LobbyHandler _lobbyHandlerPrefab;
 
         #endregion
 
@@ -65,9 +69,9 @@ namespace LobbySystem
         private Dictionary<int, string> _clientLobbyDict;
 
         #endregion
-        
+
         #region ClientOnly
-        
+
         /// <summary>
         /// The meta data of the current lobby.
         /// Can be null if local client is not connected to a lobby
@@ -76,7 +80,7 @@ namespace LobbySystem
         private LobbyMetaData _currentLobby;
 
         #endregion
-        
+
         /// <summary>
         /// Dictionary with all active lobbies on the server.
         /// The keys are lobby ids.
@@ -92,6 +96,7 @@ namespace LobbySystem
         /// Invoked when a remote client opened a new lobby
         /// </summary>
         public event Action<LobbyMetaData> LobbyOpened;
+
         /// <summary>
         /// Invoked when a remote client closed a lobby
         /// </summary>
@@ -101,13 +106,14 @@ namespace LobbySystem
         /// Invoked when the local client starts loading a lobby scene
         /// </summary>
         public event Action ClientLobbyLoadStart;
-        
+
         /// <summary>
         /// Invoked when the player-count of a lobby changes.
         /// The local user does not have to be connected to the lobby.
         /// (string: lobbyId, int: playerCount)
         /// </summary>
         public event Action<string, int> PlayerCountUpdate;
+
         public override void OnStartServer()
         {
             base.OnStartServer();
@@ -137,12 +143,12 @@ namespace LobbySystem
         [Client]
         private void Client_OnUnloadEnd(SceneUnloadEndEventArgs args)
         {
-            if(args.QueueData.AsServer)
+            if (args.QueueData.AsServer)
             {
                 return;
             }
 
-            if(_currentLobby == null)
+            if (_currentLobby == null)
             {
                 return;
             }
@@ -158,14 +164,14 @@ namespace LobbySystem
             object[] loadParams = asServer
                 ? queueData.SceneUnloadData.Params.ServerParams
                 : LobbyMetaData.DeserializeClientParams(queueData.SceneUnloadData.Params.ClientParams);
-            
+
             lobbyId = string.Empty;
-            
+
             if (loadParams.Length < 2 || loadParams[0] is not SceneLoadParam)
             {
                 return false;
             }
-            
+
             // Lobbies must have this flag
             if ((SceneLoadParam)loadParams[0] != SceneLoadParam.Lobby)
             {
@@ -176,30 +182,30 @@ namespace LobbySystem
             {
                 return false;
             }
-            
+
             lobbyId = loadParams[1] as string;
             return true;
         }
-        
+
         private bool IsLoadingLobby(LoadQueueData queueData, bool asServer, out string errorMsg)
         {
             object[] loadParams = asServer
                 ? queueData.SceneLoadData.Params.ServerParams
                 : LobbyMetaData.DeserializeClientParams(queueData.SceneLoadData.Params.ClientParams);
-            
+
             errorMsg = string.Empty;
-            
+
             if (loadParams.Length < 3 || loadParams[0] is not SceneLoadParam)
             {
                 return false;
             }
-            
+
             // Lobbies must have this flag
             if ((SceneLoadParam)loadParams[0] != SceneLoadParam.Lobby)
             {
                 return false;
             }
-            
+
             // Try get corresponding lobbyId
             string lobbyId = loadParams[1] as string;
             if (string.IsNullOrEmpty(lobbyId))
@@ -214,7 +220,7 @@ namespace LobbySystem
                 errorMsg = $"Lobby with ID '{lobbyId}' does not exist.";
                 return false;
             }
-            
+
             // Check that the creating client is passed as param
             if (loadParams[2] is not int)
             {
@@ -228,31 +234,30 @@ namespace LobbySystem
         [Server]
         private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
         {
-
             if (!IsLoadingLobby(loadArgs.QueueData, true, out string errorMsg))
             {
-                if(!string.IsNullOrEmpty(errorMsg))
+                if (!string.IsNullOrEmpty(errorMsg))
                 {
                     Debug.LogWarning($"Can't register LobbyHandler. {errorMsg}");
                 }
 
                 return;
             }
-            
+
             // Lobby scenes have to be loaded with exactly 0 clients
             if (loadArgs.QueueData.Connections.Length != 0)
             {
                 Debug.LogWarning($"Can't register LobbyHandler. The lobby scene must be empty.");
                 return;
             }
-            
+
             object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
 
             if (serverParams[1] is not string lobbyId)
             {
-                return; 
+                return;
             }
-            
+
             int adminId = (int)serverParams[2];
 
             if (!ServerManager.Clients.ContainsKey(adminId))
@@ -275,10 +280,10 @@ namespace LobbySystem
                 int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
                 OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
             };
-            
+
             _lobbies[lobbyId].SetSceneHandle(loadArgs.LoadedScenes[0].handle);
             _lobbyHandlers.Add(lobbyId, lobbyHandler);
-            
+
             Log($"LobbyHandler with lobbyId '{lobbyId}' is registered");
             LobbyHandlerRegistered?.Invoke(lobbyId);
         }
@@ -300,11 +305,13 @@ namespace LobbySystem
                 {
                     return id;
                 }
+
                 i++;
             }
+
             return null;
         }
-        
+
         public void Client_CreateLobby(string lobbyName, string scene, ushort maxClients)
         {
             CreateLobby(lobbyName, scene, maxClients, ClientManager.Connection);
@@ -332,11 +339,11 @@ namespace LobbySystem
             {
                 yield break;
             }
-            
+
             maxClients = (ushort)Mathf.Max(1, maxClients);
             LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, conn.ClientId, scene, maxClients);
             _lobbies.Add(lobbyMetaData.LobbyId, lobbyMetaData);
-            
+
             // Starts the lobby scene without clients. When loaded, the LoadEnd callback will be called and we spawn a LobbyHandler. After that clients are able to join.
             Log("Loading lobby scene. Waiting for lobby handler");
             SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), lobbyMetaData.GetSceneLoadData());
@@ -351,7 +358,7 @@ namespace LobbySystem
                     receivedLobbyHandler = true;
                 }
             };
-            
+
             while (!receivedLobbyHandler && timeout > 0)
             {
                 yield return null;
@@ -361,7 +368,8 @@ namespace LobbySystem
             if (!receivedLobbyHandler)
             {
                 CloseLobby(lobbyMetaData.LobbyId);
-                Debug.LogWarning($"Lobby (id={lobbyMetaData.LobbyId}) could not be created. LobbyHandler was not received.");
+                Debug.LogWarning(
+                    $"Lobby (id={lobbyMetaData.LobbyId}) could not be created. LobbyHandler was not received.");
                 yield break;
             }
 
@@ -375,7 +383,7 @@ namespace LobbySystem
         {
             LobbyOpened?.Invoke(lobbyMetaData);
         }
-        
+
         /// <summary>
         /// Server Rpc to join an active lobby on the server.
         /// </summary>
@@ -395,20 +403,23 @@ namespace LobbySystem
 
             if (!_lobbies.TryGetValue(lobbyId, out LobbyMetaData lobby))
             {
-                Debug.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Lobby was not found.");
+                Debug.LogWarning(
+                    $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Lobby was not found.");
                 return;
             }
-            
+
             if (!_lobbyHandlers.TryGetValue(lobbyId, out LobbyHandler _))
             {
-                Debug.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The corresponding lobby handler does not exist.");
+                Debug.LogWarning(
+                    $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The corresponding lobby handler does not exist.");
                 return;
             }
 
             int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
             if (currentPlayerCount >= lobby.LobbyCapacity)
             {
-                Debug.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The lobby is already full.");
+                Debug.LogWarning(
+                    $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The lobby is already full.");
                 return;
             }
 
@@ -417,12 +428,12 @@ namespace LobbySystem
                 Debug.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'.");
                 return;
             }
-            
+
             Log($"Client '{PlayerNameTracker.GetPlayerName(conn.ClientId)}' joined lobby with id '{lobbyId}");
             OnLobbyJoinedRpc(conn, lobby);
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
         }
-        
+
         /// <summary>
         /// Callback for when the local client joins a lobby.
         /// </summary>
@@ -439,7 +450,7 @@ namespace LobbySystem
                 Debug.LogWarning("LivKitManager is not initialized");
             }
         }
-        
+
         /// <summary>
         /// Callback for when the local client leaves a lobby.
         /// </summary>
@@ -456,6 +467,7 @@ namespace LobbySystem
             {
                 yield return null;
             }
+
             UnityEngine.SceneManagement.SceneManager.LoadScene(_offlineScene, LoadSceneMode.Additive);
         }
 
@@ -466,7 +478,7 @@ namespace LobbySystem
             {
                 return;
             }
-            
+
             // Kick all players from the lobby
             foreach ((int id, string) client in handler.GetClients())
             {
@@ -478,13 +490,13 @@ namespace LobbySystem
 
                 TryRemoveClientFromLobby(clientConn);
             }
-            
+
             _lobbyHandlers.Remove(lobbyId);
             _lobbies.Remove(lobbyId);
             LobbyClosed?.Invoke(lobbyId);
             Log($"Lobby with id '{lobbyId}' is closed");
         }
-        
+
         [ServerRpc(RequireOwnership = false)]
         internal void LeaveLobby(NetworkConnection conn = null)
         {
@@ -511,24 +523,28 @@ namespace LobbySystem
             {
                 return false;
             }
-            
+
             handler.Server_RemoveClient(clientConnection.ClientId);
             _clientLobbyDict.Remove(clientConnection.ClientId);
 
             if (_lobbies.TryGetValue(lobbyId, out LobbyMetaData lmd))
             {
-                SceneUnloadData sud = new(new[] { lmd.Scene }) { Params = { ServerParams = new object[] { SceneLoadParam.Lobby, lmd.LobbyId } } };
+                SceneUnloadData sud = new(new[] { lmd.Scene })
+                {
+                    Params = { ServerParams = new object[] { SceneLoadParam.Lobby, lmd.LobbyId } }
+                };
                 sud.Params.ClientParams = LobbyMetaData.SerializeObjects(sud.Params.ServerParams);
                 Debug.LogWarning("Unloading Connection scenes");
                 SceneManager.UnloadConnectionScenes(clientConnection, sud);
             }
 
             OnLobbyLeftRpc(clientConnection);
-            
+
             if (!handler.GetClients().Any())
             {
                 CloseLobby(lobbyId);
             }
+
             return true;
         }
 
@@ -549,19 +565,20 @@ namespace LobbySystem
         {
             TryRemoveClientFromLobby(conn);
         }
-        
+
         [CanBeNull]
         public static LobbyManager GetInstance()
         {
             return s_instance;
         }
 
-        [CanBeNull, Client]
+        [CanBeNull]
+        [Client]
         public LobbyMetaData Client_GetCurrentLobby()
         {
             return _currentLobby;
         }
-        
+
         /// <summary>
         /// Logs a common value if can log.
         /// </summary>

@@ -17,7 +17,7 @@ namespace LobbySystem.LobbyTests
             yield return JoinServer();
             Assert.AreEqual(LobbyManager.GetAvailableLobbies().Count, 0);
         }
-        
+
         /// <summary>
         /// The client creates a lobby and connects to it.
         /// The client then leaves the lobby.
@@ -39,8 +39,9 @@ namespace LobbySystem.LobbyTests
                 yield return null;
                 timeout -= Time.deltaTime;
             }
+
             LobbyManager.LobbyOpened -= EventHandler;
-            
+
             Assert.IsTrue(receivedCallback);
             Assert.AreEqual(LobbyManager.GetAvailableLobbies().Count, 1);
 
@@ -51,7 +52,7 @@ namespace LobbySystem.LobbyTests
 
             bool lobbyFound = LobbyManager.TryGetLobbyIdOfClient(LobbyManager.ClientManager.Connection.ClientId,
                 out string lobbyId);
-            
+
             Assert.IsTrue(lobbyFound);
             Assert.AreEqual(lobbyId, lobbyMetaPair.Key);
 
@@ -76,11 +77,12 @@ namespace LobbySystem.LobbyTests
                 yield return null;
                 timeout -= Time.deltaTime;
             }
+
             Assert.IsTrue(creatorJoined);
             LobbyMetaData currentLobby = LobbyManager.Client_GetCurrentLobby();
             Assert.IsNotNull(currentLobby);
             Assert.AreEqual(currentLobby, lobbyMetaPair.Value);
-            
+
             LobbyManager.LeaveLobby(LobbyManager.ClientManager.Connection);
             // TODO
             yield break;

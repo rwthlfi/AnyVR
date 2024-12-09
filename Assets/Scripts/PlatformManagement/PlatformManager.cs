@@ -40,6 +40,7 @@ namespace AnyVR.PlatformManagement
                         Debug.LogError("PlattformManager not found in scene. Please add it to a gameobject.");
                     }
                 }
+
                 return s_instance;
             }
         }

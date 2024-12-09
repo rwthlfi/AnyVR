@@ -24,7 +24,7 @@ namespace LobbySystem.UI.LobbyRoom
     public class ClientNameLabelHandler : MonoBehaviour
     {
         [SerializeField] private OnlinePlayerHandler _onlinePlayer;
-        
+
         private TextMeshProUGUI _nameLabel;
 
         private void Awake()

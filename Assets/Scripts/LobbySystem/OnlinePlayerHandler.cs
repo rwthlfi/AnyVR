@@ -35,11 +35,11 @@ namespace LobbySystem
         private Renderer[] _renderers;
 
         public event Action<int, bool> SetClientId;
-        
+
         public override void OnStartClient()
         {
             base.OnStartClient();
-            
+
             SetClientId?.Invoke(OwnerId, ClientManager.Connection.ClientId == OwnerId);
 
             if (!IsOwner)
@@ -59,13 +59,13 @@ namespace LobbySystem
             {
                 r.gameObject.layer = ownerLayer;
             }
-            
+
             _isOwnerInit = true;
         }
 
         private void Update()
         {
-            if(!_isOwnerInit)
+            if (!_isOwnerInit)
             {
                 return;
             }

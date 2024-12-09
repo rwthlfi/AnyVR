@@ -78,6 +78,7 @@ namespace AnyVR
         {
             RequestOwnershipRPC();
         }
+
         public void OnGrabSelectExit()
         {
             RigidbodyState bodyState = new() { Position = _body.position, Rotation = _body.rotation };
@@ -92,10 +93,12 @@ namespace AnyVR
             {
                 return;
             }
+
             if (OwnerId != conn.ClientId) // Only the owner can remove ownership with this server rpc
             {
                 return;
             }
+
             _body.isKinematic = false;
             RemoveOwnership();
             Debug.Log($"Throwing {name}: v: {state.Velocity}"); //BUG
@@ -104,14 +107,15 @@ namespace AnyVR
             _body.velocity = state.Velocity;
             _body.angularVelocity = state.AngularVelocity;
         }
-        
-        [ServerRpc (RequireOwnership = false)]
+
+        [ServerRpc(RequireOwnership = false)]
         private void RequestOwnershipRPC(NetworkConnection conn = null)
         {
             if (conn == null)
             {
                 return;
             }
+
             if (OwnerId != -1) // Another client is already owner
             {
                 return;

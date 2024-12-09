@@ -24,14 +24,13 @@ namespace TextChat.UI
 {
     public class ChatBoxHandler : MonoBehaviour
     {
-        [Header("UI")]
-        [SerializeField] private TMP_InputField _inputField;
+        [Header("UI")] [SerializeField] private TMP_InputField _inputField;
         [SerializeField] private Button _submitButton;
         [SerializeField] private VerticalLayoutGroup _chatMessagesParent;
         [SerializeField] private TextMessageHandler _chatMessageHandlerPrefab;
 
         private TextChatManager _textChat;
-        
+
         private void Awake()
         {
             LobbyHandler.PostInit += Init;
@@ -51,7 +50,7 @@ namespace TextChat.UI
                 SyncMessages(_textChat.GetBuffer());
             };
             _textChat.TextMessageReceived += AddTextMessageToList;
-            
+
             SyncMessages(_textChat.GetBuffer());
 
             _submitButton.onClick.AddListener(SendTextMessage);
@@ -63,6 +62,7 @@ namespace TextChat.UI
             {
                 return;
             }
+
             string message = _inputField.text;
             if (string.IsNullOrEmpty(message))
             {
@@ -79,6 +79,7 @@ namespace TextChat.UI
             {
                 Destroy(child.gameObject);
             }
+
             foreach (TextMessage message in buffer.GetAll())
             {
                 AddTextMessageToList(message);

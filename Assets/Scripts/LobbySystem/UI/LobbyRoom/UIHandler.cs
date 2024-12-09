@@ -14,16 +14,16 @@ namespace LobbySystem.UI.LobbyRoom
         [SerializeField] private Toggle _muteToggle;
 
         private readonly List<GameObject> _panels = new();
-        
+
         private bool _isLocalAdmin;
 
         private LobbyHandler _lobbyHandler;
-        
+
         private void Awake()
         {
             InitSingleton();
         }
-        
+
         private void Start()
         {
             _muteToggle.SetIsOnWithoutNotify(true);
@@ -38,19 +38,19 @@ namespace LobbySystem.UI.LobbyRoom
             {
                 panel.SetActive(false);
             }
-            
+
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
-            
+
             _lobbyHandler = LobbyHandler.GetInstance();
             if (_lobbyHandler == null)
             {
                 Debug.LogError("UIScene could not find the LobbyHandler");
                 return;
             }
-            
+
             UpdateClientList(_lobbyHandler.GetClients(), _lobbyHandler.GetAdminId());
-            
+
             _lobbyHandler.ClientJoin += (clientId, clientName) =>
             {
                 _clientListHandler.AddClient(clientId, clientName);
@@ -59,7 +59,7 @@ namespace LobbySystem.UI.LobbyRoom
             {
                 _clientListHandler.RemoveClient(clientId);
             };
-            
+
             _muteToggle.onValueChanged.AddListener(b =>
             {
                 _lobbyHandler.SetMuteSelf(b);
@@ -77,6 +77,7 @@ namespace LobbySystem.UI.LobbyRoom
             {
                 TogglePanel(Panel.PausePanel);
             }
+
             if (Input.GetKeyDown(KeyCode.Tab))
             {
                 TogglePanel(Panel.ClientListPanel);
@@ -112,7 +113,7 @@ namespace LobbySystem.UI.LobbyRoom
                     throw new ArgumentOutOfRangeException(nameof(panel), panel, null);
             }
         }
-        
+
         internal void SetPanelActive(Panel panel, bool active)
         {
             foreach (GameObject e in _panels)
@@ -135,9 +136,11 @@ namespace LobbySystem.UI.LobbyRoom
                     throw new ArgumentOutOfRangeException(nameof(panel), panel, null);
             }
         }
-        
-        private void UpdateClientList((int, string)[] clientIds, int adminId) =>
+
+        private void UpdateClientList((int, string)[] clientIds, int adminId)
+        {
             _clientListHandler.UpdateClientList(clientIds, adminId);
+        }
 
         #region Singleton
 
@@ -155,7 +158,6 @@ namespace LobbySystem.UI.LobbyRoom
         }
 
         #endregion
-
     }
 
     internal enum Panel

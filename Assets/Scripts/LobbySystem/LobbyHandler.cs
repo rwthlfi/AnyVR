@@ -25,21 +25,21 @@ namespace LobbySystem
         /// |clientId, clientName|
         /// </summary>
         public event Action<int, string> ClientJoin;
-        
+
         /// <summary>
         /// Invoked when an remote client left the lobby of thk local client
         /// </summary>
         public event Action<int> ClientLeft;
-        
+
         // Only assigned on client
         [CanBeNull] private static LobbyHandler s_instance;
-        
+
         // Only invoked on client after ClientStart
         public static event Action PostInit;
-        
+
         public TextChatManager TextChat { get; private set; }
 
-        public ushort CurrentClientCount => (ushort) _clientIds.Count;
+        public ushort CurrentClientCount => (ushort)_clientIds.Count;
 
         [Server]
         internal void Init(string lobbyId, int adminId)
@@ -71,16 +71,17 @@ namespace LobbySystem
         public override void OnStartClient()
         {
             base.OnStartClient();
-            
+
             if (s_instance != null)
             {
                 Debug.LogError("Instance of LobbyHandler is already initialized");
                 return;
             }
+
             s_instance = this;
 
             _clientIds.OnChange += OnClientUpdate;
-            
+
             AddClient();
             UnityEngine.SceneManagement.SceneManager.LoadScene("Scenes/UIScene", LoadSceneMode.Additive);
 
@@ -95,7 +96,7 @@ namespace LobbySystem
             const int defaultMic = 0;
             // Debug.Log($"Selected Microphone: {micNames[defaultMic]}");
             LiveKitManager.s_instance.SetActiveMicrophone(micNames[defaultMic]);
-            
+
             PostInit?.Invoke();
         }
 
@@ -106,6 +107,7 @@ namespace LobbySystem
                 // ClientJoin & ClientLeft callbacks are already invoked from the 'AddClient' and 'RemoveClient' server RPC
                 return;
             }
+
             switch (op)
             {
                 case SyncHashSetOperation.Add:
@@ -133,6 +135,7 @@ namespace LobbySystem
             {
                 return;
             }
+
             Server_AddClient(conn.ClientId, PlayerNameTracker.GetPlayerName(conn));
         }
 
@@ -143,7 +146,7 @@ namespace LobbySystem
             LobbyManager.s_instance.Log($"Client {clientId} joined lobby {_lobbyId.Value}");
             ClientJoin?.Invoke(clientId, clientName);
         }
-        
+
         [ServerRpc(RequireOwnership = false)]
         internal void RemoveClient(int clientId, NetworkConnection conn = null)
         {
@@ -151,9 +154,10 @@ namespace LobbySystem
             {
                 return;
             }
+
             Server_RemoveClient(clientId);
         }
-        
+
         [Server]
         internal void Server_RemoveClient(int clientId)
         {
@@ -172,6 +176,7 @@ namespace LobbySystem
                 clients[i] = (clientId, PlayerNameTracker.GetPlayerName(clientId));
                 i++;
             }
+
             return clients;
         }
 

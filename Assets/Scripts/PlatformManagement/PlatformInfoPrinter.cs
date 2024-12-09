@@ -27,14 +27,12 @@ namespace AnyVR.PlatformManagement
     public class PlatformInfoPrinter : MonoBehaviour
     {
         // Private fields
-        
-        [SerializeField]
-        private TextMeshProUGUI _infoDisplay;
 
+        [SerializeField] private TextMeshProUGUI _infoDisplay;
 
 
         // Methods
-   
+
         // Start is called before the first frame update
         private void Start()
         {
@@ -44,7 +42,7 @@ namespace AnyVR.PlatformManagement
         private void PrintPlatformInfo()
         {
             string platformInfo = PlatformInfo.GetDeviceDescription();
-            if (_infoDisplay) 
+            if (_infoDisplay)
             {
                 _infoDisplay.text = platformInfo;
             }
@@ -58,6 +56,5 @@ namespace AnyVR.PlatformManagement
         {
             Debug.Log("Hello World");
         }
-
     }
 }

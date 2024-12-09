@@ -23,9 +23,9 @@ namespace LobbySystem
     {
         private void Awake()
         {
-            #if UNITY_SERVER
+#if UNITY_SERVER
                 Destroy(gameObject);
-            #endif
+#endif
         }
     }
 }

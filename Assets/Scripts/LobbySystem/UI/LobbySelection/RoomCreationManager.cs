@@ -11,8 +11,7 @@ namespace LobbySystem.UI.LobbySelection
 {
     public class RoomCreationManager : MonoBehaviour
     {
-        [Header("UI")]
-        [SerializeField] private TMP_InputField _nameInputField;
+        [Header("UI")] [SerializeField] private TMP_InputField _nameInputField;
         [SerializeField] private Slider _userLimitSlider;
 
         [SerializeField] private Toggle _usePinToggle;
@@ -21,15 +20,16 @@ namespace LobbySystem.UI.LobbySelection
 
         [SerializeField] private Button _openRoomBtn;
 
-        [Header("Prefab Setup")]
-        [SerializeField] private LocationCardHandler _locationCardPrefab;
+        [Header("Prefab Setup")] [SerializeField]
+        private LocationCardHandler _locationCardPrefab;
+
         [SerializeField] private Transform _locationCardParent;
 
-        [Header("Available Locations Setup")]
-        [SerializeField] private LobbySceneMetaData[] _lobbySceneMetaData;
+        [Header("Available Locations Setup")] [SerializeField]
+        private LobbySceneMetaData[] _lobbySceneMetaData;
 
         private string _selectedRoom;
-        
+
         private const ushort k_maxUserLimit = 99;
 
         private void Start()
@@ -44,7 +44,7 @@ namespace LobbySystem.UI.LobbySelection
                     UpdateUI();
                 };
             }
-            
+
             _pinInputField.characterLimit = 8;
             _randomizePinBtn.onClick.AddListener(() =>
             {
@@ -96,10 +96,10 @@ namespace LobbySystem.UI.LobbySelection
             {
                 return;
             }
-            
+
             const string pattern = @"([^/]+)\.unity$";
             Match match = Regex.Match(_selectedRoom, pattern);
-            
+
             if (!match.Success)
             {
                 Debug.LogError("Error parsing location name");
@@ -108,7 +108,7 @@ namespace LobbySystem.UI.LobbySelection
 
             string lobbyName = _nameInputField.text;
             ushort userLimit = (ushort)Math.Clamp(Convert.ToInt32(_userLimitSlider.value), 1, k_maxUserLimit);
-             
+
             UILobbyMetaData uiLobbyMeta = new(lobbyName, -1, match.Groups[1].Value, userLimit);
             LobbySelectionMenuHandler.s_instance.CloseCreateRoomScene(uiLobbyMeta);
         }

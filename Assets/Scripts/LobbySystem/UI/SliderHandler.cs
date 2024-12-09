@@ -30,7 +30,7 @@ namespace LobbySystem.UI
 
         [SerializeField] private GameObject _valueLabel;
         [SerializeField] private TextMeshProUGUI _valueText;
-        
+
         private Coroutine _hideLabelCoroutine;
 
         private bool _isInit;
@@ -55,8 +55,8 @@ namespace LobbySystem.UI
                 StopCoroutine(_hideLabelCoroutine);
                 _hideLabelCoroutine = null;
             }
-    
-            _valueLabel.SetActive(true); 
+
+            _valueLabel.SetActive(true);
         }
 
         public void OnPointerUp()
@@ -84,8 +84,7 @@ namespace LobbySystem.UI
         {
             yield return new WaitForSeconds(delay);
             _valueLabel.SetActive(false); // Hide the label after delay
-            _hideLabelCoroutine = null;   // Reset the coroutine handle
+            _hideLabelCoroutine = null; // Reset the coroutine handle
         }
-
     }
 }

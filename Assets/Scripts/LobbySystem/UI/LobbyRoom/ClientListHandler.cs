@@ -52,6 +52,7 @@ namespace LobbySystem.UI.LobbyRoom
                 _clients.Add(client.id, client.name);
                 AddClient(client.id, client.name, client.id == adminId);
             }
+
             foreach ((int id, string name) client in toRemove)
             {
                 _clients.Remove(client.id);

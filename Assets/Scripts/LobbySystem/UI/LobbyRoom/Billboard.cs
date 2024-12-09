@@ -34,7 +34,7 @@ namespace LobbySystem.UI.LobbyRoom
 
         private void LateUpdate()
         {
-            if(_cam != null)
+            if (_cam != null)
             {
                 transform.rotation = _cam.transform.rotation;
             }

@@ -13,6 +13,7 @@ namespace LobbySystem
         /// Unique identifier
         /// </summary>
         public readonly string LobbyId;
+
         public readonly string Name;
         public readonly int CreatorId;
         public readonly string Scene;
@@ -37,10 +38,7 @@ namespace LobbySystem
                 // By adding SceneLoadParam.Lobby the LobbyManager knows this scene is a lobby when the SceneManager.LoadEnd callback fires.
                 // By adding the lobbyId the LobbyManager can register a corresponding LobbyHandler.
                 // By adding the creatorId the LobbyManager can give that client administration rights in the lobby
-                Params =
-                {
-                    ServerParams = new object[] { SceneLoadParam.Lobby, lobbyId, creatorId}
-                } 
+                Params = { ServerParams = new object[] { SceneLoadParam.Lobby, lobbyId, creatorId } }
             };
             _sceneLoadData.Params.ClientParams = SerializeObjects(_sceneLoadData.Params.ServerParams);
         }
@@ -54,14 +52,12 @@ namespace LobbySystem
             {
                 return _sceneLoadData;
             }
+
             SceneLoadData sceneLoadData = new((int)_sceneHandle)
             {
                 ReplaceScenes = ReplaceOption.OnlineOnly,
                 Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None },
-                Params =
-                {
-                    ServerParams = new object[] { SceneLoadParam.Lobby , LobbyId, CreatorId},
-                } 
+                Params = { ServerParams = new object[] { SceneLoadParam.Lobby, LobbyId, CreatorId } }
             };
             sceneLoadData.Params.ClientParams = SerializeObjects(sceneLoadData.Params.ServerParams);
             return sceneLoadData;
@@ -79,6 +75,7 @@ namespace LobbySystem
             formatter.Serialize(stream, objects);
             return stream.ToArray();
         }
+
         internal static object[] DeserializeClientParams(byte[] bytes)
         {
             if (bytes == null || bytes.Length == 0)
@@ -90,8 +87,8 @@ namespace LobbySystem
             BinaryFormatter formatter = new();
             return (object[])formatter.Deserialize(stream);
         }
-        
-        
+
+
         internal void SetSceneHandle(int sceneHandle)
         {
             _sceneHandle = sceneHandle;
@@ -99,7 +96,8 @@ namespace LobbySystem
 
         public override string ToString()
         {
-            return $"LobbyMetaData (Id={LobbyId}, Name={Name}, Scene={Scene}, Creator={CreatorId}, MaxClients={LobbyCapacity})";
+            return
+                $"LobbyMetaData (Id={LobbyId}, Name={Name}, Scene={Scene}, Creator={CreatorId}, MaxClients={LobbyCapacity})";
         }
 
         public override bool Equals(object obj)

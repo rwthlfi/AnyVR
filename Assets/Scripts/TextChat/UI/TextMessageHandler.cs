@@ -28,7 +28,7 @@ namespace TextChat.UI
         [SerializeField] private Color _playerTextColor;
 
         private TextMeshProUGUI _textMesh;
-        
+
         private void Awake()
         {
             _textMesh = GetComponent<TextMeshProUGUI>();

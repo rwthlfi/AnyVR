@@ -10,14 +10,14 @@ namespace LobbySystem.UI.LobbySelection
 {
     public class LobbySelectionMenuHandler : MonoBehaviour
     {
-        [Header("PrefabSetup")]
-        [SerializeField] private LobbyCardHandler _lobbyCardPrefab;
+        [Header("PrefabSetup")] [SerializeField]
+        private LobbyCardHandler _lobbyCardPrefab;
+
         [SerializeField] private Transform _lobbyCardParent;
-        
-        [Header("UI")]
-        [SerializeField] private TextMeshProUGUI _pingLabel;
+
+        [Header("UI")] [SerializeField] private TextMeshProUGUI _pingLabel;
         [SerializeField] private RoomCreationManager _roomCreationManager;
-        
+
         private ConnectionManager _connectionManager;
 
         private bool _isRoomCreationSceneActive;
@@ -37,13 +37,13 @@ namespace LobbySystem.UI.LobbySelection
             _isRoomCreationSceneActive = false;
 
             _connectionManager = ConnectionManager.GetInstance();
-            
+
             if (_connectionManager == null)
             {
                 Debug.LogError("Instance of ConnectionManager not found");
-                return;    
+                return;
             }
-            
+
             // LobbyManager.GetInstance() != null iff the client is unloading from a lobby.
             if (LobbyManager.GetInstance() != null)
             {
@@ -81,19 +81,20 @@ namespace LobbySystem.UI.LobbySelection
                 Debug.LogWarning("The LobbyManager is already initialized");
                 return;
             }
-            
+
             _lobbyManager = lobbyManager;
             if (_lobbyManager == null)
             {
                 Debug.LogError("Passed LobbyManager is null");
                 return;
             }
+
             _lobbyManager.LobbyOpened += AddLobbyCard;
             _lobbyManager.LobbyClosed += RemoveLobbyCard;
-            
+
             _lobbyManager.PlayerCountUpdate += (lobbyId, count) =>
             {
-                if(_lobbyCards.TryGetValue(lobbyId, out LobbyCardHandler cardHandler))
+                if (_lobbyCards.TryGetValue(lobbyId, out LobbyCardHandler cardHandler))
                 {
                     cardHandler.SetCurrentPlayerCount(count);
                 }
@@ -106,7 +107,7 @@ namespace LobbySystem.UI.LobbySelection
                 EventSystem es = FindObjectOfType<EventSystem>();
                 es.enabled = false;
             };
-            
+
             RefreshLobbyList();
         }
 
@@ -116,9 +117,10 @@ namespace LobbySystem.UI.LobbySelection
             {
                 Destroy(card.gameObject);
             }
+
             _lobbyCards.Clear();
-            
-            Dictionary<string, LobbyMetaData> lobbies =  _lobbyManager.GetAvailableLobbies();
+
+            Dictionary<string, LobbyMetaData> lobbies = _lobbyManager.GetAvailableLobbies();
             foreach (LobbyMetaData lobby in lobbies.Values)
             {
                 AddLobbyCard(lobby);
@@ -162,7 +164,8 @@ namespace LobbySystem.UI.LobbySelection
             }
 
             CloseCreateRoomScene();
-            _lobbyManager.Client_CreateLobby(uiLobbyMetaData.Name, uiLobbyMetaData.Location, uiLobbyMetaData.MaxClients);
+            _lobbyManager.Client_CreateLobby(uiLobbyMetaData.Name, uiLobbyMetaData.Location,
+                uiLobbyMetaData.MaxClients);
         }
 
         public void CloseCreateRoomScene()
@@ -184,15 +187,16 @@ namespace LobbySystem.UI.LobbySelection
                 Debug.LogWarning("A card with the same id has already been added.");
                 return;
             }
+
             LobbyCardHandler card = Instantiate(_lobbyCardPrefab, _lobbyCardParent);
             card.SetLobbyMeta(uiLobby);
             card.JoinBtn += () =>
-            {   
+            {
                 _lobbyManager.JoinLobby(card.MetaData.ID);
             };
             _lobbyCards.Add(uiLobby.ID, card);
         }
-        
+
         private void RemoveLobbyCard(string lobbyId)
         {
             if (!_lobbyCards.TryGetValue(lobbyId, out LobbyCardHandler card))
@@ -214,6 +218,7 @@ namespace LobbySystem.UI.LobbySelection
             {
                 return;
             }
+
             _lobbyManager.LobbyOpened -= AddLobbyCard;
             _lobbyManager.LobbyClosed -= RemoveLobbyCard;
             InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState -=
@@ -236,6 +241,5 @@ namespace LobbySystem.UI.LobbySelection
         }
 
         #endregion
-
     }
 }

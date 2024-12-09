@@ -26,19 +26,17 @@ namespace AnyVR.UserControlSystem
     public class PCTurnProvider : MonoBehaviour
     {
         // Private fields
-        [SerializeField]
-        private Transform _turnOrigin;
+        [SerializeField] private Transform _turnOrigin;
 
-        [SerializeField]
-        [Tooltip("Max/min degrees of pitching the camera")]
-        [Range(-89f, 89f)]
+        [SerializeField] [Tooltip("Max/min degrees of pitching the camera")] [Range(-89f, 89f)]
         private float _pitchThreshhold = 60f;
 
         private Vector2 _turnRotation;
 
         [SerializeField]
-        [Tooltip("The Input System Action that will be used to read Turn data from the mouse. Must be a Value Vector2 Control.")]
-        private InputActionProperty _turnAction = new InputActionProperty(new InputAction("Turn", expectedControlType: "Vector2"));
+        [Tooltip(
+            "The Input System Action that will be used to read Turn data from the mouse. Must be a Value Vector2 Control.")]
+        private InputActionProperty _turnAction = new(new InputAction("Turn", expectedControlType: "Vector2"));
 
         // Properties
         public float TurnSpeed => 30f;
@@ -55,9 +53,10 @@ namespace AnyVR.UserControlSystem
                 return;
             }
 
-            var scaledRotateSpeed = TurnSpeed * Time.deltaTime;
+            float scaledRotateSpeed = TurnSpeed * Time.deltaTime;
             _turnRotation.y += rotation.x * scaledRotateSpeed;
-            _turnRotation.x = Mathf.Clamp(_turnRotation.x - rotation.y * scaledRotateSpeed, -_pitchThreshhold, _pitchThreshhold);
+            _turnRotation.x = Mathf.Clamp(_turnRotation.x - (rotation.y * scaledRotateSpeed), -_pitchThreshhold,
+                _pitchThreshhold);
             _turnOrigin.localEulerAngles = _turnRotation;
         }
     }

@@ -40,8 +40,8 @@ namespace TextChat
         }
 
         #endregion
-        
-        
+
+
         private readonly CircularBuffer<TextMessage> _buffer = new(100);
 
         public event Action<TextMessage> TextMessageReceived;
@@ -72,6 +72,7 @@ namespace TextChat
             {
                 return;
             }
+
             TextMessage tm = new(sender.ClientId, msg);
             _buffer.Push(tm);
             ReceiveTextMessage(tm);
@@ -97,6 +98,7 @@ namespace TextChat
             {
                 _buffer.Push(textMessage);
             }
+
             MessagesSynced?.Invoke();
         }
 
@@ -112,7 +114,7 @@ namespace TextChat
             return _buffer;
         }
     }
-    
+
     public struct TextMessage
     {
         public readonly int SenderId;
@@ -124,5 +126,4 @@ namespace TextChat
             Message = message;
         }
     }
-
 }

@@ -55,10 +55,11 @@ namespace TextChat
             {
                 _tail = (_tail + 1) % Capacity;
             }
+
             _buffer[_head] = item;
         }
 
-        public T this[int index] 
+        public T this[int index]
         {
             get
             {
@@ -67,11 +68,12 @@ namespace TextChat
                 {
                     throw new ArgumentOutOfRangeException();
                 }
+
                 int actualIndex = (_head - index + Capacity) % Capacity;
                 return _buffer[actualIndex];
             }
         }
-        
+
         public T[] GetAll()
         {
             T[] res = new T[Count];
@@ -79,6 +81,7 @@ namespace TextChat
             {
                 res[i] = this[i];
             }
+
             return res;
         }
 

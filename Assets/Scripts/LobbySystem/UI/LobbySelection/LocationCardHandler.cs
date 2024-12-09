@@ -17,7 +17,7 @@ namespace LobbySystem.UI.LobbySelection
         {
             LeanTween.scale(gameObject, Vector3.one * value, .1f);
         }
-        
+
         internal void SetMetaData(LobbySceneMetaData meta)
         {
             MetaData = meta;
@@ -30,6 +30,5 @@ namespace LobbySystem.UI.LobbySelection
         {
             Click?.Invoke();
         }
-        
     }
 }

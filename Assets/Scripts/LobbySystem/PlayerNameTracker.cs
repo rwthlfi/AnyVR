@@ -24,7 +24,7 @@ namespace LobbySystem
         public override void OnStartClient()
         {
             base.OnStartClient();
-            SetName(LobbySystem.ConnectionManager.UserName);
+            SetName(ConnectionManager.UserName);
         }
 
         public override void OnStartServer()

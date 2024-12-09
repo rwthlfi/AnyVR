@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 #if UNITY_WEBGL
 using UnityEngine.Networking;
+
 #else
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -161,7 +162,7 @@ namespace Voicechat
         /// </summary>
         public void Disconnect()
         {
-            if(_chatClient != null)
+            if (_chatClient != null)
             {
                 _chatClient.Disconnect();
             }
@@ -193,7 +194,7 @@ namespace Voicechat
                 Debug.LogWarning($"Error parsing token server address: {address}");
             }
         }
-        
+
         private static bool TryParseAddress(string address, out (string, ushort) res)
         {
             res = (null, 0);

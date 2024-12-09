@@ -7,23 +7,26 @@ namespace LobbySystem.UI
 {
     public class WelcomeScene : MonoBehaviour
     {
-        [Header("Platform Setup")] 
-        [SerializeField] private GameObject _pcParent;
+        [Header("Platform Setup")] [SerializeField]
+        private GameObject _pcParent;
+
         [SerializeField] private GameObject _vrParent;
         [SerializeField] private bool _forceVr;
-        
-        [Header("PC Menu Panels")] 
-        [SerializeField] private GameObject _pcConnectionPanel;
+
+        [Header("PC Menu Panels")] [SerializeField]
+        private GameObject _pcConnectionPanel;
+
         [SerializeField] private GameObject _pcLobbySelectionPanel;
         [SerializeField] private GameObject _pcCreateLobbyPanel;
-        
-        [Header("VR Menu Panels")] 
-        [SerializeField] private GameObject _vrConnectionPanel;
+
+        [Header("VR Menu Panels")] [SerializeField]
+        private GameObject _vrConnectionPanel;
+
         [SerializeField] private GameObject _vrLobbySelectionPanel;
         [SerializeField] private GameObject _vrCreateLobbyPanel;
 
         private readonly Dictionary<WelcomeScenePanel, GameObject> _panels = new();
-        
+
         private ConnectionManager _connectionManager;
         private GameObject _connectionPanel;
         private GameObject _lobbySelectionPanel;
@@ -39,7 +42,7 @@ namespace LobbySystem.UI
             _connectionPanel = isVr ? _vrConnectionPanel : _pcConnectionPanel;
             _lobbySelectionPanel = isVr ? _vrLobbySelectionPanel : _pcLobbySelectionPanel;
             _createLobbyPanel = isVr ? _vrCreateLobbyPanel : _pcCreateLobbyPanel;
-           
+
             _vrParent.SetActive(isVr);
             _pcParent.SetActive(!isVr);
 
@@ -48,7 +51,7 @@ namespace LobbySystem.UI
             if (_connectionManager == null)
             {
                 Debug.LogError("Instance of ConnectionManager not found");
-                return;    
+                return;
             }
 
             _panels.Add(WelcomeScenePanel.ConnectionPanel, _connectionPanel);
@@ -63,27 +66,27 @@ namespace LobbySystem.UI
 
         private void SetActivePanel(WelcomeScenePanel panel)
         {
-            foreach (KeyValuePair<WelcomeScenePanel,GameObject> pair in _panels)
+            foreach (KeyValuePair<WelcomeScenePanel, GameObject> pair in _panels)
             {
                 pair.Value.SetActive(false);
             }
 
             switch (panel)
             {
-                case WelcomeScenePanel.ConnectionPanel: 
+                case WelcomeScenePanel.ConnectionPanel:
                     _connectionPanel.SetActive(true);
                     break;
-                case WelcomeScenePanel.LobbySelectionPanel: 
+                case WelcomeScenePanel.LobbySelectionPanel:
                     _lobbySelectionPanel.SetActive(true);
                     break;
-                case WelcomeScenePanel.CreateLobbyPanel: 
+                case WelcomeScenePanel.CreateLobbyPanel:
                     _createLobbyPanel.SetActive(true);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(panel), panel, null);
             }
         }
-        
+
         private void OnConnectionState(ConnectionState state)
         {
             Debug.Log($"Connection State Update: {state}");
@@ -94,7 +97,7 @@ namespace LobbySystem.UI
 
         private void OnDestroy()
         {
-            if(_connectionManager != null)
+            if (_connectionManager != null)
             {
                 _connectionManager.ConnectionState -= OnConnectionState;
             }
@@ -139,7 +142,7 @@ namespace LobbySystem.UI
             res = (arr[0], (ushort)port);
             return true;
         }
-        
+
         private enum WelcomeScenePanel
         {
             ConnectionPanel, LobbySelectionPanel, CreateLobbyPanel
