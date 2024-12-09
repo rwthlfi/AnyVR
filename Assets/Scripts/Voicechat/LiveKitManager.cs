@@ -5,9 +5,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 #if UNITY_WEBGL
 using UnityEngine.Networking;
-
 #else
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 #endif
@@ -18,13 +16,14 @@ namespace Voicechat
     {
         #region Singleton
 
-        public static LiveKitManager s_instance;
+        public static LiveKitManager s_instance; // TODO: set singleton accessibility to internal
 
         private void InitSingleton()
         {
             if (s_instance != null)
             {
-                Debug.LogWarning("Instance of LiveKitManager is already active");
+                Destroy(gameObject);
+                Destroy(this);
                 return;
             }
 
@@ -34,7 +33,7 @@ namespace Voicechat
         #endregion
 
         private Dictionary<string, Participant> RemoteParticipants => _chatClient.RemoteParticipants;
-        public Participant LocalParticipant => _chatClient.LocalParticipant;
+        private Participant LocalParticipant => _chatClient.LocalParticipant;
 
         private VoiceChatClient _chatClient;
         [Header("LiveKit")] [SerializeField] private string _tokenServerAddr;
@@ -136,7 +135,7 @@ namespace Voicechat
         {
             if (_chatClient == null)
             {
-                Debug.LogError("VoiceChatClient is not initialized!");
+                Debug.LogWarning("VoiceChatClient is not initialized!");
                 return;
             }
             // TODO: ensure that the passed names will result in a valid url for token server
@@ -162,7 +161,10 @@ namespace Voicechat
         /// </summary>
         public void Disconnect()
         {
-            _chatClient.Disconnect();
+            if(_chatClient != null)
+            {
+                _chatClient.Disconnect();
+            }
         }
 
         public void SetMicrophoneEnabled(bool b)
@@ -184,14 +186,14 @@ namespace Voicechat
         {
             if (TryParseAddress(address, out (string ip, ushort port) res))
             {
-                _tokenServerAddr = $"{res.ip}:{res.port}";
+                _tokenServerAddr = address;
             }
             else
             {
                 Debug.LogWarning($"Error parsing token server address: {address}");
             }
         }
-
+        
         private static bool TryParseAddress(string address, out (string, ushort) res)
         {
             res = (null, 0);
@@ -201,12 +203,6 @@ namespace Voicechat
             }
 
             string[] arr = address.Split(':'); // [ip, port]
-            const string ipPattern =
-                @"^(\b25[0-5]|\b2[0-4][0-9]|\b[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}";
-            if (!Regex.IsMatch(arr[0], ipPattern))
-            {
-                return false;
-            }
 
             uint port = uint.Parse(arr[1]);
             if (port > ushort.MaxValue)
@@ -289,7 +285,7 @@ namespace Voicechat
 
         public bool TryGetAvailableMicrophoneNames(out string[] micNames)
         {
-            if (_chatClient.TryGetAvailableMicrophoneNames(out string[] names))
+            if (_chatClient != null && _chatClient.TryGetAvailableMicrophoneNames(out string[] names))
             {
                 micNames = names;
                 return true;

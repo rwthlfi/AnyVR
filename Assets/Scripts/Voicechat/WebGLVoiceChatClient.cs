@@ -112,7 +112,7 @@ namespace Voicechat
                 Connected = true;
 
                 Local = new Participant(_room.LocalParticipant.Sid, _room.LocalParticipant.Identity);
-                foreach (RemoteParticipant remote in _room.Participants.Values)
+                foreach (RemoteParticipant remote in _room.RemoteParticipants.Values)
                 {
                     Remotes.Add(remote.Sid, new Participant(remote.Sid, remote.Identity));
                 }
@@ -124,7 +124,7 @@ namespace Voicechat
 
         internal override void SetClientMute(string sid, bool mute)
         {
-            if (_room.Participants.TryGetValue(sid, out RemoteParticipant remote))
+            if (_room.RemoteParticipants.TryGetValue(sid, out RemoteParticipant remote))
             {
                 remote.SetVolume(mute ? 0 : 1);
             }

@@ -41,7 +41,7 @@ namespace AnyVR.UserControlSystem
         private InputActionProperty _turnAction = new InputActionProperty(new InputAction("Turn", expectedControlType: "Vector2"));
 
         // Properties
-        public float TurnSpeed => 60f;
+        public float TurnSpeed => 30f;
 
         private void Update()
         {

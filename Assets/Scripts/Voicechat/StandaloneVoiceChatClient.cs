@@ -29,7 +29,7 @@ namespace Voicechat
             _room = new Room();
             _room.ParticipantConnected += participant =>
             {
-                Debug.Log($"Participant Connected! Name: {participant.Identity}");
+                Debug.Log($"Participant Connected! Name: {participant.Name}");
                 Remotes.Add(participant.Sid, new Participant(participant.Sid, participant.Identity));
                 ParticipantConnected?.Invoke(Remotes[participant.Sid]);
             };
