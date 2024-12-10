@@ -28,22 +28,14 @@ namespace AnyVR.UserControlSystem
     /// </summary>
     public class InputModalityManager : MonoBehaviour
     {
-        [SerializeField]
-        private ContinuousTurnProvider _xrTurnProvider;
-        [SerializeField]
-        private PCTurnProvider _pcTurnProvider;
-        [SerializeField]
-        private PCInteractionSystem _pcInteractionSystem;
-        [SerializeField]
-        private TrackedPoseDriver _cameraTrackedPoseDriver;
-        [SerializeField]
-        private Transform _xrGazeInteractionOrigin;
-        [SerializeField]
-        private Transform _pcGazeInteractionOrigin;
-        [SerializeField]
-        private XRGazeInteractor _gazeInteractor;
-        [SerializeField]
-        PCInterface _pcInterface;
+        [SerializeField] private ContinuousTurnProvider _xrTurnProvider;
+        [SerializeField] private PCTurnProvider _pcTurnProvider;
+        [SerializeField] private PCInteractionSystem _pcInteractionSystem;
+        [SerializeField] private TrackedPoseDriver _cameraTrackedPoseDriver;
+        [SerializeField] private Transform _xrGazeInteractionOrigin;
+        [SerializeField] private Transform _pcGazeInteractionOrigin;
+        [SerializeField] private XRGazeInteractor _gazeInteractor;
+        [SerializeField] private PCInterface _pcInterface;
 
         private void Start()
         {

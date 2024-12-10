@@ -90,7 +90,8 @@ namespace AnyVR.PlatformManagement
                 Debug.LogWarning($"[PlatformInfo] This device is no XR device.");
                 return null;
             }
-            var inputDevices = new List<InputDevice>();
+
+            List<InputDevice> inputDevices = new();
             InputDevices.GetDevicesAtXRNode(node, inputDevices);
             if (inputDevices.Count > 0)
             {
@@ -115,10 +116,11 @@ namespace AnyVR.PlatformManagement
             {
                 inputDevice = RightController;
             }
-            
+
             if (inputDevice != null)
             {
-                Debug.Log($"[PlatformInfo] XR-Controller {inputDevice?.name} with characteristics {inputDevice?.characteristics} identified.");
+                Debug.Log(
+                    $"[PlatformInfo] XR-Controller {inputDevice?.name} with characteristics {inputDevice?.characteristics} identified.");
                 string deviceName = inputDevice?.name;
                 if (!string.IsNullOrEmpty(deviceName))
                 {
@@ -131,6 +133,7 @@ namespace AnyVR.PlatformManagement
                         return XRHardwareType.Pico;
                     }
                 }
+
                 Debug.LogWarning("[PlatformInfo] Could not identify your XR headset, defaulting to Quest series.");
                 return XRHardwareType.Quest;
             }
@@ -170,12 +173,11 @@ namespace AnyVR.PlatformManagement
         public static string GetDeviceDescription()
         {
             return $"[PlatformInfo]\n" +
-                $"Device {SystemInfo.deviceName} ({SystemInfo.deviceModel}):\n" +
-                $"Platform: {PlatformFamily}" + (IsXRPlatform() ? $" ({XRHardwareType})" : "") + "\n" +
-                $"OS: {SystemInfo.operatingSystem}, ({SystemInfo.operatingSystemFamily} family)" +
-                (IsXRPlatform() ? $"\nCharacteristics: {Headset?.characteristics}" : "");
+                   $"Device {SystemInfo.deviceName} ({SystemInfo.deviceModel}):\n" +
+                   $"Platform: {PlatformFamily}" + (IsXRPlatform() ? $" ({XRHardwareType})" : "") + "\n" +
+                   $"OS: {SystemInfo.operatingSystem}, ({SystemInfo.operatingSystemFamily} family)" +
+                   (IsXRPlatform() ? $"\nCharacteristics: {Headset?.characteristics}" : "");
         }
-
     }
 
     /// <summary>
@@ -226,7 +228,6 @@ namespace AnyVR.PlatformManagement
         Pico,
         OpenXR,
         None,
-        Unknown,
+        Unknown
     }
-
 }

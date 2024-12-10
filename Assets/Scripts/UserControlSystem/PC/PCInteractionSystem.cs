@@ -38,27 +38,25 @@ namespace AnyVR.UserControlSystem
             Hold
         }
 
-        [SerializeField]
-        [Tooltip("Maximum range for interactable objects")]
+        [SerializeField] [Tooltip("Maximum range for interactable objects")]
         private float _maxInteractionDistance = 3f;
 
-        [SerializeField]
-        private Transform _interactionRaycastOrigin;
+        [SerializeField] private Transform _interactionRaycastOrigin;
 
-        [SerializeField]
-        [Tooltip("If interaction should be toggleable or only when button is pressed.")]
+        [SerializeField] [Tooltip("If interaction should be toggleable or only when button is pressed.")]
         private InteractionMode _interactionMode;
 
         [SerializeField]
         [Tooltip("The Input System Action that will be used to interaction an object. Expects a 'Button' action.")]
-        private InputActionProperty _interactionAction = new InputActionProperty(new InputAction("Interaction", expectedControlType: "Button"));
+        private InputActionProperty _interactionAction =
+            new(new InputAction("Interaction", expectedControlType: "Button"));
 
         private XRBaseInteractable _hoveredObject = null;
         private XRBaseInteractable _interactableObject = null;
-        
+
         protected override void Start()
         {
-            base.Start();   
+            base.Start();
             allowHover = true;
             allowSelect = true;
             _interactionAction.action.started += TryStartInteraction;
@@ -130,13 +128,14 @@ namespace AnyVR.UserControlSystem
         {
             RaycastHit hit;
 
-            if (Physics.Raycast(_interactionRaycastOrigin.position, _interactionRaycastOrigin.forward, out hit, _maxInteractionDistance))
+            if (Physics.Raycast(_interactionRaycastOrigin.position, _interactionRaycastOrigin.forward, out hit,
+                    _maxInteractionDistance))
             {
                 XRBaseInteractable interactionInteractable = hit.collider.gameObject.GetComponent<XRBaseInteractable>();
                 if (interactionInteractable != null)
                 {
                     target = interactionInteractable;
-                    return true;        
+                    return true;
                 }
                 else
                 {
@@ -150,6 +149,7 @@ namespace AnyVR.UserControlSystem
                     }
                 }
             }
+
             target = null;
             return false;
         }
@@ -164,7 +164,6 @@ namespace AnyVR.UserControlSystem
             {
                 TryReleaseObject(context);
             }
-            
         }
 
         private void TryReleaseObject(InputAction.CallbackContext context)
@@ -180,8 +179,9 @@ namespace AnyVR.UserControlSystem
 
         private void SelectInteractableObject()
         {
-            StartManualInteraction((IXRSelectInteractable)_interactableObject);            
+            StartManualInteraction((IXRSelectInteractable)_interactableObject);
         }
+
         private void ReleaseInteractableObject()
         {
             EndManualInteraction();

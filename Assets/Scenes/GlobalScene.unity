@@ -171,19 +171,69 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4083339213612696829, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+      propertyPath: _componentIndexCache
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5419417114175935541, guid: c68b52150fd06234fad771da14cf4693, type: 3}
       propertyPath: m_Name
       value: GlobalSceneManager
       objectReference: {fileID: 0}
     - target: {fileID: 6574523170611092761, guid: c68b52150fd06234fad771da14cf4693, type: 3}
       propertyPath: <SceneId>k__BackingField
-      value: 6861379636014662857
+      value: 4092591613
+      objectReference: {fileID: 0}
+    - target: {fileID: 6574523170611092761, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+      propertyPath: _networkBehaviours.Array.data[0]
+      value: 
+      objectReference: {fileID: 728109941706048310}
+    - target: {fileID: 6574523170611092761, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+      propertyPath: _networkBehaviours.Array.data[1]
+      value: 
+      objectReference: {fileID: 728109941706048309}
+    - target: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+      propertyPath: _offlineScene
+      value: Assets/Scenes/WelcomeScene.unity
+      objectReference: {fileID: 0}
+    - target: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+      propertyPath: _loggingEnabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+      propertyPath: _lobbyHandlerPrefab
+      value: 
+      objectReference: {fileID: 3580284226864861460, guid: 4833cfa3e442f3445b1b9b800571cfe9, type: 3}
+    - target: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+      propertyPath: _componentIndexCache
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+--- !u!114 &728109941706048309 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4083339213612696829, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+  m_PrefabInstance: {fileID: 728109941706048308}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd22ee86d2702724ca993327e5641ec5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &728109941706048310 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8216294827977510481, guid: c68b52150fd06234fad771da14cf4693, type: 3}
+  m_PrefabInstance: {fileID: 728109941706048308}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 044cbd80f449876408b74b1c5abbe3a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
