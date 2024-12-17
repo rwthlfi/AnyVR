@@ -17,5 +17,12 @@
     "name": "Unity",
     "email": "unity@example.com",
     "url": "https://www.unity3d.com"
-  }
+  },
+  "samples": [
+    {
+      "displayName": "LobbySetup",
+      "description": "Example lobby setup with two lobby scenes",
+      "path": "Samples~/LobbySetup"
+    }
+  ]
 }
