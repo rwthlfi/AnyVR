@@ -52,7 +52,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _logging: {fileID: 0}
-  _spawnablePrefabs: {fileID: 11400000, guid: 430e5e6bcc5120e0fbc6bea57842f560, type: 2}
+  _spawnablePrefabs: {fileID: 11400000, guid: c71c13eaad25f593e89d29e02d7372b6, type: 2}
   _refreshDefaultPrefabs: 1
   _runInBackground: 1
   _dontDestroyOnLoad: 1
@@ -172,4 +172,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e838fcb1542f77b4aace907895a68966, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _globalScene: 
+  _globalScene: Assets/Samples/LobbySetup/Scenes/GlobalScene.unity
