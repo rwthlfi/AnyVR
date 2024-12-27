@@ -27,7 +27,7 @@ namespace LobbySystem.LobbyTests
         public IEnumerator SimpleLobbyCreationTest()
         {
             const string lobbyName = "TestLobby";
-            const string scene = "Assets/Scenes/LobbyScenes/InputModality_DemoScene.unity";
+            const string scene = "WelcomeScene";
             const ushort lobbyCapacity = 10;
             LobbyManager.Client_CreateLobby(lobbyName, scene, lobbyCapacity);
 

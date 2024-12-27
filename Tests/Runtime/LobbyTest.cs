@@ -32,7 +32,7 @@ namespace Tests.Runtime
         [UnitySetUp]
         public virtual IEnumerator Setup()
         {
-            AsyncOperation op = SceneManager.LoadSceneAsync("Samples/AnyVr/0.1.0/LobbySetup/Scenes/WelcomeScene", LoadSceneMode.Additive);
+            AsyncOperation op = SceneManager.LoadSceneAsync("WelcomeScene", LoadSceneMode.Additive);
             while (op is { isDone: false })
             {
                 yield return null;
