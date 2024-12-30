@@ -24,8 +24,8 @@ namespace LobbySystem.UI
 {
     public class ConnectMenuHandler : MonoBehaviour
     {
-        [FormerlySerializedAs("_offlineScene")] [SerializeField]
-        private WelcomeScene _welcomeScene;
+        [FormerlySerializedAs("_welcomeScene")] [FormerlySerializedAs("_offlineScene")] [SerializeField]
+        private WelcomeSceneHandler _welcomeSceneHandler;
 
         [Header("UI")] [SerializeField] private Button _goBtn;
         [SerializeField] private TMP_InputField _fishnetIpInputField;
@@ -44,7 +44,7 @@ namespace LobbySystem.UI
             string fishnetAddress = _fishnetIpInputField.text.Trim();
             string liveKitAddress = _livekitIpInputField.text.Trim();
             string userName = _usernameInputField.text.Trim();
-            _welcomeScene.OnConnectBtn(fishnetAddress, liveKitAddress, userName);
+            _welcomeSceneHandler.OnConnectBtn(fishnetAddress, liveKitAddress, userName);
         }
     }
 }

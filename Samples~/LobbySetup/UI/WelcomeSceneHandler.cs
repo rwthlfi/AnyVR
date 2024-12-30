@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace LobbySystem.UI
 {
-    public class WelcomeScene : MonoBehaviour
+    public class WelcomeSceneHandler : MonoBehaviour
     {
         [Header("Platform Setup")] [SerializeField]
         private GameObject _pcParent;
