@@ -1389,6 +1389,10 @@ PrefabInstance:
       propertyPath: _globalScene
       value: Assets/Samples/LobbySetup/Scenes/GlobalScene.unity
       objectReference: {fileID: 0}
+    - target: {fileID: 5808065475186452488, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
+      propertyPath: _spawnablePrefabs
+      value: 
+      objectReference: {fileID: 11400000, guid: 5c06729e51af42811ad811fd9c341b9b, type: 2}
     - target: {fileID: 7371100047868426117, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1551,6 +1555,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player Interaction Setup
       objectReference: {fileID: 0}
+    - target: {fileID: 7904810116953755684, guid: 62dd71735bebe56efb60d7992473b390, type: 3}
+      propertyPath: _interactionAction.m_Reference
+      value: 
+      objectReference: {fileID: -7565586953333158246, guid: 6d6d1627e1c2c8241af3c01c9095026e, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
