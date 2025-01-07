@@ -34,7 +34,7 @@ namespace AnyVR.PlatformManagement
             {
                 if (s_instance == null)
                 {
-                    s_instance = FindObjectOfType<PlatformManager>();
+                    s_instance = FindAnyObjectByType<PlatformManager>();
                     if (s_instance == null)
                     {
                         Debug.LogError("PlattformManager not found in scene. Please add it to a gameobject.");

@@ -104,7 +104,7 @@ namespace AnyVR
             Debug.Log($"Throwing {name}: v: {state.Velocity}"); //BUG
             _body.position = state.Position;
             _body.rotation = state.Rotation;
-            _body.velocity = state.Velocity;
+            _body.linearVelocity = state.Velocity;
             _body.angularVelocity = state.AngularVelocity;
         }
 

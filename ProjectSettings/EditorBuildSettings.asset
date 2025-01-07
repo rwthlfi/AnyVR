@@ -16,7 +16,7 @@ EditorBuildSettings:
     guid: bba88a0c3162cca4ca6104582577da92
   - enabled: 1
     path: Assets/Scenes/LobbyScenes/InputModality_DemoScene.unity
-    guid: e22023fc041c3dd42aa64caef345f18f
+    guid: 27e2bfb48ba443f65bec452823bbb0a7
   - enabled: 1
     path: Assets/Scenes/LobbyScenes/PhysicsDemo.unity
     guid: f451233d543fea04f9e557992fb1f19a
@@ -25,5 +25,7 @@ EditorBuildSettings:
     Unity.XR.WindowsMR.Settings: {fileID: 11400000, guid: dc5a169419fa04987b057f65238cf3ba, type: 2}
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 9bec1ce6a03ccba4b9a8215241b32e63, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: a49cadc1a815591479693b955ccf08c1, type: 2}
-    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: fe36764eafd7f1f45a3fa90053f9b687, type: 2}
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 985fdffee33a5944396199c6b7145dd4, type: 3}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 1a4c68ca72a83449f938d669337cb305, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 1bee136ea9400004394c887060e95ba1, type: 2}
+  m_UseUCBPForAssetBundles: 0
