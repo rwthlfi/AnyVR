@@ -645,7 +645,7 @@ GameObject:
   - component: {fileID: 1067807000}
   - component: {fileID: 1067806999}
   - component: {fileID: 1067807003}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: ChatCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -910,6 +910,10 @@ PrefabInstance:
       propertyPath: <SceneId>k__BackingField
       value: 460033519
       objectReference: {fileID: 0}
+    - target: {fileID: 6300413751004297945, guid: 8219e8c94d186ab4c81c6a346416e3be, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: -8309319643020345216, guid: 7ab6f3b0fd1a6ba41b2a47766c16613f, type: 3}
     - target: {fileID: 6875527230144720153, guid: 8219e8c94d186ab4c81c6a346416e3be, type: 3}
       propertyPath: m_Name
       value: Cube

@@ -74,7 +74,7 @@
       "source": "builtin",
       "dependencies": {
         "com.unity.xr.oculus": "4.1.2",
-        "com.unity.xr.openxr": "1.10.0"
+        "com.unity.xr.openxr": "1.9.1"
       }
     },
     "com.unity.ide.rider": {
@@ -301,7 +301,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.core-utils": {
-      "version": "2.3.0",
+      "version": "2.2.3",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -385,16 +385,7 @@
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "9f274e1e90bcde869651e9510b4bfeb815b89318"
-    },
-    "io.livekit.unity": {
-      "version": "https://github.com/livekit/client-sdk-unity-web.git",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "2.0.0"
-      },
-      "hash": "897aa5a1136c0035dcc87bc38394f94d0ec6c53d"
+      "hash": "87898753fc591c03e80a1d49f108bee03f321fc2"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

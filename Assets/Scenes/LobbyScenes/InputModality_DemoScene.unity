@@ -949,7 +949,7 @@ GameObject:
   - component: {fileID: 788111589}
   - component: {fileID: 788111588}
   - component: {fileID: 788111587}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Far Grab Interactable Info
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1441,6 +1441,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: UI Sample
       objectReference: {fileID: 0}
+    - target: {fileID: 4015128326712939855, guid: fd28f23af44f73f4a95e33435872ad15, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4220274215976610951, guid: fd28f23af44f73f4a95e33435872ad15, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1849,7 +1853,7 @@ GameObject:
   - component: {fileID: 986673954}
   - component: {fileID: 986673953}
   - component: {fileID: 986673952}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Gaze Interactable Info
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3592,7 +3596,7 @@ GameObject:
   - component: {fileID: 1917198437}
   - component: {fileID: 1917198436}
   - component: {fileID: 1917198435}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Climb Interactable Info
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3924,7 +3928,7 @@ GameObject:
   - component: {fileID: 604367606304239378}
   - component: {fileID: 604367606304239379}
   - component: {fileID: 604367606304239383}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Grab Interactable Info
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4978,7 +4982,7 @@ GameObject:
   - component: {fileID: 3807310296116640661}
   - component: {fileID: 3807310296116640660}
   - component: {fileID: 3807310296116640663}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Poke Interactions Info
   m_TagString: Untagged
   m_Icon: {fileID: 0}
