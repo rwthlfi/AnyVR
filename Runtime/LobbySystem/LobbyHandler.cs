@@ -83,7 +83,7 @@ namespace LobbySystem
             _clientIds.OnChange += OnClientUpdate;
 
             AddClient();
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Scenes/UIScene", LoadSceneMode.Additive);
+            UnityEngine.SceneManagement.SceneManager.LoadScene("UIScene", LoadSceneMode.Additive);
 
             if (!LiveKitManager.s_instance.TryGetAvailableMicrophoneNames(out string[] micNames))
             {
