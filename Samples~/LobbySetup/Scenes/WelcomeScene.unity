@@ -177,7 +177,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &65253622
 Transform:
   m_ObjectHideFlags: 0
@@ -230,12 +230,12 @@ MonoBehaviour:
   _pcParent: {fileID: 1797401195}
   _vrParent: {fileID: 65253621}
   _forceVr: 0
-  _pcConnectionPanel: {fileID: 202126506}
-  _pcLobbySelectionPanel: {fileID: 202126505}
-  _pcCreateLobbyPanel: {fileID: 202126504}
-  _vrConnectionPanel: {fileID: 761184980}
-  _vrLobbySelectionPanel: {fileID: 761184979}
-  _vrCreateLobbyPanel: {fileID: 761184978}
+  _pcConnectionPanel: {fileID: 761184980}
+  _pcLobbySelectionPanel: {fileID: 761184979}
+  _pcCreateLobbyPanel: {fileID: 761184978}
+  _vrConnectionPanel: {fileID: 202126506}
+  _vrLobbySelectionPanel: {fileID: 202126505}
+  _vrCreateLobbyPanel: {fileID: 202126504}
 --- !u!4 &95279596
 Transform:
   m_ObjectHideFlags: 0
@@ -1387,7 +1387,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5021902473138039828, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: _globalScene
-      value: Assets/Samples/LobbySetup/Scenes/GlobalScene.unity
+      value: Packages/rwth.lfi.anyvr/Samples/LobbySetup/Scenes/GlobalScene.unity
       objectReference: {fileID: 0}
     - target: {fileID: 5808065475186452488, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: _spawnablePrefabs
