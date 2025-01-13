@@ -17,7 +17,6 @@
 
 using FishNet.Object;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace LobbySystem
@@ -28,11 +27,28 @@ namespace LobbySystem
         [SerializeField] private Transform _leftController;
         [SerializeField] private Transform _rightController;
 
-        private bool _isOwnerInit;
-
         private PlayerInteractionHandler _handler;
 
+        private bool _isOwnerInit;
+
         private Renderer[] _renderers;
+
+        private void Update()
+        {
+            if (!_isOwnerInit)
+            {
+                return;
+            }
+
+            transform.position = _handler._rig.position;
+
+            _head.position = _handler._cam.position;
+            _head.rotation = _handler._cam.rotation;
+            _leftController.position = _handler._leftController.position;
+            _leftController.rotation = _handler._leftController.rotation;
+            _rightController.position = _handler._rightController.position;
+            _rightController.rotation = _handler._rightController.rotation;
+        }
 
         public event Action<int, bool> SetClientId;
 
@@ -61,23 +77,6 @@ namespace LobbySystem
             }
 
             _isOwnerInit = true;
-        }
-
-        private void Update()
-        {
-            if (!_isOwnerInit)
-            {
-                return;
-            }
-
-            transform.position = _handler._rig.position;
-
-            _head.position = _handler._cam.position;
-            _head.rotation = _handler._cam.rotation;
-            _leftController.position = _handler._leftController.position;
-            _leftController.rotation = _handler._leftController.rotation;
-            _rightController.position = _handler._rightController.position;
-            _rightController.rotation = _handler._rightController.rotation;
         }
     }
 }

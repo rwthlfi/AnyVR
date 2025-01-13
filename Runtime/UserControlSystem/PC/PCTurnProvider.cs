@@ -21,7 +21,7 @@ using UnityEngine.InputSystem;
 namespace AnyVR.UserControlSystem
 {
     /// <summary>
-    /// Provides the functionality to turn the camera using mouse input on PC.
+    ///     Provides the functionality to turn the camera using mouse input on PC.
     /// </summary>
     public class PCTurnProvider : MonoBehaviour
     {
@@ -31,12 +31,12 @@ namespace AnyVR.UserControlSystem
         [SerializeField] [Tooltip("Max/min degrees of pitching the camera")] [Range(-89f, 89f)]
         private float _pitchThreshhold = 60f;
 
-        private Vector2 _turnRotation;
-
         [SerializeField]
         [Tooltip(
             "The Input System Action that will be used to read Turn data from the mouse. Must be a Value Vector2 Control.")]
         private InputActionProperty _turnAction = new(new InputAction("Turn", expectedControlType: "Vector2"));
+
+        private Vector2 _turnRotation;
 
         // Properties
         public float TurnSpeed => 30f;

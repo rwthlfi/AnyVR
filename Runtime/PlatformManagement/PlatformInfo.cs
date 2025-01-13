@@ -15,51 +15,52 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR;
-using System.Collections.Generic;
 using UnityEngine.XR.Management;
 
 namespace AnyVR.PlatformManagement
 {
     /// <summary>
-    /// Static information class to provide miscellaneous information about the platform the software is running on.
+    ///     Static information class to provide miscellaneous information about the platform the software is running on.
     /// </summary>
     public static class PlatformInfo
     {
         /// <summary>
-        /// The platform the software is running on.
+        ///     The platform the software is running on.
         /// </summary>
         public static Platform Platform => GetPlatform();
 
         /// <summary>
-        /// The platform family the software is running on.
+        ///     The platform family the software is running on.
         /// </summary>
         public static PlatformFamily PlatformFamily => GetPlatformFamily();
 
         /// <summary>
-        /// The XR hardware that is used.
+        ///     The XR hardware that is used.
         /// </summary>
         public static XRHardwareType XRHardwareType => GetXRHardwareType();
 
         /// <summary>
-        /// Reference to the HMD, if there is one. Is null otherwise.
+        ///     Reference to the HMD, if there is one. Is null otherwise.
         /// </summary>
         public static InputDevice? Headset => LookupInputDevice(XRNode.Head);
 
         /// <summary>
-        /// Reference to the left XR controller, if there is one. Is null otherwise.
+        ///     Reference to the left XR controller, if there is one. Is null otherwise.
         /// </summary>
         public static InputDevice? LeftController => LookupInputDevice(XRNode.LeftHand);
 
         /// <summary>
-        /// Reference to the right XR controller, if there is one. Is null otherwise.
+        ///     Reference to the right XR controller, if there is one. Is null otherwise.
         /// </summary>
         public static InputDevice? RightController => LookupInputDevice(XRNode.RightHand);
 
         private static Platform GetPlatform()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         private static PlatformFamily GetPlatformFamily()
@@ -87,7 +88,7 @@ namespace AnyVR.PlatformManagement
         {
             if (!IsXRPlatform())
             {
-                Debug.LogWarning($"[PlatformInfo] This device is no XR device.");
+                Debug.LogWarning("[PlatformInfo] This device is no XR device.");
                 return null;
             }
 
@@ -97,17 +98,15 @@ namespace AnyVR.PlatformManagement
             {
                 return inputDevices[0];
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         private static XRHardwareType GetXRHardwareType()
         {
             if (!IsXRPlatform())
             {
-                Debug.LogWarning($"[PlatformInfo] This device is no XR device.");
+                Debug.LogWarning("[PlatformInfo] This device is no XR device.");
                 return XRHardwareType.None;
             }
 
@@ -128,7 +127,8 @@ namespace AnyVR.PlatformManagement
                     {
                         return XRHardwareType.Quest;
                     }
-                    else if (deviceName.ToLower().Contains("pico"))
+
+                    if (deviceName.ToLower().Contains("pico"))
                     {
                         return XRHardwareType.Pico;
                     }
@@ -147,7 +147,7 @@ namespace AnyVR.PlatformManagement
         }
 
         /// <summary>
-        /// Determines if the used platform is an XR platform.
+        ///     Determines if the used platform is an XR platform.
         /// </summary>
         /// <returns>Whether the used platform is an XR platform.</returns>
         public static bool IsXRPlatform()
@@ -156,23 +156,23 @@ namespace AnyVR.PlatformManagement
         }
 
         /// <summary>
-        /// Returns whether the used XR hardware has handtracking enabled.
+        ///     Returns whether the used XR hardware has handtracking enabled.
         /// </summary>
         /// <returns>Whether the used XR hardware has handtracking enabled.</returns>
         public static bool HasHandTrackingEnabled()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Returns a readable description of the system the software is ran on. Yields information 
-        /// about the device (name and model), also its OS and what kind of platform family it belongs
-        /// to.
+        ///     Returns a readable description of the system the software is ran on. Yields information
+        ///     about the device (name and model), also its OS and what kind of platform family it belongs
+        ///     to.
         /// </summary>
         /// <returns>The device description as a string.</returns>
         public static string GetDeviceDescription()
         {
-            return $"[PlatformInfo]\n" +
+            return "[PlatformInfo]\n" +
                    $"Device {SystemInfo.deviceName} ({SystemInfo.deviceModel}):\n" +
                    $"Platform: {PlatformFamily}" + (IsXRPlatform() ? $" ({XRHardwareType})" : "") + "\n" +
                    $"OS: {SystemInfo.operatingSystem}, ({SystemInfo.operatingSystemFamily} family)" +
@@ -181,7 +181,7 @@ namespace AnyVR.PlatformManagement
     }
 
     /// <summary>
-    /// Enumeration of all supported platforms.
+    ///     Enumeration of all supported platforms.
     /// </summary>
     public enum Platform
     {
@@ -207,7 +207,7 @@ namespace AnyVR.PlatformManagement
     }
 
     /// <summary>
-    /// Enumeration of all supported platform families.
+    ///     Enumeration of all supported platform families.
     /// </summary>
     public enum PlatformFamily
     {
@@ -219,7 +219,7 @@ namespace AnyVR.PlatformManagement
     }
 
     /// <summary>
-    /// Enumeration for the type of XR hardware that is used.
+    ///     Enumeration for the type of XR hardware that is used.
     /// </summary>
     public enum XRHardwareType
     {

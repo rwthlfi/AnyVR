@@ -24,34 +24,16 @@ namespace TextChat
 {
     public class TextChatManager : NetworkBehaviour
     {
-        #region Singleton
-
-        internal static TextChatManager s_instance;
-
-        private void InitSingleton()
-        {
-            if (s_instance != null)
-            {
-                Debug.LogWarning("Instance of TextChatManager already exists!");
-                Destroy(this);
-            }
-
-            s_instance = this;
-        }
-
-        #endregion
-
-
         private readonly CircularBuffer<TextMessage> _buffer = new(100);
-
-        public event Action<TextMessage> TextMessageReceived;
-
-        public event Action MessagesSynced;
 
         private void Awake()
         {
             InitSingleton();
         }
+
+        public event Action<TextMessage> TextMessageReceived;
+
+        public event Action MessagesSynced;
 
         public override void OnStartClient()
         {
@@ -113,6 +95,23 @@ namespace TextChat
         {
             return _buffer;
         }
+
+        #region Singleton
+
+        internal static TextChatManager s_instance;
+
+        private void InitSingleton()
+        {
+            if (s_instance != null)
+            {
+                Debug.LogWarning("Instance of TextChatManager already exists!");
+                Destroy(this);
+            }
+
+            s_instance = this;
+        }
+
+        #endregion
     }
 
     public struct TextMessage

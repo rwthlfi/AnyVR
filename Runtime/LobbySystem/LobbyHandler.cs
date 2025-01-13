@@ -4,7 +4,6 @@ using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using TextChat;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,31 +14,40 @@ namespace LobbySystem
     [RequireComponent(typeof(TextChatManager))]
     public class LobbyHandler : NetworkBehaviour
     {
-        private readonly SyncHashSet<int> _clientIds = new();
-        private readonly SyncVar<Guid> _lobbyId = new();
-        private readonly SyncVar<int> _adminId = new();
-        private readonly SyncVar<bool> _initialized = new(false);
-
-        /// <summary>
-        /// Invoked when a remote client joined the lobby of the local client
-        /// |clientId, clientName|
-        /// </summary>
-        public event Action<int, string> ClientJoin;
-
-        /// <summary>
-        /// Invoked when an remote client left the lobby of thk local client
-        /// </summary>
-        public event Action<int> ClientLeft;
-
         // Only assigned on client
         [CanBeNull] private static LobbyHandler s_instance;
-
-        // Only invoked on client after ClientStart
-        public static event Action PostInit;
+        private readonly SyncVar<int> _adminId = new();
+        private readonly SyncHashSet<int> _clientIds = new();
+        private readonly SyncVar<bool> _initialized = new(false);
+        private readonly SyncVar<Guid> _lobbyId = new();
 
         public TextChatManager TextChat { get; private set; }
 
         public ushort CurrentClientCount => (ushort)_clientIds.Count;
+
+        private void Awake()
+        {
+            TextChat = GetComponent<TextChatManager>();
+        }
+
+        private void OnDestroy()
+        {
+            _clientIds.OnChange -= OnClientUpdate;
+        }
+
+        /// <summary>
+        ///     Invoked when a remote client joined the lobby of the local client
+        ///     |clientId, clientName|
+        /// </summary>
+        public event Action<int, string> ClientJoin;
+
+        /// <summary>
+        ///     Invoked when an remote client left the lobby of thk local client
+        /// </summary>
+        public event Action<int> ClientLeft;
+
+        // Only invoked on client after ClientStart
+        public static event Action PostInit;
 
         [Server]
         internal void Init(Guid lobbyId, int adminId)
@@ -50,16 +58,11 @@ namespace LobbySystem
         }
 
         /// <summary>
-        /// Returns the client id of the admin
+        ///     Returns the client id of the admin
         /// </summary>
         public int GetAdminId()
         {
             return _adminId.Value;
-        }
-
-        private void Awake()
-        {
-            TextChat = GetComponent<TextChatManager>();
         }
 
         public override void OnStartServer()
@@ -189,11 +192,6 @@ namespace LobbySystem
         public static LobbyHandler GetInstance()
         {
             return s_instance;
-        }
-
-        private void OnDestroy()
-        {
-            _clientIds.OnChange -= OnClientUpdate;
         }
 
         [Client]

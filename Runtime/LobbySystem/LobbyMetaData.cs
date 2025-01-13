@@ -2,23 +2,23 @@
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace LobbySystem
 {
     public class LobbyMetaData
     {
+        private readonly SceneLoadData _sceneLoadData;
+        public readonly int CreatorId;
+        public readonly ushort LobbyCapacity;
+
         /// <summary>
-        /// Unique identifier
+        ///     Unique identifier
         /// </summary>
         public readonly Guid LobbyId;
 
         public readonly string Name;
-        public readonly int CreatorId;
         public readonly string Scene;
-        public readonly ushort LobbyCapacity;
-        private readonly SceneLoadData _sceneLoadData;
         private int? _sceneHandle;
 
         public LobbyMetaData() { }
@@ -44,7 +44,7 @@ namespace LobbySystem
         }
 
         /// <summary>
-        /// Returns the SceneLoadData of the lobby as handle if possible.
+        ///     Returns the SceneLoadData of the lobby as handle if possible.
         /// </summary>
         public SceneLoadData GetSceneLoadData()
         {

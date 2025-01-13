@@ -22,10 +22,18 @@ namespace TextChat
     public class CircularBuffer<T>
     {
         private readonly T[] _buffer;
+
+        public readonly int Capacity;
         private int _head;
         private int _tail;
 
-        public readonly int Capacity;
+        public CircularBuffer(int capacity)
+        {
+            Capacity = capacity;
+            _buffer = new T[capacity];
+            _head = 0;
+            _tail = 0;
+        }
 
         public int Count
         {
@@ -38,25 +46,6 @@ namespace TextChat
 
                 return Capacity - (_tail - _head) + 1;
             }
-        }
-
-        public CircularBuffer(int capacity)
-        {
-            Capacity = capacity;
-            _buffer = new T[capacity];
-            _head = 0;
-            _tail = 0;
-        }
-
-        public void Push(T item)
-        {
-            _head = (_head + 1) % Capacity;
-            if (_head == _tail)
-            {
-                _tail = (_tail + 1) % Capacity;
-            }
-
-            _buffer[_head] = item;
         }
 
         public T this[int index]
@@ -72,6 +61,17 @@ namespace TextChat
                 int actualIndex = (_head - index + Capacity) % Capacity;
                 return _buffer[actualIndex];
             }
+        }
+
+        public void Push(T item)
+        {
+            _head = (_head + 1) % Capacity;
+            if (_head == _tail)
+            {
+                _tail = (_tail + 1) % Capacity;
+            }
+
+            _buffer[_head] = item;
         }
 
         public T[] GetAll()

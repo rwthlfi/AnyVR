@@ -20,17 +20,16 @@ using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
-
 namespace AnyVR.UserControlSystem
 {
     /// <summary>
-    /// Represents a PC interaction system that extends XRBaseInteractor.
-    /// This class handles the interaction logic for PC input modality.
+    ///     Represents a PC interaction system that extends XRBaseInteractor.
+    ///     This class handles the interaction logic for PC input modality.
     /// </summary>
     public class PCInteractionSystem : XRBaseInteractor
     {
         /// <summary>
-        /// Represents the interaction mode for the PC interaction system.
+        ///     Represents the interaction mode for the PC interaction system.
         /// </summary>
         public enum InteractionMode
         {
@@ -51,8 +50,8 @@ namespace AnyVR.UserControlSystem
         private InputActionProperty _interactionAction =
             new(new InputAction("Interaction", expectedControlType: "Button"));
 
-        private XRBaseInteractable _hoveredObject = null;
-        private XRBaseInteractable _interactableObject = null;
+        private XRBaseInteractable _hoveredObject;
+        private XRBaseInteractable _interactableObject;
 
         protected override void Start()
         {
@@ -137,16 +136,14 @@ namespace AnyVR.UserControlSystem
                     target = interactionInteractable;
                     return true;
                 }
-                else
-                {
-                    // Also tries parent object
-                    interactionInteractable = hit.collider.gameObject.GetComponentInParent<XRBaseInteractable>();
 
-                    if (interactionInteractable != null)
-                    {
-                        target = interactionInteractable;
-                        return true;
-                    }
+                // Also tries parent object
+                interactionInteractable = hit.collider.gameObject.GetComponentInParent<XRBaseInteractable>();
+
+                if (interactionInteractable != null)
+                {
+                    target = interactionInteractable;
+                    return true;
                 }
             }
 
@@ -160,10 +157,8 @@ namespace AnyVR.UserControlSystem
             {
                 return;
             }
-            else
-            {
-                TryReleaseObject(context);
-            }
+
+            TryReleaseObject(context);
         }
 
         private void TryReleaseObject(InputAction.CallbackContext context)

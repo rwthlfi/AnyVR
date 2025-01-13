@@ -1,13 +1,15 @@
+using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Decorates each new code file with a GPL license header containing basic
-/// information about the project.
+///     Decorates each new code file with a GPL license header containing basic
+///     information about the project.
 /// </summary>
-public class ScriptTemplateKeywordReplacer : AssetModificationProcessor {
-
-    private static readonly string s_licenseHeader = 
+public class ScriptTemplateKeywordReplacer : AssetModificationProcessor
+{
+    private static readonly string s_licenseHeader =
         "// #APPNAME# is a multiuser, multiplatform XR framework.\r\n" +
         "// Copyright (C) #CURRENT-YEAR# #AUTHORS#.\r\n" +
         "// \r\n" +
@@ -42,18 +44,18 @@ public class ScriptTemplateKeywordReplacer : AssetModificationProcessor {
 
         index = Application.dataPath.LastIndexOf("Assets");
         path = Application.dataPath.Substring(0, index) + path;
-        if (!System.IO.File.Exists(path))
+        if (!File.Exists(path))
         {
             return;
         }
 
-        string fileContent = System.IO.File.ReadAllText(path);
+        string fileContent = File.ReadAllText(path);
         fileContent = fileContent.Replace("#LICENSE-HEADER#", s_licenseHeader);
         fileContent = fileContent.Replace("#APPNAME#", Application.productName);
         fileContent = fileContent.Replace("#AUTHORS#", Application.companyName);
-        fileContent = fileContent.Replace("#CURRENT-YEAR#", System.DateTime.Now.Year.ToString());
+        fileContent = fileContent.Replace("#CURRENT-YEAR#", DateTime.Now.Year.ToString());
 
-        System.IO.File.WriteAllText(path, fileContent);
+        File.WriteAllText(path, fileContent);
         AssetDatabase.Refresh();
     }
 }

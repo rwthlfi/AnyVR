@@ -15,10 +15,10 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using UnityEngine;
-using UnityEditor;
-using System.IO;
 using System;
+using System.IO;
+using UnityEditor;
+using UnityEngine;
 
 namespace AnyVR
 {
@@ -29,7 +29,9 @@ namespace AnyVR
             string packageCacheDir = Path.Combine(Application.dataPath, "../Library/PackageCache");
             string[] matchingDirectories = Directory.GetDirectories(packageCacheDir, $"{packageName}@*");
 
-            return matchingDirectories.Length > 0 ? Path.Combine(matchingDirectories[0], "Runtime/livekit.unity.Runtime.asmdef") : string.Empty;
+            return matchingDirectories.Length > 0
+                ? Path.Combine(matchingDirectories[0], "Runtime/livekit.unity.Runtime.asmdef")
+                : string.Empty;
         }
 
         private static void EditAssemblyDefinition(bool isWebGl)
@@ -58,7 +60,6 @@ namespace AnyVR
 
             File.WriteAllText(standaloneAsmdefPath, JsonUtility.ToJson(standalone, true));
             File.WriteAllText(webglAsmdefPath, JsonUtility.ToJson(wegbl, true));
-
         }
 
         [MenuItem("AnyVr/SetTarget/Standalone")]

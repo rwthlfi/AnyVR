@@ -21,6 +21,15 @@ namespace LobbySystem
 {
     public class PlayerInteractionHandler : MonoBehaviour
     {
+        [SerializeField] internal Transform _leftController, _rightController;
+        [SerializeField] internal Transform _rig;
+        [SerializeField] internal Transform _cam;
+
+        private void OnDestroy()
+        {
+            s_interactionHandler = null;
+        }
+
         #region Singleton
 
         internal static PlayerInteractionHandler s_interactionHandler;
@@ -37,14 +46,5 @@ namespace LobbySystem
         }
 
         #endregion
-
-        [SerializeField] internal Transform _leftController, _rightController;
-        [SerializeField] internal Transform _rig;
-        [SerializeField] internal Transform _cam;
-
-        private void OnDestroy()
-        {
-            s_interactionHandler = null;
-        }
     }
 }

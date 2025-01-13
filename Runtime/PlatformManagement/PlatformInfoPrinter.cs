@@ -21,8 +21,8 @@ using UnityEngine;
 namespace AnyVR.PlatformManagement
 {
     /// <summary>
-    /// Will print information about the current platform to the assigned display object.
-    /// If no object is assigned, it will print to the debug console instead.
+    ///     Will print information about the current platform to the assigned display object.
+    ///     If no object is assigned, it will print to the debug console instead.
     /// </summary>
     public class PlatformInfoPrinter : MonoBehaviour
     {

@@ -14,25 +14,11 @@ namespace LobbySystem
 {
     public class ConnectionManager : MonoBehaviour
     {
-        #region Singleton
-
-        private static ConnectionManager s_instance;
-
-        private void InitSingleton()
-        {
-            if (s_instance != null)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            DontDestroyOnLoad(gameObject);
-            s_instance = this;
-        }
-
-        #endregion
-
         [SerializeField] [Scene] private string _globalScene;
+
+        private bool _isServerInitialized;
+
+        private NetworkManager _networkManager;
 
         public ConnectionState State
         {
@@ -58,15 +44,7 @@ namespace LobbySystem
             }
         }
 
-        private NetworkManager _networkManager;
-
-        private bool _isServerInitialized;
-
         public static string UserName { get; private set; }
-
-        public event Action<ConnectionState> ConnectionState;
-        public event Action<bool> GlobalSceneLoaded;
-        private event Action<bool> LobbySceneLoaded;
 
         private void Awake()
         {
@@ -97,6 +75,22 @@ namespace LobbySystem
             };
 #endif
         }
+
+        private void OnDestroy()
+        {
+            if (_networkManager == null)
+            {
+                return;
+            }
+
+            _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
+            _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
+            _networkManager.SceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
+        }
+
+        public event Action<ConnectionState> ConnectionState;
+        public event Action<bool> GlobalSceneLoaded;
+        private event Action<bool> LobbySceneLoaded;
 
 
         public void StartServer()
@@ -221,22 +215,28 @@ namespace LobbySystem
             }
         }
 
-        private void OnDestroy()
-        {
-            if (_networkManager == null)
-            {
-                return;
-            }
-
-            _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
-            _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
-            _networkManager.SceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
-        }
-
         public void StopServer()
         {
             _networkManager.ServerManager.StopConnection(false);
         }
+
+        #region Singleton
+
+        private static ConnectionManager s_instance;
+
+        private void InitSingleton()
+        {
+            if (s_instance != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            DontDestroyOnLoad(gameObject);
+            s_instance = this;
+        }
+
+        #endregion
     }
 
     [Flags]

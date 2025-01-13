@@ -1,11 +1,11 @@
 using System;
-using UnityEngine.TestTools;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Tests.Runtime;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.TestTools;
 
 namespace LobbySystem.LobbyTests
 {
@@ -21,8 +21,8 @@ namespace LobbySystem.LobbyTests
         }
 
         /// <summary>
-        /// The client creates a lobby and connects to it.
-        /// The client then leaves the lobby.
+        ///     The client creates a lobby and connects to it.
+        ///     The client then leaves the lobby.
         /// </summary>
         [UnityTest]
         public IEnumerator SimpleLobbyCreationTest()

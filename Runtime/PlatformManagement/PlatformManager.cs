@@ -26,8 +26,6 @@ namespace AnyVR.PlatformManagement
     {
         private static PlatformManager s_instance;
 
-        public event Action OnXRInitializationFinished;
-
         public static PlatformManager Instance
         {
             get
@@ -58,6 +56,8 @@ namespace AnyVR.PlatformManagement
 
             StartCoroutine(InitializeXR());
         }
+
+        public event Action OnXRInitializationFinished;
 
         private IEnumerator InitializeXR()
         {

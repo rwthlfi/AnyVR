@@ -2,16 +2,13 @@ using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using GameKit.Dependencies.Utilities;
 using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Voicechat;
@@ -20,69 +17,22 @@ namespace LobbySystem
 {
     public class LobbyManager : NetworkBehaviour
     {
-        #region Singleton
-
-        internal static LobbyManager s_instance;
-
-        private void InitSingleton()
-        {
-            if (s_instance != null)
-            {
-                Debug.LogWarning("Instance of LobbyManager already exists!");
-                Destroy(this);
-            }
-
-            s_instance = this;
-        }
-
-        #endregion
-
-        #region SerializedFields
-
-        [Tooltip("The Scene to load when the local client leaves their current lobby")] [SerializeField] [Scene]
-        private string _offlineScene;
-
-        [SerializeField] private bool _loggingEnabled;
-
-        [Header("Prefab Setup")] [SerializeField]
-        private LobbyHandler _lobbyHandlerPrefab;
-
-        #endregion
-
-        #region ServerOnly
-
-        private event Action<Guid> LobbyHandlerRegistered;
-
         /// <summary>
-        /// The actual lobby handlers.
-        /// Only initialized on the server.
+        ///     Dictionary with all active lobbies on the server.
+        ///     The keys are lobby ids.
         /// </summary>
-        private Dictionary<Guid, LobbyHandler> _lobbyHandlers;
-
-        /// <summary>
-        /// A dictionary mapping clients to their corresponding lobby
-        /// Only initialized on the server.
-        /// </summary>
-        private Dictionary<int, Guid> _clientLobbyDict;
-
-        #endregion
+        private readonly SyncDictionary<Guid, LobbyMetaData> _lobbies = new();
 
         #region ClientOnly
 
         /// <summary>
-        /// The meta data of the current lobby.
-        /// Can be null if local client is not connected to a lobby
-        /// Only initialized on the client.
+        ///     The meta data of the current lobby.
+        ///     Can be null if local client is not connected to a lobby
+        ///     Only initialized on the client.
         /// </summary>
         private LobbyMetaData _currentLobby;
 
         #endregion
-
-        /// <summary>
-        /// Dictionary with all active lobbies on the server.
-        /// The keys are lobby ids.
-        /// </summary>
-        private readonly SyncDictionary<Guid, LobbyMetaData> _lobbies = new();
 
         private void Awake()
         {
@@ -90,24 +40,24 @@ namespace LobbySystem
         }
 
         /// <summary>
-        /// Invoked when a remote client opened a new lobby
+        ///     Invoked when a remote client opened a new lobby
         /// </summary>
         public event Action<LobbyMetaData> LobbyOpened;
 
         /// <summary>
-        /// Invoked when a remote client closed a lobby
+        ///     Invoked when a remote client closed a lobby
         /// </summary>
         public event Action<Guid> LobbyClosed;
 
         /// <summary>
-        /// Invoked when the local client starts loading a lobby scene
+        ///     Invoked when the local client starts loading a lobby scene
         /// </summary>
         public event Action ClientLobbyLoadStart;
 
         /// <summary>
-        /// Invoked when the player-count of a lobby changes.
-        /// The local user does not have to be connected to the lobby.
-        /// (string: lobbyId, int: playerCount)
+        ///     Invoked when the player-count of a lobby changes.
+        ///     The local user does not have to be connected to the lobby.
+        ///     (string: lobbyId, int: playerCount)
         /// </summary>
         public event Action<Guid, int> PlayerCountUpdate;
 
@@ -244,7 +194,7 @@ namespace LobbySystem
             // Lobby scenes have to be loaded with exactly 0 clients
             if (loadArgs.QueueData.Connections.Length != 0)
             {
-                Debug.LogWarning($"Can't register LobbyHandler. The lobby scene must be empty.");
+                Debug.LogWarning("Can't register LobbyHandler. The lobby scene must be empty.");
                 return;
             }
 
@@ -303,7 +253,7 @@ namespace LobbySystem
         }
 
         /// <summary>
-        /// Server Rpc to create a new lobby on the server.
+        ///     Server Rpc to create a new lobby on the server.
         /// </summary>
         [ServerRpc(RequireOwnership = false)]
         private void CreateLobby(string lobbyName, string scene, ushort maxClients, NetworkConnection conn = null)
@@ -358,7 +308,7 @@ namespace LobbySystem
                 yield break;
             }
 
-            Log($"Lobby created. {lobbyMetaData.ToString()}");
+            Log($"Lobby created. {lobbyMetaData}");
             AddClientToLobby(lobbyMetaData.LobbyId, conn); // Auto join lobby
             InvokeLobbyOpened(lobbyMetaData);
         }
@@ -370,7 +320,7 @@ namespace LobbySystem
         }
 
         /// <summary>
-        /// Server Rpc to join an active lobby on the server.
+        ///     Server Rpc to join an active lobby on the server.
         /// </summary>
         [ServerRpc(RequireOwnership = false)]
         public void JoinLobby(Guid lobbyId, NetworkConnection conn = null)
@@ -420,7 +370,7 @@ namespace LobbySystem
         }
 
         /// <summary>
-        /// Callback for when the local client joins a lobby.
+        ///     Callback for when the local client joins a lobby.
         /// </summary>
         [TargetRpc]
         private void OnLobbyJoinedRpc(NetworkConnection _, LobbyMetaData lmd)
@@ -437,7 +387,7 @@ namespace LobbySystem
         }
 
         /// <summary>
-        /// Callback for when the local client leaves a lobby.
+        ///     Callback for when the local client leaves a lobby.
         /// </summary>
         [TargetRpc]
         private void OnLobbyLeftRpc(NetworkConnection _)
@@ -565,7 +515,7 @@ namespace LobbySystem
         }
 
         /// <summary>
-        /// Logs a common value if can log.
+        ///     Logs a common value if can log.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Log(string value)
@@ -580,5 +530,52 @@ namespace LobbySystem
         {
             return _lobbies.Collection;
         }
+
+        #region Singleton
+
+        internal static LobbyManager s_instance;
+
+        private void InitSingleton()
+        {
+            if (s_instance != null)
+            {
+                Debug.LogWarning("Instance of LobbyManager already exists!");
+                Destroy(this);
+            }
+
+            s_instance = this;
+        }
+
+        #endregion
+
+        #region SerializedFields
+
+        [Tooltip("The Scene to load when the local client leaves their current lobby")] [SerializeField] [Scene]
+        private string _offlineScene;
+
+        [SerializeField] private bool _loggingEnabled;
+
+        [Header("Prefab Setup")] [SerializeField]
+        private LobbyHandler _lobbyHandlerPrefab;
+
+        #endregion
+
+        #region ServerOnly
+
+        private event Action<Guid> LobbyHandlerRegistered;
+
+        /// <summary>
+        ///     The actual lobby handlers.
+        ///     Only initialized on the server.
+        /// </summary>
+        private Dictionary<Guid, LobbyHandler> _lobbyHandlers;
+
+        /// <summary>
+        ///     A dictionary mapping clients to their corresponding lobby
+        ///     Only initialized on the server.
+        /// </summary>
+        private Dictionary<int, Guid> _clientLobbyDict;
+
+        #endregion
     }
 }

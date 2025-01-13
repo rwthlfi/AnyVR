@@ -24,7 +24,7 @@ using UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning;
 namespace AnyVR.UserControlSystem
 {
     /// <summary>
-    /// Manages the user input based on the XR platform availability. Supports PC and XR input modalities.
+    ///     Manages the user input based on the XR platform availability. Supports PC and XR input modalities.
     /// </summary>
     public class InputModalityManager : MonoBehaviour
     {
@@ -43,7 +43,7 @@ namespace AnyVR.UserControlSystem
         }
 
         /// <summary>
-        /// Initializes the user input based on the XR platform availability.
+        ///     Initializes the user input based on the XR platform availability.
         /// </summary>
         private void InitializeUserInput()
         {

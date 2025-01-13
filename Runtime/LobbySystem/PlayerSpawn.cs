@@ -1,6 +1,5 @@
 using FishNet.Connection;
 using FishNet.Object;
-using System;
 using UnityEngine;
 
 namespace LobbySystem
