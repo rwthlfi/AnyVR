@@ -1,8 +1,11 @@
-namespace LobbySystem.UI.LobbySelection
+using System;
+using AnyVr.LobbySystem;
+
+namespace AnyVr.Samples.LobbySetup
 {
     public sealed class UILobbyMetaData
     {
-        public readonly string ID;
+        public readonly Guid ID;
         public readonly string Name;
         public readonly int Creator;
         public readonly string Location;
@@ -14,7 +17,7 @@ namespace LobbySystem.UI.LobbySelection
             Creator = creator;
             Location = location;
             MaxClients = maxClients;
-            ID = GetHashCode().ToString();
+            ID = Guid.Empty;
         }
 
         public UILobbyMetaData(LobbyMetaData lobby)

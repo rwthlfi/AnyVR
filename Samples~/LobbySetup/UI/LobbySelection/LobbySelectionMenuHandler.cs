@@ -22,7 +22,7 @@ namespace LobbySystem.UI.LobbySelection
 
         private bool _isRoomCreationSceneActive;
 
-        private Dictionary<string, LobbyCardHandler> _lobbyCards;
+        private Dictionary<Guid, LobbyCardHandler> _lobbyCards;
 
         private LobbyManager _lobbyManager;
 
@@ -33,7 +33,7 @@ namespace LobbySystem.UI.LobbySelection
 
         private void Start()
         {
-            _lobbyCards = new Dictionary<string, LobbyCardHandler>();
+            _lobbyCards = new Dictionary<Guid, LobbyCardHandler>();
             _isRoomCreationSceneActive = false;
 
             _connectionManager = ConnectionManager.GetInstance();
@@ -120,7 +120,7 @@ namespace LobbySystem.UI.LobbySelection
 
             _lobbyCards.Clear();
 
-            Dictionary<string, LobbyMetaData> lobbies = _lobbyManager.GetAvailableLobbies();
+            Dictionary<Guid, LobbyMetaData> lobbies = _lobbyManager.GetLobbies();
             foreach (LobbyMetaData lobby in lobbies.Values)
             {
                 AddLobbyCard(lobby);
@@ -197,7 +197,7 @@ namespace LobbySystem.UI.LobbySelection
             _lobbyCards.Add(uiLobby.ID, card);
         }
 
-        private void RemoveLobbyCard(string lobbyId)
+        private void RemoveLobbyCard(Guid lobbyId)
         {
             if (!_lobbyCards.TryGetValue(lobbyId, out LobbyCardHandler card))
             {

@@ -12,7 +12,7 @@ namespace LobbySystem
         /// <summary>
         /// Unique identifier
         /// </summary>
-        public readonly string LobbyId;
+        public readonly Guid LobbyId;
 
         public readonly string Name;
         public readonly int CreatorId;
@@ -23,7 +23,7 @@ namespace LobbySystem
 
         public LobbyMetaData() { }
 
-        public LobbyMetaData(string lobbyId, string name, int creatorId, string scene, ushort lobbyCapacity)
+        public LobbyMetaData(Guid lobbyId, string name, int creatorId, string scene, ushort lobbyCapacity)
         {
             Name = name;
             Scene = scene;

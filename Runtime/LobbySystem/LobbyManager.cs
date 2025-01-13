@@ -51,19 +51,19 @@ namespace LobbySystem
 
         #region ServerOnly
 
-        private event Action<string> LobbyHandlerRegistered;
+        private event Action<Guid> LobbyHandlerRegistered;
 
         /// <summary>
         /// The actual lobby handlers.
         /// Only initialized on the server.
         /// </summary>
-        private Dictionary<string, LobbyHandler> _lobbyHandlers;
+        private Dictionary<Guid, LobbyHandler> _lobbyHandlers;
 
         /// <summary>
         /// A dictionary mapping clients to their corresponding lobby
         /// Only initialized on the server.
         /// </summary>
-        private Dictionary<int, string> _clientLobbyDict;
+        private Dictionary<int, Guid> _clientLobbyDict;
 
         #endregion
 
@@ -82,7 +82,7 @@ namespace LobbySystem
         /// Dictionary with all active lobbies on the server.
         /// The keys are lobby ids.
         /// </summary>
-        private readonly SyncDictionary<string, LobbyMetaData> _lobbies = new();
+        private readonly SyncDictionary<Guid, LobbyMetaData> _lobbies = new();
 
         private void Awake()
         {
@@ -97,7 +97,7 @@ namespace LobbySystem
         /// <summary>
         /// Invoked when a remote client closed a lobby
         /// </summary>
-        public event Action<string> LobbyClosed;
+        public event Action<Guid> LobbyClosed;
 
         /// <summary>
         /// Invoked when the local client starts loading a lobby scene
@@ -109,13 +109,13 @@ namespace LobbySystem
         /// The local user does not have to be connected to the lobby.
         /// (string: lobbyId, int: playerCount)
         /// </summary>
-        public event Action<string, int> PlayerCountUpdate;
+        public event Action<Guid, int> PlayerCountUpdate;
 
         public override void OnStartServer()
         {
             base.OnStartServer();
-            _lobbyHandlers = new Dictionary<string, LobbyHandler>();
-            _clientLobbyDict = new Dictionary<int, string>();
+            _lobbyHandlers = new Dictionary<Guid, LobbyHandler>();
+            _clientLobbyDict = new Dictionary<int, Guid>();
             SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
             string logging = _loggingEnabled ? "enabled" : "disabled";
             Debug.Log($"Server started. Logging {logging}");
@@ -204,8 +204,8 @@ namespace LobbySystem
             }
 
             // Try get corresponding lobbyId
-            string lobbyId = loadParams[1] as string;
-            if (string.IsNullOrEmpty(lobbyId))
+            Guid lobbyId = (Guid)loadParams[1];
+            if (Guid.Empty == lobbyId)
             {
                 errorMsg = "The passed lobbyId is null.";
                 return false;
@@ -250,7 +250,7 @@ namespace LobbySystem
 
             object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
 
-            if (serverParams[1] is not string lobbyId)
+            if (serverParams[1] is not Guid lobbyId)
             {
                 return;
             }
@@ -286,27 +286,15 @@ namespace LobbySystem
         }
 
         [ObserversRpc]
-        private void OnLobbyPlayerCountUpdate(string lobby, ushort playerCount)
+        private void OnLobbyPlayerCountUpdate(Guid lobby, ushort playerCount)
         {
             PlayerCountUpdate?.Invoke(lobby, playerCount);
         }
 
         [Server]
-        private string CreateUniqueLobbyId(string scene)
+        private static Guid CreateLobbyId()
         {
-            int i = 1;
-            while (i > 0)
-            {
-                string id = scene + i;
-                if (!_lobbies.ContainsKey(id))
-                {
-                    return id;
-                }
-
-                i++;
-            }
-
-            return null;
+            return Guid.NewGuid();
         }
 
         public void Client_CreateLobby(string lobbyName, string scene, ushort maxClients)
@@ -338,7 +326,7 @@ namespace LobbySystem
             }
 
             maxClients = (ushort)Mathf.Max(1, maxClients);
-            LobbyMetaData lobbyMetaData = new(CreateUniqueLobbyId(scene), lobbyName, conn.ClientId, scene, maxClients);
+            LobbyMetaData lobbyMetaData = new(CreateLobbyId(), lobbyName, conn.ClientId, scene, maxClients);
             _lobbies.Add(lobbyMetaData.LobbyId, lobbyMetaData);
 
             // Starts the lobby scene without clients. When loaded, the LoadEnd callback will be called and we spawn a LobbyHandler. After that clients are able to join.
@@ -385,13 +373,13 @@ namespace LobbySystem
         /// Server Rpc to join an active lobby on the server.
         /// </summary>
         [ServerRpc(RequireOwnership = false)]
-        public void JoinLobby(string lobbyId, NetworkConnection conn = null)
+        public void JoinLobby(Guid lobbyId, NetworkConnection conn = null)
         {
             AddClientToLobby(lobbyId, conn);
         }
 
         [Server]
-        private void AddClientToLobby(string lobbyId, NetworkConnection conn)
+        private void AddClientToLobby(Guid lobbyId, NetworkConnection conn)
         {
             if (conn == null)
             {
@@ -440,7 +428,7 @@ namespace LobbySystem
             _currentLobby = lmd;
             if (LiveKitManager.s_instance != null)
             {
-                LiveKitManager.s_instance.TryConnectToRoom(lmd.LobbyId, ConnectionManager.UserName);
+                LiveKitManager.s_instance.TryConnectToRoom(lmd.LobbyId.ToString(), ConnectionManager.UserName);
             }
             else
             {
@@ -469,7 +457,7 @@ namespace LobbySystem
         }
 
         [Server]
-        private void CloseLobby(string lobbyId)
+        private void CloseLobby(Guid lobbyId)
         {
             if (!_lobbyHandlers.TryGetValue(lobbyId, out LobbyHandler handler))
             {
@@ -511,7 +499,7 @@ namespace LobbySystem
                 return false;
             }
 
-            if (!TryGetLobbyIdOfClient(clientConnection.ClientId, out string lobbyId))
+            if (!TryGetLobbyIdOfClient(clientConnection.ClientId, out Guid lobbyId))
             {
                 return false;
             }
@@ -546,13 +534,13 @@ namespace LobbySystem
         }
 
         [Server]
-        public bool TryGetLobbyIdOfClient(int clientId, out string lobbyId)
+        public bool TryGetLobbyIdOfClient(int clientId, out Guid lobbyId)
         {
             return _clientLobbyDict.TryGetValue(clientId, out lobbyId);
         }
 
         [Server]
-        public bool TryGetLobbyHandlerById(string lobbyId, out LobbyHandler res)
+        public bool TryGetLobbyHandlerById(Guid lobbyId, out LobbyHandler res)
         {
             return _lobbyHandlers.TryGetValue(lobbyId, out res);
         }
@@ -588,7 +576,7 @@ namespace LobbySystem
             }
         }
 
-        public Dictionary<string, LobbyMetaData> GetAvailableLobbies()
+        public Dictionary<Guid, LobbyMetaData> GetLobbies()
         {
             return _lobbies.Collection;
         }

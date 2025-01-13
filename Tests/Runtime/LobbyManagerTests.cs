@@ -1,3 +1,4 @@
+using System;
 using UnityEngine.TestTools;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace LobbySystem.LobbyTests
             yield return base.Setup();
             yield return StartServer();
             yield return JoinServer();
-            Assert.AreEqual(LobbyManager.GetAvailableLobbies().Count, 0);
+            Assert.AreEqual(LobbyManager.GetLobbies().Count, 0);
         }
 
         /// <summary>
@@ -44,15 +45,15 @@ namespace LobbySystem.LobbyTests
             LobbyManager.LobbyOpened -= EventHandler;
 
             Assert.IsTrue(receivedCallback);
-            Assert.AreEqual(LobbyManager.GetAvailableLobbies().Count, 1);
+            Assert.AreEqual(LobbyManager.GetLobbies().Count, 1);
 
-            KeyValuePair<string, LobbyMetaData> lobbyMetaPair = LobbyManager.GetAvailableLobbies().First();
+            KeyValuePair<Guid, LobbyMetaData> lobbyMetaPair = LobbyManager.GetLobbies().First();
             Assert.AreEqual(lobbyName, lobbyMetaPair.Value.Name);
             Assert.AreEqual(scene, lobbyMetaPair.Value.Scene);
             Assert.AreEqual(lobbyCapacity, lobbyMetaPair.Value.LobbyCapacity);
 
             bool lobbyFound = LobbyManager.TryGetLobbyIdOfClient(LobbyManager.ClientManager.Connection.ClientId,
-                out string lobbyId);
+                out Guid lobbyId);
 
             Assert.IsTrue(lobbyFound);
             Assert.AreEqual(lobbyId, lobbyMetaPair.Key);

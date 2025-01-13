@@ -16,7 +16,7 @@ namespace LobbySystem
     public class LobbyHandler : NetworkBehaviour
     {
         private readonly SyncHashSet<int> _clientIds = new();
-        private readonly SyncVar<string> _lobbyId = new();
+        private readonly SyncVar<Guid> _lobbyId = new();
         private readonly SyncVar<int> _adminId = new();
         private readonly SyncVar<bool> _initialized = new(false);
 
@@ -42,7 +42,7 @@ namespace LobbySystem
         public ushort CurrentClientCount => (ushort)_clientIds.Count;
 
         [Server]
-        internal void Init(string lobbyId, int adminId)
+        internal void Init(Guid lobbyId, int adminId)
         {
             _lobbyId.Value = lobbyId;
             _adminId.Value = adminId;
@@ -202,7 +202,7 @@ namespace LobbySystem
             LobbyManager.s_instance.LeaveLobby();
         }
 
-        public string GetLobbyId()
+        public Guid GetLobbyId()
         {
             return _lobbyId.Value;
         }
