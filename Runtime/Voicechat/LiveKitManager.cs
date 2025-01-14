@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEngine;
 
-namespace Voicechat
+namespace AnyVr.Voicechat
 {
     public class LiveKitManager : MonoBehaviour
     {

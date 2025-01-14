@@ -8,7 +8,7 @@ using System.Linq;
 using UnityEngine;
 using RoomOptions = LiveKit.RoomOptions;
 
-namespace Voicechat
+namespace AnyVr.Voicechat
 {
     internal class StandaloneVoiceChatClient : VoiceChatClient
     {

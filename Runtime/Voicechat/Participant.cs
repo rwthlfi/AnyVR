@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Voicechat
+namespace AnyVr.Voicechat
 {
     public class Participant
     {
