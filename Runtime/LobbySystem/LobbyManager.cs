@@ -11,9 +11,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Voicechat;
+using AnyVr.Voicechat;
 
-namespace LobbySystem
+namespace AnyVr.LobbySystem
 {
     public class LobbyManager : NetworkBehaviour
     {

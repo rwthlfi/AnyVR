@@ -7,10 +7,10 @@ using System;
 using System.IO;
 using System.Linq;
 using UnityEngine;
-using Voicechat;
+using AnyVr.Voicechat;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
-namespace LobbySystem
+namespace AnyVr.LobbySystem
 {
     public class ConnectionManager : MonoBehaviour
     {

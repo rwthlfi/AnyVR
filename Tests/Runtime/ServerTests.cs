@@ -2,7 +2,7 @@ using System.Collections;
 using Tests.Runtime;
 using UnityEngine.TestTools;
 
-namespace LobbySystem.LobbyTests
+namespace AnyVr.LobbySystem.LobbyTests
 {
     public class ServerTests : LobbyTest
     {

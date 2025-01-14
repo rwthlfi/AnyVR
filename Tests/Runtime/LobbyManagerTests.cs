@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.TestTools;
 
-namespace LobbySystem.LobbyTests
+namespace AnyVr.LobbySystem.LobbyTests
 {
     public class LobbyManagerTests : LobbyTest
     {

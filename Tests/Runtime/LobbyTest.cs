@@ -15,7 +15,7 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using LobbySystem;
+using AnyVr.LobbySystem;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Assertions;

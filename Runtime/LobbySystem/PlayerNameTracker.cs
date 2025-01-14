@@ -5,7 +5,7 @@ using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using System;
 
-namespace LobbySystem
+namespace AnyVr.LobbySystem
 {
     public class PlayerNameTracker : NetworkBehaviour
     {

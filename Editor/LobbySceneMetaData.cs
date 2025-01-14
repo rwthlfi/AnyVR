@@ -1,7 +1,7 @@
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
 
-namespace LobbySystem.UI
+namespace AnyVr.LobbySystem.UI
 {
     [CreateAssetMenu(menuName = "AnyVr/LobbySceneMetaData")]
     public class LobbySceneMetaData : ScriptableObject

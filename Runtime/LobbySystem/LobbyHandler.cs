@@ -4,12 +4,12 @@ using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
-using TextChat;
+using AnyVr.TextChat;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Voicechat;
+using AnyVr.Voicechat;
 
-namespace LobbySystem
+namespace AnyVr.LobbySystem
 {
     [RequireComponent(typeof(TextChatManager))]
     public class LobbyHandler : NetworkBehaviour
