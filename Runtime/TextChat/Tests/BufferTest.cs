@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 
-namespace TextChat.Tests
+namespace AnyVr.TextChat.Tests
 {
     public class BufferTest
     {

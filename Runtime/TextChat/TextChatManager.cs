@@ -20,7 +20,7 @@ using FishNet.Object;
 using System;
 using UnityEngine;
 
-namespace TextChat
+namespace AnyVr.TextChat
 {
     public class TextChatManager : NetworkBehaviour
     {
