@@ -1,12 +1,14 @@
+using System;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Transporting;
 using System.Collections.Generic;
+using AnyVr.LobbySystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace LobbySystem.UI.LobbySelection
+namespace AnyVr.Samples.LobbySetup
 {
     public class LobbySelectionMenuHandler : MonoBehaviour
     {

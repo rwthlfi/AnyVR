@@ -1,9 +1,10 @@
 using System;
+using AnyVr.Samples.LobbySetup;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace LobbySystem.UI.LobbySelection
+namespace AnyVr.Samples.LobbySetup
 {
     public class LocationCardHandler : MonoBehaviour
     {

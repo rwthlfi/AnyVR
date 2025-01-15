@@ -17,7 +17,7 @@
 
 using UnityEngine;
 
-namespace LobbySystem.UI.LobbyRoom
+namespace AnyVr.Samples.LobbySetup
 {
     public class Billboard : MonoBehaviour
     {

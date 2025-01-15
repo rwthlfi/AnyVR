@@ -15,10 +15,11 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using AnyVr.LobbySystem;
 using TMPro;
 using UnityEngine;
 
-namespace LobbySystem.UI.LobbyRoom
+namespace AnyVr.Samples.LobbySetup
 {
     [RequireComponent(typeof(TextMeshProUGUI))]
     public class ClientNameLabelHandler : MonoBehaviour

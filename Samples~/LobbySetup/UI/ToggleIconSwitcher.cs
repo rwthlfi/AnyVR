@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace LobbySystem.UI
+namespace AnyVr.Samples.LobbySetup
 {
     [RequireComponent(typeof(Toggle))]
     [ExecuteInEditMode]

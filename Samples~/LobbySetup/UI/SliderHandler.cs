@@ -21,7 +21,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace LobbySystem.UI
+namespace AnyVr.Samples.LobbySetup
 {
     [RequireComponent(typeof(Slider))]
     public class SliderHandler : MonoBehaviour

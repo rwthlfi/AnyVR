@@ -1,13 +1,14 @@
 using JetBrains.Annotations;
 using System;
 using System.Text.RegularExpressions;
+using AnyVr.Samples.LobbySetup;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
-namespace LobbySystem.UI.LobbySelection
+namespace AnyVr.Samples.LobbySetup
 {
     public class RoomCreationManager : MonoBehaviour
     {

@@ -1,9 +1,10 @@
 using System;
+using AnyVr.LobbySystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace LobbySystem.UI.LobbySelection
+namespace AnyVr.Samples.LobbySetup
 {
     public class LobbyCardHandler : MonoBehaviour
     {

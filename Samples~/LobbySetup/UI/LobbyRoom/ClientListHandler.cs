@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace LobbySystem.UI.LobbyRoom
+namespace AnyVr.Samples.LobbySetup
 {
     internal class ClientListHandler : MonoBehaviour
     {

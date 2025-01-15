@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using AnyVr.LobbySystem;
 using UnityEngine;
 
-namespace LobbySystem.UI
+namespace AnyVr.Samples.LobbySetup
 {
     public class WelcomeSceneHandler : MonoBehaviour
     {

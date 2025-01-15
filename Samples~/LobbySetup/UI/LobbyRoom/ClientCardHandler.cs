@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace LobbySystem.UI.LobbyRoom
+namespace AnyVr.Samples.LobbySetup
 {
     internal class ClientCardHandler : MonoBehaviour
     {

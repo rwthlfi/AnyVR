@@ -20,7 +20,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace LobbySystem.UI
+namespace AnyVr.Samples.LobbySetup
 {
     public class ConnectMenuHandler : MonoBehaviour
     {
