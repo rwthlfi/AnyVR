@@ -1,3 +1,4 @@
+using AnyVr.Voicechat;
 using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Transporting;
@@ -6,12 +7,10 @@ using JetBrains.Annotations;
 using System;
 using System.IO;
 using System.Linq;
-using UnityEngine;
-using AnyVr.Voicechat;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using UnityEngine.Serialization;
+using UnityEngine;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVr.LobbySystem
@@ -125,6 +124,60 @@ namespace AnyVr.LobbySystem
             return s_instance;
         }
 
+        public void ConnectToServer(ServerAddressResponse addressResponse)
+        {
+            if (_networkManager == null)
+            {
+                return;
+            }
+
+            if (State.HasFlag(LobbySystem.ConnectionState.k_client))
+            {
+                return;
+            }
+
+            if (!TryParseAddress(addressResponse.fishnet_server_address, out (string ip, ushort port) fishnetAddress))
+            {
+                return;
+            }
+
+            if (!TryParseAddress(addressResponse.livekit_server_address,
+                    out (string ip, ushort port) liveKitAddress))
+            {
+                return;
+            }
+
+            _networkManager.TransportManager.Transport.SetClientAddress(fishnetAddress.ip);
+            _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
+            _networkManager.ClientManager.StartConnection();
+
+            LiveKitManager.s_instance.SetTokenServerAddress(liveKitAddress.ip, liveKitAddress.port);
+        }
+
+        private static bool TryParseAddress(string address, out (string, ushort) res)
+        {
+            res = (null, 0);
+            if (!Regex.IsMatch(address, ".+:[0-9]+"))
+            {
+                return false;
+            }
+
+            string[] arr = address.Split(':'); // [ip, port]
+
+            if (!uint.TryParse(arr[1], out uint port))
+            {
+                return false;
+            }
+
+            if (port > ushort.MaxValue)
+            {
+                return false;
+            }
+
+            res = (arr[0], (ushort)port);
+            return true;
+        }
+
         public void ConnectToServer((string ip, ushort port) fishnetAddress, (string ip, ushort port) liveKitAddress,
             string userName)
         {
@@ -224,6 +277,16 @@ namespace AnyVr.LobbySystem
             _networkManager.ServerManager.StopConnection(false);
         }
 
+        public static async Task<ServerAddressResponse> RequestServerIp(string tokenServerIp)
+        {
+            const string tokenURL = "http://{0}/requestServerIp";
+            string url = string.Format(tokenURL, tokenServerIp);
+            Debug.Log($"Getting server addresses from: {url}");
+            HttpResponseMessage response = await new HttpClient().GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            return JsonUtility.FromJson<ServerAddressResponse>(response.Content.ReadAsStringAsync().Result);
+        }
+
         #region Singleton
 
         private static ConnectionManager s_instance;
@@ -241,6 +304,14 @@ namespace AnyVr.LobbySystem
         }
 
         #endregion
+    }
+
+    [Serializable]
+    public class ServerAddressResponse
+    {
+        public string fishnet_server_address;
+        public string livekit_server_address;
+    }
 
     [Flags]
     public enum ConnectionState
