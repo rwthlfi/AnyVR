@@ -1,5 +1,4 @@
 using System;
-using AnyVr.Samples.LobbySetup;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

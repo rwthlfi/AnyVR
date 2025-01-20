@@ -1,6 +1,5 @@
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace AnyVr.Samples.LobbySetup
 {

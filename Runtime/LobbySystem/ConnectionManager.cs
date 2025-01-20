@@ -8,13 +8,17 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using AnyVr.Voicechat;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using UnityEngine.Serialization;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVr.LobbySystem
 {
     public class ConnectionManager : MonoBehaviour
     {
-        [SerializeField] [Scene] private string _globalScene;
+        [SerializeField] [Scene] private string globalScene;
 
         private bool _isServerInitialized;
 
@@ -26,18 +30,18 @@ namespace AnyVr.LobbySystem
             {
                 if (_networkManager == null)
                 {
-                    return LobbySystem.ConnectionState.Disconnected;
+                    return LobbySystem.ConnectionState.k_disconnected;
                 }
 
-                ConnectionState state = LobbySystem.ConnectionState.Disconnected;
+                ConnectionState state = LobbySystem.ConnectionState.k_disconnected;
                 if (_networkManager.ClientManager.Started)
                 {
-                    state |= LobbySystem.ConnectionState.Client;
+                    state |= LobbySystem.ConnectionState.k_client;
                 }
 
                 if (_networkManager.ServerManager.Started)
                 {
-                    state |= LobbySystem.ConnectionState.Server;
+                    state |= LobbySystem.ConnectionState.k_server;
                 }
 
                 return state;
@@ -95,7 +99,7 @@ namespace AnyVr.LobbySystem
 
         public void StartServer()
         {
-            if (State.HasFlag(LobbySystem.ConnectionState.Server))
+            if (State.HasFlag(LobbySystem.ConnectionState.k_server))
             {
                 return;
             }
@@ -106,7 +110,7 @@ namespace AnyVr.LobbySystem
 
         public void LeaveServer()
         {
-            if (!State.HasFlag(LobbySystem.ConnectionState.Client))
+            if (!State.HasFlag(LobbySystem.ConnectionState.k_client))
             {
                 return;
             }
@@ -129,7 +133,7 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
-            if (State.HasFlag(LobbySystem.ConnectionState.Client))
+            if (State.HasFlag(LobbySystem.ConnectionState.k_client))
             {
                 return;
             }
@@ -160,13 +164,13 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
-            string scene = Path.GetFileNameWithoutExtension(_globalScene);
+            string scene = Path.GetFileNameWithoutExtension(globalScene);
             SceneLoadData sld = new(scene)
             {
                 Params =
                 {
-                    ServerParams = new[] { (object)SceneLoadParam.Global },
-                    ClientParams = LobbyMetaData.SerializeObjects(new[] { (object)SceneLoadParam.Global })
+                    ServerParams = new[] { (object)SceneLoadParam.k_global },
+                    ClientParams = LobbyMetaData.SerializeObjects(new[] { (object)SceneLoadParam.k_global })
                 }
             };
 
@@ -204,10 +208,10 @@ namespace AnyVr.LobbySystem
 
             switch (param)
             {
-                case SceneLoadParam.Global:
+                case SceneLoadParam.k_global:
                     GlobalSceneLoaded?.Invoke(args.QueueData.AsServer);
                     break;
-                case SceneLoadParam.Lobby:
+                case SceneLoadParam.k_lobby:
                     LobbySceneLoaded?.Invoke(args.QueueData.AsServer);
                     break;
                 default:
@@ -237,16 +241,15 @@ namespace AnyVr.LobbySystem
         }
 
         #endregion
-    }
 
     [Flags]
     public enum ConnectionState
     {
-        Disconnected = 0, Client = 1 << 0, Server = 1 << 1
+        k_disconnected = 0, k_client = 1 << 0, k_server = 1 << 1
     }
 
     public enum SceneLoadParam
     {
-        Global = 0, Lobby
+        k_global = 0, k_lobby
     }
 }

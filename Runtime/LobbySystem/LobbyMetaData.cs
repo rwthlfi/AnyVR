@@ -38,7 +38,7 @@ namespace AnyVr.LobbySystem
                 // By adding SceneLoadParam.Lobby the LobbyManager knows this scene is a lobby when the SceneManager.LoadEnd callback fires.
                 // By adding the lobbyId the LobbyManager can register a corresponding LobbyHandler.
                 // By adding the creatorId the LobbyManager can give that client administration rights in the lobby
-                Params = { ServerParams = new object[] { SceneLoadParam.Lobby, lobbyId, creatorId } }
+                Params = { ServerParams = new object[] { SceneLoadParam.k_lobby, lobbyId, creatorId } }
             };
             _sceneLoadData.Params.ClientParams = SerializeObjects(_sceneLoadData.Params.ServerParams);
         }
@@ -57,7 +57,7 @@ namespace AnyVr.LobbySystem
             {
                 ReplaceScenes = ReplaceOption.OnlineOnly,
                 Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None },
-                Params = { ServerParams = new object[] { SceneLoadParam.Lobby, LobbyId, CreatorId } }
+                Params = { ServerParams = new object[] { SceneLoadParam.k_lobby, LobbyId, CreatorId } }
             };
             sceneLoadData.Params.ClientParams = SerializeObjects(sceneLoadData.Params.ServerParams);
             return sceneLoadData;

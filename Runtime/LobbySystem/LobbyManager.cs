@@ -120,7 +120,7 @@ namespace AnyVr.LobbySystem
             }
 
             // Lobbies must have this flag
-            if ((SceneLoadParam)loadParams[0] != SceneLoadParam.Lobby)
+            if ((SceneLoadParam)loadParams[0] != SceneLoadParam.k_lobby)
             {
                 return false;
             }
@@ -148,7 +148,7 @@ namespace AnyVr.LobbySystem
             }
 
             // Lobbies must have this flag
-            if ((SceneLoadParam)loadParams[0] != SceneLoadParam.Lobby)
+            if ((SceneLoadParam)loadParams[0] != SceneLoadParam.k_lobby)
             {
                 return false;
             }
@@ -466,7 +466,7 @@ namespace AnyVr.LobbySystem
             {
                 SceneUnloadData sud = new(new[] { lmd.Scene })
                 {
-                    Params = { ServerParams = new object[] { SceneLoadParam.Lobby, lmd.LobbyId } }
+                    Params = { ServerParams = new object[] { SceneLoadParam.k_lobby, lmd.LobbyId } }
                 };
                 sud.Params.ClientParams = LobbyMetaData.SerializeObjects(sud.Params.ServerParams);
                 Debug.LogWarning("Unloading Connection scenes");

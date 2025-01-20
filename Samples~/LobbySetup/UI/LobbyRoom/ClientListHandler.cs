@@ -13,11 +13,11 @@ namespace AnyVr.Samples.LobbySetup
 
         private readonly Dictionary<int, ClientCardHandler> _clientCards = new();
 
+        private readonly Dictionary<int, string> _clients = new();
+
         public event Action<int, float> ClientVolumeChange;
 
         public event Action<int> ClientKick;
-
-        private readonly Dictionary<int, string> _clients = new();
 
         internal void AddClient(int clientId, string clientName, bool isAdmin = false)
         {

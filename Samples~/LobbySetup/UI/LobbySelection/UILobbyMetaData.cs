@@ -1,15 +1,15 @@
-using System;
 using AnyVr.LobbySystem;
+using System;
 
 namespace AnyVr.Samples.LobbySetup
 {
     public sealed class UILobbyMetaData
     {
-        public readonly Guid ID;
-        public readonly string Name;
         public readonly int Creator;
+        public readonly Guid ID;
         public readonly string Location;
         public readonly ushort MaxClients;
+        public readonly string Name;
 
         public UILobbyMetaData(string name, int creator, string location, ushort maxClients)
         {

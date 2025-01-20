@@ -1,7 +1,7 @@
+using AnyVr.LobbySystem;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using AnyVr.LobbySystem;
 using UnityEngine;
 
 namespace AnyVr.Samples.LobbySetup
@@ -30,8 +30,8 @@ namespace AnyVr.Samples.LobbySetup
 
         private ConnectionManager _connectionManager;
         private GameObject _connectionPanel;
-        private GameObject _lobbySelectionPanel;
         private GameObject _createLobbyPanel;
+        private GameObject _lobbySelectionPanel;
 
         private void Start()
         {
@@ -59,10 +59,18 @@ namespace AnyVr.Samples.LobbySetup
             _panels.Add(WelcomeScenePanel.LobbySelectionPanel, _lobbySelectionPanel);
             _panels.Add(WelcomeScenePanel.CreateLobbyPanel, _createLobbyPanel);
 
-            SetActivePanel(_connectionManager.State == ConnectionState.Disconnected
+            SetActivePanel(_connectionManager.State == ConnectionState.k_disconnected
                 ? WelcomeScenePanel.ConnectionPanel
                 : WelcomeScenePanel.LobbySelectionPanel);
             _connectionManager.ConnectionState += OnConnectionState;
+        }
+
+        private void OnDestroy()
+        {
+            if (_connectionManager != null)
+            {
+                _connectionManager.ConnectionState -= OnConnectionState;
+            }
         }
 
         private void SetActivePanel(WelcomeScenePanel panel)
@@ -91,17 +99,9 @@ namespace AnyVr.Samples.LobbySetup
         private void OnConnectionState(ConnectionState state)
         {
             Debug.Log($"Connection State Update: {state}");
-            SetActivePanel(state == ConnectionState.Disconnected
+            SetActivePanel(state == ConnectionState.k_disconnected
                 ? WelcomeScenePanel.ConnectionPanel
                 : WelcomeScenePanel.LobbySelectionPanel);
-        }
-
-        private void OnDestroy()
-        {
-            if (_connectionManager != null)
-            {
-                _connectionManager.ConnectionState -= OnConnectionState;
-            }
         }
 
         internal void OnConnectBtn(string fishnetAddress, string liveKitAddress, string userName)

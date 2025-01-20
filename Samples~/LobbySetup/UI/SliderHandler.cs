@@ -26,14 +26,13 @@ namespace AnyVr.Samples.LobbySetup
     [RequireComponent(typeof(Slider))]
     public class SliderHandler : MonoBehaviour
     {
-        private Slider _slider;
-
         [SerializeField] private GameObject _valueLabel;
         [SerializeField] private TextMeshProUGUI _valueText;
 
         private Coroutine _hideLabelCoroutine;
 
         private bool _isInit;
+        private Slider _slider;
 
         private void Start()
         {

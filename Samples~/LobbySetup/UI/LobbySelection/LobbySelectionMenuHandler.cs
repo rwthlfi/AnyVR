@@ -1,9 +1,9 @@
-using System;
+using AnyVr.LobbySystem;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Transporting;
+using System;
 using System.Collections.Generic;
-using AnyVr.LobbySystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -65,6 +65,32 @@ namespace AnyVr.Samples.LobbySetup
             };
 
             InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState +=
+                ServerManager_OnRemoteConnectionState;
+        }
+
+        private void FixedUpdate()
+        {
+            if (_lobbyManager == null || _lobbyManager.TimeManager == null)
+            {
+                return;
+            }
+
+            long latency = _lobbyManager.TimeManager == null ? 0 : _lobbyManager.TimeManager.RoundTripTime;
+            long deduction = (long)(_lobbyManager.TimeManager.TickDelta * Time.fixedDeltaTime);
+            latency = (long)Mathf.Max(1, latency - deduction);
+            _pingLabel.text = $"{latency}ms";
+        }
+
+        private void OnDestroy()
+        {
+            if (_lobbyManager == null)
+            {
+                return;
+            }
+
+            _lobbyManager.LobbyOpened -= AddLobbyCard;
+            _lobbyManager.LobbyClosed -= RemoveLobbyCard;
+            InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState -=
                 ServerManager_OnRemoteConnectionState;
         }
 
@@ -134,19 +160,6 @@ namespace AnyVr.Samples.LobbySetup
             _connectionManager.LeaveServer();
         }
 
-        private void FixedUpdate()
-        {
-            if (_lobbyManager == null || _lobbyManager.TimeManager == null)
-            {
-                return;
-            }
-
-            long latency = _lobbyManager.TimeManager == null ? 0 : _lobbyManager.TimeManager.RoundTripTime;
-            long deduction = (long)(_lobbyManager.TimeManager.TickDelta * Time.fixedDeltaTime);
-            latency = (long)Mathf.Max(1, latency - deduction);
-            _pingLabel.text = $"{latency}ms";
-        }
-
         public void Client_OpenCreateRoomScene()
         {
             if (_isRoomCreationSceneActive)
@@ -212,19 +225,6 @@ namespace AnyVr.Samples.LobbySetup
             }
 
             _lobbyCards.Remove(lobbyId);
-        }
-
-        private void OnDestroy()
-        {
-            if (_lobbyManager == null)
-            {
-                return;
-            }
-
-            _lobbyManager.LobbyOpened -= AddLobbyCard;
-            _lobbyManager.LobbyClosed -= RemoveLobbyCard;
-            InstanceFinder.NetworkManager.ServerManager.OnRemoteConnectionState -=
-                ServerManager_OnRemoteConnectionState;
         }
 
         #region Singleton

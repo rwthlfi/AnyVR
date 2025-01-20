@@ -1,10 +1,7 @@
-using JetBrains.Annotations;
 using System;
 using System.Text.RegularExpressions;
-using AnyVr.Samples.LobbySetup;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
@@ -12,6 +9,7 @@ namespace AnyVr.Samples.LobbySetup
 {
     public class RoomCreationManager : MonoBehaviour
     {
+        private const ushort k_maxUserLimit = 99;
         [Header("UI")] [SerializeField] private TMP_InputField _nameInputField;
         [SerializeField] private Slider _userLimitSlider;
 
@@ -30,8 +28,6 @@ namespace AnyVr.Samples.LobbySetup
         private LobbySceneMetaData[] _lobbySceneMetaData;
 
         private string _selectedRoom;
-
-        private const ushort k_maxUserLimit = 99;
 
         private void Start()
         {

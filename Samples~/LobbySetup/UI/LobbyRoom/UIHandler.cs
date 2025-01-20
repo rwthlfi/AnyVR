@@ -1,6 +1,6 @@
+using AnyVr.LobbySystem;
 using System;
 using System.Collections.Generic;
-using AnyVr.LobbySystem;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -67,11 +67,6 @@ namespace AnyVr.Samples.LobbySetup
             });
         }
 
-        public void LeaveLobby()
-        {
-            _lobbyHandler.Leave();
-        }
-
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Escape))
@@ -85,14 +80,19 @@ namespace AnyVr.Samples.LobbySetup
             }
         }
 
-        public void SetLocalClientIsAdmin(bool b)
-        {
-            _isLocalAdmin = b;
-        }
-
         private void OnDestroy()
         {
             s_instance = null;
+        }
+
+        public void LeaveLobby()
+        {
+            _lobbyHandler.Leave();
+        }
+
+        public void SetLocalClientIsAdmin(bool b)
+        {
+            _isLocalAdmin = b;
         }
 
         internal bool IsLocalClientAdmin()

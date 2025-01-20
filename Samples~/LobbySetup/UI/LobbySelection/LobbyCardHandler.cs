@@ -1,5 +1,5 @@
-using System;
 using AnyVr.LobbySystem;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,8 +17,6 @@ namespace AnyVr.Samples.LobbySetup
 
         internal UILobbyMetaData MetaData { get; private set; }
 
-        internal event Action JoinBtn;
-
         private void Start()
         {
             _joinBtn.onClick.AddListener(() =>
@@ -26,6 +24,8 @@ namespace AnyVr.Samples.LobbySetup
                 JoinBtn?.Invoke();
             });
         }
+
+        internal event Action JoinBtn;
 
         public void SetLobbyMeta(UILobbyMetaData metaData)
         {
