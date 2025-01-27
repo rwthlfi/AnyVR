@@ -111,17 +111,20 @@ namespace AnyVr.Samples.LobbySetup
                 return;
             }
 
-            if (TryParseAddress(fishnetAddress, out (string ip, ushort port) fishnetRes))
+            if (!TryParseAddress(fishnetAddress, out (string ip, ushort port) fishnetRes))
             {
-                if (TryParseAddress(liveKitAddress, out (string ip, ushort port) liveKitRes))
-                {
-                    _connectionManager.ConnectToServer(fishnetRes, liveKitRes, userName);
-                    return;
-                }
+                return;
             }
 
-            Debug.LogError(
-                "Invalid client address! Address has to match the pattern <ip>:<port>"); //TODO: display msg graphically
+            if (!TryParseAddress(liveKitAddress, out (string ip, ushort port) liveKitRes))
+            {
+                return;
+            }
+
+            if (!_connectionManager.ConnectToServer(fishnetRes, liveKitRes, userName, out string errorMessage))
+            {
+                Debug.LogWarning($"Error connecting to AnyVr server: {errorMessage}");
+            }
         }
 
         private static bool TryParseAddress(string address, out (string, ushort) res)

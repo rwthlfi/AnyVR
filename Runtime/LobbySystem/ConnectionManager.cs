@@ -47,7 +47,7 @@ namespace AnyVr.LobbySystem
             }
         }
 
-        public static string UserName { get; private set; }
+        public static string UserName { get; }
 
         private void Awake()
         {
@@ -124,27 +124,32 @@ namespace AnyVr.LobbySystem
             return s_instance;
         }
 
-        public void ConnectToServer(ServerAddressResponse addressResponse)
+        public bool ConnectToServer(ServerAddressResponse addressResponse, string userName, out string errorMessage)
         {
+            errorMessage = string.Empty;
+
             if (_networkManager == null)
             {
-                return;
+                errorMessage = "NetworkManager is null.";
+                return false;
             }
 
             if (State.HasFlag(LobbySystem.ConnectionState.k_client))
             {
-                return;
+                errorMessage = "Already connected as a client.";
+                return false;
             }
 
             if (!TryParseAddress(addressResponse.fishnet_server_address, out (string ip, ushort port) fishnetAddress))
             {
-                return;
+                errorMessage = $"Failed to parse FishNet server address ('{addressResponse.fishnet_server_address}').";
+                return false;
             }
 
-            if (!TryParseAddress(addressResponse.livekit_server_address,
-                    out (string ip, ushort port) liveKitAddress))
+            if (!TryParseAddress(addressResponse.livekit_server_address, out (string ip, ushort port) liveKitAddress))
             {
-                return;
+                errorMessage = $"Failed to parse LiveKit server address ('{addressResponse.livekit_server_address}').";
+                return false;
             }
 
             _networkManager.TransportManager.Transport.SetClientAddress(fishnetAddress.ip);
@@ -152,6 +157,16 @@ namespace AnyVr.LobbySystem
             _networkManager.ClientManager.StartConnection();
 
             LiveKitManager.s_instance.SetTokenServerAddress(liveKitAddress.ip, liveKitAddress.port);
+
+            return true;
+        }
+
+        public bool ConnectToServer((string ip, ushort port) fishnetAddress, (string ip, ushort port) liveKitAddress,
+            string userName, out string errorMessage)
+        {
+            ServerAddressResponse sar = new(fishnetAddress.ip + ":" + fishnetAddress.port,
+                liveKitAddress.ip + ":" + liveKitAddress.port);
+            return ConnectToServer(sar, userName, out errorMessage);
         }
 
         private static bool TryParseAddress(string address, out (string, ushort) res)
@@ -178,25 +193,6 @@ namespace AnyVr.LobbySystem
             return true;
         }
 
-        public void ConnectToServer((string ip, ushort port) fishnetAddress, (string ip, ushort port) liveKitAddress,
-            string userName)
-        {
-            if (_networkManager == null)
-            {
-                return;
-            }
-
-            if (State.HasFlag(LobbySystem.ConnectionState.k_client))
-            {
-                return;
-            }
-
-            _networkManager.TransportManager.Transport.SetClientAddress(fishnetAddress.ip);
-            _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
-            _networkManager.ClientManager.StartConnection();
-            UserName = userName;
-            LiveKitManager.s_instance.SetTokenServerAddress(liveKitAddress.ip, liveKitAddress.port);
-        }
 
         private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs state)
         {
@@ -288,6 +284,7 @@ namespace AnyVr.LobbySystem
             {
                 res = JsonUtility.FromJson<ServerAddressResponse>(response.Content.ReadAsStringAsync().Result);
             }
+
             res.success = response.IsSuccessStatusCode;
             return res;
         }
@@ -317,6 +314,15 @@ namespace AnyVr.LobbySystem
         public bool success;
         public string fishnet_server_address;
         public string livekit_server_address;
+
+        public ServerAddressResponse() { }
+
+        public ServerAddressResponse(string fishnetAddressPort, string livekitServerAddress)
+        {
+            fishnet_server_address = fishnetAddressPort;
+            livekit_server_address = livekitServerAddress;
+            success = true;
+        }
     }
 
     [Flags]

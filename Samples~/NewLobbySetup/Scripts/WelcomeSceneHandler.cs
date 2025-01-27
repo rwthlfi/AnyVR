@@ -29,7 +29,11 @@ namespace AnyVr.Samples.NewLobbySetup
             }
 
             Debug.Log("Connecting to the server...");
-            _connectionManager.ConnectToServer(result);
+            string userName = userNameInputField.text;
+            if (!_connectionManager.ConnectToServer(result, userName, out string errorMessage))
+            {
+                Debug.LogWarning($"Failed to connect to the server: {errorMessage}");
+            }
         }
     }
 }
