@@ -281,10 +281,15 @@ namespace AnyVr.LobbySystem
         {
             const string tokenURL = "http://{0}/requestServerIp";
             string url = string.Format(tokenURL, tokenServerIp);
-            Debug.Log($"Getting server addresses from: {url}");
+            Debug.Log($"Request server ip from {url}");
             HttpResponseMessage response = await new HttpClient().GetAsync(url);
-            response.EnsureSuccessStatusCode();
-            return JsonUtility.FromJson<ServerAddressResponse>(response.Content.ReadAsStringAsync().Result);
+            ServerAddressResponse res = new();
+            if (response.IsSuccessStatusCode)
+            {
+                res = JsonUtility.FromJson<ServerAddressResponse>(response.Content.ReadAsStringAsync().Result);
+            }
+            res.success = response.IsSuccessStatusCode;
+            return res;
         }
 
         #region Singleton
@@ -309,6 +314,7 @@ namespace AnyVr.LobbySystem
     [Serializable]
     public class ServerAddressResponse
     {
+        public bool success;
         public string fishnet_server_address;
         public string livekit_server_address;
     }

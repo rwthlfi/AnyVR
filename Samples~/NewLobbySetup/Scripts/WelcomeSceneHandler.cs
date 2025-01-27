@@ -22,8 +22,14 @@ namespace AnyVr.Samples.NewLobbySetup
         {
             string tokenServerIp = serverIpInputField.text;
             ServerAddressResponse result = await ConnectionManager.RequestServerIp(tokenServerIp);
+            if (!result.success)
+            {
+                Debug.LogWarning("Failed to request server ip");
+                return;
+            }
+
+            Debug.Log("Connecting to the server...");
             _connectionManager.ConnectToServer(result);
-            Debug.Log(result);
         }
     }
 }
