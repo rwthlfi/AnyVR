@@ -65,9 +65,6 @@ namespace AnyVr.LobbySystem
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
 
-#if UNITY_SERVER && !UNITY_EDITOR
-            StartServer(); // Autostart server in server builds
-#else
             // The WelcomeScene gets only unloaded for clients
             LobbySceneLoaded += asServer =>
             {
@@ -76,7 +73,6 @@ namespace AnyVr.LobbySystem
                     SceneManager.UnloadSceneAsync("WelcomeScene");
                 }
             };
-#endif
         }
 
         private void OnDestroy()
@@ -103,7 +99,6 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
-            Debug.LogWarning("Starting Server");
             _networkManager.ServerManager.StartConnection();
         }
 
