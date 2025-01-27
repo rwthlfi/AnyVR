@@ -67,8 +67,6 @@ namespace AnyVr.LobbySystem
             _lobbyHandlers = new Dictionary<Guid, LobbyHandler>();
             _clientLobbyDict = new Dictionary<int, Guid>();
             SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
-            string logging = _loggingEnabled ? "enabled" : "disabled";
-            Debug.Log($"Server started. Logging {logging}");
         }
 
         public override void OnStartClient()
