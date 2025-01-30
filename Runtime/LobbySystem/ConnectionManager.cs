@@ -11,10 +11,12 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Assertions;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVr.LobbySystem
 {
+    [RequireComponent(typeof(NetworkManager))]
     public class ConnectionManager : MonoBehaviour
     {
         [SerializeField] [Scene] private string globalScene;
@@ -52,15 +54,8 @@ namespace AnyVr.LobbySystem
         private void Awake()
         {
             InitSingleton();
-        }
-
-        private void Start()
-        {
-            if (NetworkManager.Instances.Any())
-            {
-                _networkManager = NetworkManager.Instances.First();
-            }
-
+            
+            _networkManager = GetComponent<NetworkManager>();
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
