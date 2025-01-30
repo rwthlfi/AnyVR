@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 2808097188437155341}
   - component: {fileID: 2423351291345961283}
   - component: {fileID: 5021902473138039828}
+  - component: {fileID: 658701158048237682}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -52,7 +53,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _logging: {fileID: 0}
-  _spawnablePrefabs: {fileID: 11400000, guid: c71c13eaad25f593e89d29e02d7372b6, type: 2}
+  _spawnablePrefabs: {fileID: 0}
   _refreshDefaultPrefabs: 1
   _runInBackground: 1
   _dontDestroyOnLoad: 1
@@ -172,4 +173,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e838fcb1542f77b4aace907895a68966, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _globalScene: Assets/Samples/LobbySetup/Scenes/GlobalScene.unity
+  globalScene: 
+--- !u!114 &658701158048237682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1087981268889951963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68828c85278210948b9d50a8db3aab74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _authenticator: {fileID: 0}
+  _remoteClientTimeout: 2
+  _remoteClientTimeoutDuration: 60
+  _allowPredictedSpawning: 0
+  _reservedObjectIds: 15
+  _syncTypeRate: 0.1
+  SpawnPacking:
+    Position: 0
+    Rotation: 2
+    Scale: 2
+  _changeFrameRate: 1
+  _frameRate: 500
+  _shareIds: 1
+  _startOnHeadless: 0
