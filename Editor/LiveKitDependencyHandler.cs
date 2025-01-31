@@ -20,7 +20,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace AnyVR
+namespace AnyVr.Editor
 {
     public class LiveKitPackageHandler : EditorWindow
     {
