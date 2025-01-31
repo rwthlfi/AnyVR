@@ -8,6 +8,7 @@ using AnyVr.TextChat;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using AnyVr.Voicechat;
+using System.Linq;
 
 namespace AnyVr.LobbySystem
 {

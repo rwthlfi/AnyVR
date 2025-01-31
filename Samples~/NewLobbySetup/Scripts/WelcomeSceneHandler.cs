@@ -19,7 +19,6 @@ namespace AnyVr.Samples.NewLobbySetup
             Debug.Log("Welcome to AnyVr");
             _connectionManager = ConnectionManager.GetInstance();
             Assert.IsNotNull(_connectionManager);
-            _connectionManager.ConnectionState += OnConnectionState;
             connectButton.onClick.AddListener(OnConnectBtnClicked);
 
             // Autostart server for server builds
@@ -34,40 +33,17 @@ namespace AnyVr.Samples.NewLobbySetup
             _connectionManager.StartServer();
         }
 
-        private void OnConnectionState(ConnectionState state)
-        {
-            switch (state)
-            {
-                case ConnectionState.k_client:
-                    Debug.Log("Connected to server.");
-                    break;
-                case ConnectionState.k_server:
-                    Debug.Log("Server started.");
-                    break;
-                case ConnectionState.k_disconnected:
-                    Debug.Log("Disconnected from server.");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(state), state, null);
-            }
-        }
-
         private async void OnConnectBtnClicked()
         {
             string tokenServerIp = serverIpInputField.text;
             ServerAddressResponse result = await ConnectionManager.RequestServerIp(tokenServerIp);
             if (!result.success)
             {
-                Debug.LogWarning("Failed to request server ip");
                 return;
             }
 
-            Debug.Log("Connecting to the server...");
             string userName = userNameInputField.text;
-            if (!_connectionManager.ConnectToServer(result, userName, out string errorMessage))
-            {
-                Debug.LogWarning($"Failed to connect to the server: {errorMessage}");
-            }
+            _connectionManager.ConnectToServer(result, userName);
         }
     }
 }
