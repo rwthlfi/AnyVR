@@ -1,4 +1,5 @@
 using AnyVr.Voicechat;
+using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Transporting;
@@ -6,12 +7,10 @@ using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
 using System;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Assertions;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVr.LobbySystem
@@ -54,9 +53,10 @@ namespace AnyVr.LobbySystem
         private void Awake()
         {
             InitSingleton();
-            
+
             _networkManager = GetComponent<NetworkManager>();
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
+            _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
 
@@ -80,6 +80,41 @@ namespace AnyVr.LobbySystem
             _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
             _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
             _networkManager.SceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
+            ConnectionState += OnConnectionState;
+        }
+
+        private static void OnConnectionState(ConnectionState state){
+            
+            switch (state)
+            {
+                case LobbySystem.ConnectionState.k_client:
+                    Logger.LogVerbose("Connected to server.");
+                    break;
+                case LobbySystem.ConnectionState.k_server:
+                    Logger.LogVerbose("Server started.");
+                    break;
+                case LobbySystem.ConnectionState.k_disconnected:
+                    Logger.LogVerbose("Disconnected from server.");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(state), state, null);
+            }
+            
+        }
+
+        private static void ServerManager_OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        {
+            switch (args.ConnectionState)
+            {
+                case RemoteConnectionState.Stopped:
+                    Logger.LogVerbose($"Remote connection {conn} stopped.");
+                    break;
+                case RemoteConnectionState.Started:
+                    Logger.LogVerbose($"Remote connection {conn} started.");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public event Action<ConnectionState> ConnectionState;
