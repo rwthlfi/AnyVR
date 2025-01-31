@@ -183,7 +183,7 @@ namespace AnyVr.LobbySystem
             {
                 if (!string.IsNullOrEmpty(errorMsg))
                 {
-                    Debug.LogWarning($"Can't register LobbyHandler. {errorMsg}");
+                    Logger.LogWarning($"Can't register LobbyHandler. {errorMsg}");
                 }
 
                 return;
@@ -192,7 +192,7 @@ namespace AnyVr.LobbySystem
             // Lobby scenes have to be loaded with exactly 0 clients
             if (loadArgs.QueueData.Connections.Length != 0)
             {
-                Debug.LogWarning("Can't register LobbyHandler. The lobby scene must be empty.");
+                Logger.LogWarning("Can't register LobbyHandler. The lobby scene must be empty.");
                 return;
             }
 
@@ -207,7 +207,7 @@ namespace AnyVr.LobbySystem
 
             if (!ServerManager.Clients.ContainsKey(adminId))
             {
-                Debug.LogWarning("Can't register LobbyHandler. The passed clientId is not connected to the server.");
+                Logger.LogWarning("Can't register LobbyHandler. The passed clientId is not connected to the server.");
                 return;
             }
 
@@ -229,7 +229,7 @@ namespace AnyVr.LobbySystem
             _lobbies[lobbyId].SetSceneHandle(loadArgs.LoadedScenes[0].handle);
             _lobbyHandlers.Add(lobbyId, lobbyHandler);
 
-            Log($"LobbyHandler with lobbyId '{lobbyId}' is registered");
+            Logger.LogVerbose($"LobbyHandler with lobbyId '{lobbyId}' is registered");
             LobbyHandlerRegistered?.Invoke(lobbyId);
         }
 
@@ -278,7 +278,7 @@ namespace AnyVr.LobbySystem
             _lobbies.Add(lobbyMetaData.LobbyId, lobbyMetaData);
 
             // Starts the lobby scene without clients. When loaded, the LoadEnd callback will be called and we spawn a LobbyHandler. After that clients are able to join.
-            Log("Loading lobby scene. Waiting for lobby handler");
+            Logger.LogVerbose("Loading lobby scene. Waiting for lobby handler");
             SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), lobbyMetaData.GetSceneLoadData());
 
             // Wait for Lobby Handler
@@ -301,12 +301,12 @@ namespace AnyVr.LobbySystem
             if (!receivedLobbyHandler)
             {
                 CloseLobby(lobbyMetaData.LobbyId);
-                Debug.LogWarning(
+                Logger.LogWarning(
                     $"Lobby (id={lobbyMetaData.LobbyId}) could not be created. LobbyHandler was not received.");
                 yield break;
             }
 
-            Log($"Lobby created. {lobbyMetaData}");
+            Logger.LogVerbose($"Lobby created. {lobbyMetaData}");
             AddClientToLobby(lobbyMetaData.LobbyId, conn); // Auto join lobby
             InvokeLobbyOpened(lobbyMetaData);
         }
@@ -336,14 +336,14 @@ namespace AnyVr.LobbySystem
 
             if (!_lobbies.TryGetValue(lobbyId, out LobbyMetaData lobby))
             {
-                Debug.LogWarning(
+                Logger.LogWarning(
                     $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Lobby was not found.");
                 return;
             }
 
             if (!_lobbyHandlers.TryGetValue(lobbyId, out LobbyHandler _))
             {
-                Debug.LogWarning(
+                Logger.LogWarning(
                     $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The corresponding lobby handler does not exist.");
                 return;
             }
@@ -351,18 +351,18 @@ namespace AnyVr.LobbySystem
             int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
             if (currentPlayerCount >= lobby.LobbyCapacity)
             {
-                Debug.LogWarning(
+                Logger.LogWarning(
                     $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The lobby is already full.");
                 return;
             }
 
             if (!_clientLobbyDict.TryAdd(conn.ClientId, lobbyId))
             {
-                Debug.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'.");
+                Logger.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'.");
                 return;
             }
 
-            Log($"Client '{PlayerNameTracker.GetPlayerName(conn.ClientId)}' joined lobby with id '{lobbyId}");
+            Logger.LogVerbose($"Client '{PlayerNameTracker.GetPlayerName(conn.ClientId)}' joined lobby with id '{lobbyId}");
             OnLobbyJoinedRpc(conn, lobby);
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
         }
@@ -380,7 +380,7 @@ namespace AnyVr.LobbySystem
             }
             else
             {
-                Debug.LogWarning("LivKitManager is not initialized");
+                Logger.LogWarning("LivKitManager is not initialized");
             }
         }
 
@@ -417,7 +417,7 @@ namespace AnyVr.LobbySystem
             {
                 if (!ServerManager.Clients.TryGetValue(client.id, out NetworkConnection clientConn))
                 {
-                    Debug.LogWarning($"Could not get NetworkConnection from client {client.id}");
+                    Logger.LogWarning($"Could not get NetworkConnection from client {client.id}");
                     continue;
                 }
 
@@ -427,7 +427,7 @@ namespace AnyVr.LobbySystem
             _lobbyHandlers.Remove(lobbyId);
             _lobbies.Remove(lobbyId);
             LobbyClosed?.Invoke(lobbyId);
-            Log($"Lobby with id '{lobbyId}' is closed");
+            Logger.LogVerbose($"Lobby with id '{lobbyId}' is closed");
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -435,7 +435,7 @@ namespace AnyVr.LobbySystem
         {
             if (!TryRemoveClientFromLobby(conn))
             {
-                Debug.LogWarning("Client could not be removed from lobby");
+                Logger.LogWarning("Client could not be removed from lobby");
             }
         }
 
@@ -467,7 +467,7 @@ namespace AnyVr.LobbySystem
                     Params = { ServerParams = new object[] { SceneLoadParam.k_lobby, lmd.LobbyId } }
                 };
                 sud.Params.ClientParams = LobbyMetaData.SerializeObjects(sud.Params.ServerParams);
-                Debug.LogWarning("Unloading Connection scenes");
+                Logger.LogWarning("Unloading Connection scenes");
                 SceneManager.UnloadConnectionScenes(clientConnection, sud);
             }
 
@@ -512,18 +512,6 @@ namespace AnyVr.LobbySystem
             return _currentLobby;
         }
 
-        /// <summary>
-        ///     Logs a common value if can log.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Log(string value)
-        {
-            if (_loggingEnabled)
-            {
-                Debug.Log(value);
-            }
-        }
-
         public Dictionary<Guid, LobbyMetaData> GetLobbies()
         {
             return _lobbies.Collection;
@@ -537,7 +525,7 @@ namespace AnyVr.LobbySystem
         {
             if (s_instance != null)
             {
-                Debug.LogWarning("Instance of LobbyManager already exists!");
+                Logger.LogWarning("Instance of LobbyManager already exists!");
                 Destroy(this);
             }
 
@@ -550,8 +538,6 @@ namespace AnyVr.LobbySystem
 
         [Tooltip("The Scene to load when the local client leaves their current lobby")] [SerializeField] [Scene]
         private string _offlineScene;
-
-        [SerializeField] private bool _loggingEnabled;
 
         [Header("Prefab Setup")] [SerializeField]
         private LobbyHandler _lobbyHandlerPrefab;

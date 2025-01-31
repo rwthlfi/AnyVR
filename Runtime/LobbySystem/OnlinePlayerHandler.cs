@@ -66,7 +66,7 @@ namespace AnyVr.LobbySystem
             _handler = PlayerInteractionHandler.s_interactionHandler;
             if (_handler == null)
             {
-                Debug.LogError("Could not find an instance of PlayerInteractionHandler");
+                Logger.LogError("Could not find an instance of PlayerInteractionHandler");
             }
 
             _renderers = gameObject.transform.GetComponentsInChildren<Renderer>();

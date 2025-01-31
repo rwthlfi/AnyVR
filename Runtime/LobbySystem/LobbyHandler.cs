@@ -77,7 +77,7 @@ namespace AnyVr.LobbySystem
 
             if (s_instance != null)
             {
-                Debug.LogError("Instance of LobbyHandler is already initialized");
+                Logger.LogError("Instance of LobbyHandler is already initialized");
                 return;
             }
 
@@ -93,11 +93,11 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
-            // string msg = micNames.Aggregate("Available Microphones:\n",
-            //     (current, micName) => current + "\t" + micName + "\n");
-            // Debug.Log(msg);
+            string msg = micNames.Aggregate("Available Microphones:\n",
+                (current, micName) => current + "\t" + micName + "\n");
+            Logger.LogVerbose(msg);
             const int defaultMic = 0;
-            // Debug.Log($"Selected Microphone: {micNames[defaultMic]}");
+            Logger.LogDebug($"Selected Microphone: {micNames[defaultMic]}");
             LiveKitManager.s_instance.SetActiveMicrophone(micNames[defaultMic]);
 
             PostInit?.Invoke();
@@ -146,7 +146,7 @@ namespace AnyVr.LobbySystem
         private void Server_AddClient(int clientId, string clientName)
         {
             _clientIds.Add(clientId);
-            LobbyManager.s_instance.Log($"Client {clientId} joined lobby {_lobbyId.Value}");
+            Logger.LogDebug($"Client {clientId} joined lobby {_lobbyId.Value}");
             ClientJoin?.Invoke(clientId, clientName);
         }
 
@@ -165,7 +165,7 @@ namespace AnyVr.LobbySystem
         internal void Server_RemoveClient(int clientId)
         {
             _clientIds.Remove(clientId);
-            LobbyManager.s_instance.Log($"Client {clientId} left lobby {_lobbyId.Value}");
+            Logger.LogDebug($"Client {clientId} left lobby {_lobbyId.Value}");
             ClientLeft?.Invoke(clientId);
         }
 

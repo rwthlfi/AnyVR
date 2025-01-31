@@ -114,34 +114,35 @@ namespace AnyVr.LobbySystem
             return s_instance;
         }
 
-        public bool ConnectToServer(ServerAddressResponse addressResponse, string userName, out string errorMessage)
+        public bool ConnectToServer(ServerAddressResponse addressResponse, string userName)
         {
-            errorMessage = string.Empty;
-
             if (_networkManager == null)
             {
-                errorMessage = "NetworkManager is null.";
+                Logger.LogError("Could not connect to server. NetworkManager is null");
                 return false;
             }
 
             if (State.HasFlag(LobbySystem.ConnectionState.k_client))
             {
-                errorMessage = "Already connected as a client.";
+                Logger.LogError("Could not connect to server. Already connected as a client");
                 return false;
             }
 
             if (!TryParseAddress(addressResponse.fishnet_server_address, out (string ip, ushort port) fishnetAddress))
             {
-                errorMessage = $"Failed to parse FishNet server address ('{addressResponse.fishnet_server_address}').";
+                Logger.LogError(
+                    $"Could not connect to server. Failed to parse FishNet server address ('{addressResponse.fishnet_server_address}').");
                 return false;
             }
 
             if (!TryParseAddress(addressResponse.livekit_server_address, out (string ip, ushort port) liveKitAddress))
             {
-                errorMessage = $"Failed to parse LiveKit server address ('{addressResponse.livekit_server_address}').";
+                Logger.LogError(
+                    $"Could not connect to server. Failed to parse LiveKit server address ('{addressResponse.livekit_server_address}').");
                 return false;
             }
 
+            Logger.LogVerbose("Connecting to server ...");
             _networkManager.TransportManager.Transport.SetClientAddress(fishnetAddress.ip);
             _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
             _networkManager.ClientManager.StartConnection();
@@ -152,11 +153,11 @@ namespace AnyVr.LobbySystem
         }
 
         public bool ConnectToServer((string ip, ushort port) fishnetAddress, (string ip, ushort port) liveKitAddress,
-            string userName, out string errorMessage)
+            string userName)
         {
             ServerAddressResponse sar = new(fishnetAddress.ip + ":" + fishnetAddress.port,
                 liveKitAddress.ip + ":" + liveKitAddress.port);
-            return ConnectToServer(sar, userName, out errorMessage);
+            return ConnectToServer(sar, userName);
         }
 
         private static bool TryParseAddress(string address, out (string, ushort) res)
@@ -267,7 +268,7 @@ namespace AnyVr.LobbySystem
         {
             const string tokenURL = "http://{0}/requestServerIp";
             string url = string.Format(tokenURL, tokenServerIp);
-            Debug.Log($"Request server ip from {url}");
+            Logger.LogVerbose($"Requesting server ip: {url}");
             HttpResponseMessage response = await new HttpClient().GetAsync(url);
             ServerAddressResponse res = new();
             if (response.IsSuccessStatusCode)
@@ -276,6 +277,15 @@ namespace AnyVr.LobbySystem
             }
 
             res.success = response.IsSuccessStatusCode;
+            if (res.success)
+            {
+                Logger.LogVerbose("Received server ip");
+            }
+            else
+            {
+                Logger.LogWarning("Could not fetch server ip");
+            }
+
             return res;
         }
 
