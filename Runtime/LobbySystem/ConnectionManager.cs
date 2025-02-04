@@ -11,6 +11,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Assertions;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVr.LobbySystem
@@ -53,12 +54,13 @@ namespace AnyVr.LobbySystem
         private void Awake()
         {
             InitSingleton();
-
             _networkManager = GetComponent<NetworkManager>();
+            Assert.IsNotNull(_networkManager);
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
             _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
+            ConnectionState += OnConnectionState;
 
             // The WelcomeScene gets only unloaded for clients
             LobbySceneLoaded += asServer =>
@@ -70,6 +72,7 @@ namespace AnyVr.LobbySystem
             };
         }
 
+
         private void OnDestroy()
         {
             if (_networkManager == null)
@@ -78,13 +81,14 @@ namespace AnyVr.LobbySystem
             }
 
             _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
+            _networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
             _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
             _networkManager.SceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
-            ConnectionState += OnConnectionState;
+            ConnectionState -= OnConnectionState;
         }
 
-        private static void OnConnectionState(ConnectionState state){
-            
+        private static void OnConnectionState(ConnectionState state)
+        {
             switch (state)
             {
                 case LobbySystem.ConnectionState.k_client:
@@ -99,10 +103,10 @@ namespace AnyVr.LobbySystem
                 default:
                     throw new ArgumentOutOfRangeException(nameof(state), state, null);
             }
-            
         }
 
-        private static void ServerManager_OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        private static void ServerManager_OnRemoteConnectionState(NetworkConnection conn,
+            RemoteConnectionStateArgs args)
         {
             switch (args.ConnectionState)
             {
@@ -118,6 +122,7 @@ namespace AnyVr.LobbySystem
         }
 
         public event Action<ConnectionState> ConnectionState;
+        
         public event Action<bool> GlobalSceneLoaded;
         private event Action<bool> LobbySceneLoaded;
 
@@ -126,10 +131,11 @@ namespace AnyVr.LobbySystem
         {
             if (State.HasFlag(LobbySystem.ConnectionState.k_server))
             {
+                Logger.LogWarning("The server is already started");
                 return;
             }
 
-            Logger.LogVerbose("Starting server.");
+            Logger.LogVerbose("Starting server...");
             _networkManager.ServerManager.StartConnection();
         }
 
@@ -137,6 +143,7 @@ namespace AnyVr.LobbySystem
         {
             if (!State.HasFlag(LobbySystem.ConnectionState.k_client))
             {
+                Logger.LogWarning("Not connected to a server");
                 return;
             }
 
@@ -229,6 +236,11 @@ namespace AnyVr.LobbySystem
 
         private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs state)
         {
+            if (state.ConnectionState is LocalConnectionState.Started or LocalConnectionState.Stopped)
+            {
+                ConnectionState?.Invoke(State);
+            }
+
             // The OnServerConnectionState will be called for each transport. 
             // But we only want to load the global scene once
             if (_isServerInitialized)
@@ -236,6 +248,7 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
+            Logger.LogVerbose($"Server is {state.ConnectionState.ToString()}");
             if (state.ConnectionState != LocalConnectionState.Started)
             {
                 return;
@@ -253,8 +266,8 @@ namespace AnyVr.LobbySystem
 
             _isServerInitialized = true;
 
+            Logger.LogVerbose("Loading global scene...");
             _networkManager.SceneManager.LoadGlobalScenes(sld);
-            ConnectionState?.Invoke(State);
         }
 
         private void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
