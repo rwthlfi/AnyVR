@@ -17,8 +17,8 @@ GameObject:
   - component: {fileID: 2808097188437155341}
   - component: {fileID: 2423351291345961283}
   - component: {fileID: 5021902473138039828}
+  - component: {fileID: 6287520840629278902}
   - component: {fileID: 3804329797783330967}
-  - component: {fileID: 658701158048237682}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -54,7 +54,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _logging: {fileID: 0}
-  _spawnablePrefabs: {fileID: 0}
+  _spawnablePrefabs: {fileID: 11400000, guid: 88addb99702eee245976360a58a65375, type: 2}
   _refreshDefaultPrefabs: 1
   _runInBackground: 1
   _dontDestroyOnLoad: 1
@@ -174,21 +174,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e838fcb1542f77b4aace907895a68966, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  globalScene: 
---- !u!114 &3804329797783330967
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1087981268889951963}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 69c4b531c159c0b1189986a178881708, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  currentLevel: 1
---- !u!114 &658701158048237682
+  globalScene: Assets/Samples/AnyVr/1.0.1/NewLobbySetup/Scenes/GlobalScene.unity
+--- !u!114 &6287520840629278902
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -214,3 +201,16 @@ MonoBehaviour:
   _frameRate: 500
   _shareIds: 1
   _startOnHeadless: 0
+--- !u!114 &3804329797783330967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1087981268889951963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69c4b531c159c0b1189986a178881708, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  currentLevel: 3

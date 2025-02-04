@@ -597,22 +597,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: NetworkManager
       objectReference: {fileID: 0}
-    - target: {fileID: 3804329797783330967, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
-      propertyPath: currentLevel
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 5021902473138039828, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
-      propertyPath: globalScene
-      value: Assets/Samples/AnyVr/1.0.1/NewLobbySetup/Scenes/GlobalScene.unity
-      objectReference: {fileID: 0}
-    - target: {fileID: 5021902473138039828, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
-      propertyPath: _globalScene
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 5808065475186452488, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
-      propertyPath: _spawnablePrefabs
-      value: 
-      objectReference: {fileID: 11400000, guid: 88addb99702eee245976360a58a65375, type: 2}
     - target: {fileID: 7371100047868426117, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -656,42 +640,8 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1087981268889951963, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
-      insertIndex: 9
-      addedObject: {fileID: 1159122474}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
---- !u!1 &1159122464 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1087981268889951963, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
-  m_PrefabInstance: {fileID: 1006223111}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1159122474
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1159122464}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68828c85278210948b9d50a8db3aab74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _authenticator: {fileID: 0}
-  _remoteClientTimeout: 2
-  _remoteClientTimeoutDuration: 60
-  _allowPredictedSpawning: 0
-  _reservedObjectIds: 15
-  _syncTypeRate: 0.1
-  SpawnPacking:
-    Position: 0
-    Rotation: 2
-    Scale: 2
-  _changeFrameRate: 1
-  _frameRate: 500
-  _shareIds: 1
-  _startOnHeadless: 0
 --- !u!1 &1212038666
 GameObject:
   m_ObjectHideFlags: 0
