@@ -129,6 +129,7 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
+            Logger.LogVerbose("Starting server.");
             _networkManager.ServerManager.StartConnection();
         }
 
@@ -139,6 +140,7 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
+            Logger.LogVerbose("Stopping server.");
             _networkManager.ClientManager.StopConnection();
             LiveKitManager.s_instance.Disconnect();
         }
