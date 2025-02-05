@@ -203,7 +203,7 @@ namespace AnyVr.LobbySystem
             // Lobby scenes have to be loaded with exactly 0 clients
             if (loadArgs.QueueData.Connections.Length != 0)
             {
-                Logger.LogWarning("Can't register LobbyHandler. The lobby scene must be empty.");
+                Logger.LogWarning("Can't register LobbyHandler. The lobby must be empty.");
                 return;
             }
 
@@ -377,7 +377,7 @@ namespace AnyVr.LobbySystem
             }
 
             Logger.LogVerbose(
-                $"Client '{PlayerNameTracker.GetPlayerName(conn.ClientId)}' joined lobby with id '{lobbyId}");
+                $"Client '{conn.ClientId}' joined lobby with id '{lobbyId}");
             OnLobbyJoinedRpc(conn, lobby);
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
         }
