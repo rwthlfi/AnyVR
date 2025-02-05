@@ -1,3 +1,4 @@
+using AnyVr.Voicechat;
 using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
@@ -8,10 +9,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
-using AnyVr.Voicechat;
 
 namespace AnyVr.LobbySystem
 {
@@ -34,9 +34,20 @@ namespace AnyVr.LobbySystem
 
         #endregion
 
+        /// <summary>
+        ///     All available scenes for a lobby
+        /// </summary>
+        public LobbySceneMetaData[] LobbyScenes => lobbyScenes.ToArray();
+
         private void Awake()
         {
             InitSingleton();
+        }
+
+        private void Start()
+        {
+            LobbyClosed += lobbyId => { Logger.LogVerbose($"Lobby {lobbyId} closed"); };
+            LobbyOpened += lmd => { Logger.LogVerbose($"Lobby {lmd.LobbyId} opened"); };
         }
 
         /// <summary>
@@ -212,7 +223,7 @@ namespace AnyVr.LobbySystem
             }
 
             // Spawn and register the LobbyHandler
-            LobbyHandler lobbyHandler = Instantiate(_lobbyHandlerPrefab);
+            LobbyHandler lobbyHandler = Instantiate(lobbyHandlerPrefab);
             Spawn(lobbyHandler.NetworkObject, null, loadArgs.LoadedScenes[0]);
             lobbyHandler.Init(lobbyId, adminId);
             lobbyHandler.ClientJoin += (_, _) =>
@@ -245,28 +256,30 @@ namespace AnyVr.LobbySystem
             return Guid.NewGuid();
         }
 
-        public void Client_CreateLobby(string lobbyName, string scene, ushort maxClients)
+        public void Client_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients,
+            DateTime? expirationDate)
         {
-            CreateLobby(lobbyName, scene, maxClients, ClientManager.Connection);
+            CreateLobby(lobbyName, password, scenePath, maxClients, expirationDate, ClientManager.Connection);
         }
 
         /// <summary>
         ///     Server Rpc to create a new lobby on the server.
         /// </summary>
         [ServerRpc(RequireOwnership = false)]
-        private void CreateLobby(string lobbyName, string scene, ushort maxClients, NetworkConnection conn = null)
+        private void CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients,
+            DateTime? expirationDate, NetworkConnection conn = null)
         {
             if (conn == null)
             {
                 return;
             }
 
-            StartCoroutine(Co_CreateLobby(lobbyName, scene, maxClients, conn));
+            StartCoroutine(Co_CreateLobby(lobbyName, password, scenePath, maxClients, expirationDate, conn));
         }
 
         [Server]
-        private IEnumerator Co_CreateLobby(string lobbyName, string scene, ushort maxClients,
-            NetworkConnection conn = null)
+        private IEnumerator Co_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients,
+            DateTime? expirationDate, NetworkConnection conn = null)
         {
             if (conn is null)
             {
@@ -274,7 +287,7 @@ namespace AnyVr.LobbySystem
             }
 
             maxClients = (ushort)Mathf.Max(1, maxClients);
-            LobbyMetaData lobbyMetaData = new(CreateLobbyId(), lobbyName, conn.ClientId, scene, maxClients);
+            LobbyMetaData lobbyMetaData = new(CreateLobbyId(), lobbyName, conn.ClientId, scenePath, maxClients);
             _lobbies.Add(lobbyMetaData.LobbyId, lobbyMetaData);
 
             // Starts the lobby scene without clients. When loaded, the LoadEnd callback will be called and we spawn a LobbyHandler. After that clients are able to join.
@@ -317,11 +330,14 @@ namespace AnyVr.LobbySystem
             LobbyOpened?.Invoke(lobbyMetaData);
         }
 
-        /// <summary>
-        ///     Server Rpc to join an active lobby on the server.
-        /// </summary>
+        public void Client_JoinLobby(Guid lobbyId, string password)
+        {
+            Logger.LogVerbose("Requesting to join lobby");
+            JoinLobby(lobbyId, password, ClientManager.Connection);
+        }
+
         [ServerRpc(RequireOwnership = false)]
-        public void JoinLobby(Guid lobbyId, NetworkConnection conn = null)
+        private void JoinLobby(Guid lobbyId, string password, NetworkConnection conn)
         {
             AddClientToLobby(lobbyId, conn);
         }
@@ -329,10 +345,7 @@ namespace AnyVr.LobbySystem
         [Server]
         private void AddClientToLobby(Guid lobbyId, NetworkConnection conn)
         {
-            if (conn == null)
-            {
-                return;
-            }
+            Assert.IsNotNull(conn);
 
             if (!_lobbies.TryGetValue(lobbyId, out LobbyMetaData lobby))
             {
@@ -358,11 +371,13 @@ namespace AnyVr.LobbySystem
 
             if (!_clientLobbyDict.TryAdd(conn.ClientId, lobbyId))
             {
-                Logger.LogWarning($"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'.");
+                Logger.LogWarning(
+                    $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'.");
                 return;
             }
 
-            Logger.LogVerbose($"Client '{PlayerNameTracker.GetPlayerName(conn.ClientId)}' joined lobby with id '{lobbyId}");
+            Logger.LogVerbose(
+                $"Client '{PlayerNameTracker.GetPlayerName(conn.ClientId)}' joined lobby with id '{lobbyId}");
             OnLobbyJoinedRpc(conn, lobby);
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
         }
@@ -396,12 +411,12 @@ namespace AnyVr.LobbySystem
         private IEnumerator LoadWelcomeScene()
         {
             AsyncOperation op = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("UIScene");
-            while (!op.isDone)
+            while (op is { isDone: false })
             {
                 yield return null;
             }
 
-            UnityEngine.SceneManagement.SceneManager.LoadScene(_offlineScene, LoadSceneMode.Additive);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(offlineScene, LoadSceneMode.Additive);
         }
 
         [Server]
@@ -537,10 +552,13 @@ namespace AnyVr.LobbySystem
         #region SerializedFields
 
         [Tooltip("The Scene to load when the local client leaves their current lobby")] [SerializeField] [Scene]
-        private string _offlineScene;
+        private string offlineScene;
+
+        [SerializeField] private List<LobbySceneMetaData> lobbyScenes;
+
 
         [Header("Prefab Setup")] [SerializeField]
-        private LobbyHandler _lobbyHandlerPrefab;
+        private LobbyHandler lobbyHandlerPrefab;
 
         #endregion
 
