@@ -1,25 +1,29 @@
 using AnyVr.LobbySystem;
 using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.UI;
 
 namespace AnyVr.Samples.NewLobbySetup
 {
+    [RequireComponent(typeof(LobbyUI))]
     public class WelcomeSceneHandler : MonoBehaviour
     {
-        [SerializeField] private TMP_InputField serverIpInputField;
-        [SerializeField] private TMP_InputField userNameInputField;
-        [SerializeField] private Button connectButton;
         private ConnectionManager _connectionManager;
+
+        private LobbyUI _lobbyUI;
 
         private void Start()
         {
             Debug.Log("Welcome to AnyVr");
             _connectionManager = ConnectionManager.GetInstance();
             Assert.IsNotNull(_connectionManager);
-            connectButton.onClick.AddListener(OnConnectBtnClicked);
+
+            _connectionManager.ConnectionState += OnConnectionStateUpdate;
+
+            _lobbyUI = GetComponent<LobbyUI>();
+            _lobbyUI.OnConnectButtonPressed += OnConnectBtnClicked;
+            _lobbyUI.OnLobbyOpenButtonPressed += OpenLobby;
+            _lobbyUI.OnLobbyJoinButtonPressed += JoinLobby;
 
             // Autostart server for server builds
             // The ServerManager component on the NetworkManager prefab has the attribute '_startOnHeadless', which does the same thing.
@@ -33,17 +37,26 @@ namespace AnyVr.Samples.NewLobbySetup
             _connectionManager.StartServer();
         }
 
-        private async void OnConnectBtnClicked()
+        private void JoinLobby(Guid lobbyId)
         {
-            string tokenServerIp = serverIpInputField.text;
-            ServerAddressResponse result = await ConnectionManager.RequestServerIp(tokenServerIp);
-            if (!result.success)
-            {
-                return;
-            }
+        }
 
-            string userName = userNameInputField.text;
-            _connectionManager.ConnectToServer(result, userName);
+        private void OpenLobby(string lobbyName, string password, string scene)
+        {
+        }
+
+        private void OnConnectionStateUpdate(ConnectionState state)
+        {
+            _lobbyUI.SetLobbyPanelActive(state == ConnectionState.k_client);
+        }
+
+        private async void OnConnectBtnClicked(string tokenServerIp, string username)
+        {
+            ServerAddressResponse result = await ConnectionManager.RequestServerIp(tokenServerIp);
+            if (result.success)
+            {
+                _connectionManager.ConnectToServer(result, username);
+            }
         }
     }
 }
