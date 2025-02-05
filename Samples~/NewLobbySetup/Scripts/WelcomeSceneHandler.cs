@@ -19,6 +19,7 @@ namespace AnyVr.Samples.NewLobbySetup
             Assert.IsNotNull(_connectionManager);
 
             _connectionManager.ConnectionState += OnConnectionStateUpdate;
+            _connectionManager.GlobalSceneLoaded += OnGlobalSceneLoaded;
 
             _lobbyUI = GetComponent<LobbyUI>();
             _lobbyUI.OnConnectButtonPressed += OnConnectBtnClicked;
@@ -37,12 +38,19 @@ namespace AnyVr.Samples.NewLobbySetup
             _connectionManager.StartServer();
         }
 
-        private void JoinLobby(Guid lobbyId)
+        private void OnGlobalSceneLoaded(bool obj)
         {
+            _lobbyUI.SetAvailableLobbyScenes(LobbyManager.GetInstance()?.LobbyScenes);
         }
 
-        private void OpenLobby(string lobbyName, string password, string scene)
+        private static void JoinLobby(Guid lobbyId)
         {
+            LobbyManager.GetInstance()?.Client_JoinLobby(lobbyId, null);
+        }
+
+        private static void OpenLobby(string lobbyName, string password, string scenePath)
+        {
+            LobbyManager.GetInstance()?.Client_CreateLobby(lobbyName, password, scenePath, 16, null);
         }
 
         private void OnConnectionStateUpdate(ConnectionState state)

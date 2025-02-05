@@ -1,6 +1,7 @@
 using AnyVr.LobbySystem;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -45,6 +46,12 @@ namespace AnyVr.Samples.NewLobbySetup
 
                 OnLobbyOpenButtonPressed?.Invoke(lobbyName, lobbyPassword, lobbyScene);
             });
+            lobbySceneDropdown.ClearOptions();
+        }
+
+        public void SetAvailableLobbyScenes(IEnumerable<LobbySceneMetaData> lobbyScenes)
+        {
+            lobbySceneDropdown.options = lobbyScenes.Select(lmd => new TMP_Dropdown.OptionData(lmd.Name)).ToList();
         }
 
         internal event Action<string, string> OnConnectButtonPressed;
