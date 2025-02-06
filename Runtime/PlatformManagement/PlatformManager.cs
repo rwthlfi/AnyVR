@@ -45,7 +45,9 @@ namespace AnyVR.PlatformManagement
 
         protected virtual void Awake()
         {
-            if (s_instance != null && s_instance != this)
+            bool isServer = Application.platform == RuntimePlatform.LinuxServer ||
+                            Application.platform == RuntimePlatform.WindowsServer;
+            if ((s_instance != null && s_instance != this) || isServer)
             {
                 Destroy(gameObject);
                 return;
