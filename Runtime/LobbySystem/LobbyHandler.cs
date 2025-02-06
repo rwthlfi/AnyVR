@@ -1,14 +1,15 @@
+using AnyVr.TextChat;
+using AnyVr.Voicechat;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
-using AnyVr.TextChat;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using AnyVr.Voicechat;
-using System.Linq;
 
 namespace AnyVr.LobbySystem
 {
@@ -17,6 +18,8 @@ namespace AnyVr.LobbySystem
     {
         // Only assigned on client
         [CanBeNull] private static LobbyHandler s_instance;
+
+        [SerializeField] [Scene] private string uiScene;
         private readonly SyncVar<int> _adminId = new();
         private readonly SyncHashSet<int> _clientIds = new();
         private readonly SyncVar<bool> _initialized = new(false);
@@ -87,7 +90,11 @@ namespace AnyVr.LobbySystem
             _clientIds.OnChange += OnClientUpdate;
 
             AddClient();
-            UnityEngine.SceneManagement.SceneManager.LoadScene("UIScene", LoadSceneMode.Additive);
+
+            if (!string.IsNullOrEmpty(uiScene))
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(uiScene, LoadSceneMode.Additive);
+            }
 
             if (!LiveKitManager.s_instance.TryGetAvailableMicrophoneNames(out string[] micNames))
             {
