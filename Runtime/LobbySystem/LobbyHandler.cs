@@ -96,7 +96,8 @@ namespace AnyVr.LobbySystem
                 UnityEngine.SceneManagement.SceneManager.LoadScene(uiScene, LoadSceneMode.Additive);
             }
 
-            if (!LiveKitManager.s_instance.TryGetAvailableMicrophoneNames(out string[] micNames))
+            VoiceChatManager voiceChatManager = VoiceChatManager.GetInstance();
+            if (voiceChatManager == null || !voiceChatManager.TryGetAvailableMicrophoneNames(out string[] micNames))
             {
                 return;
             }
@@ -106,7 +107,7 @@ namespace AnyVr.LobbySystem
             Logger.LogVerbose(msg);
             const int defaultMic = 0;
             Logger.LogDebug($"Selected Microphone: {micNames[defaultMic]}");
-            LiveKitManager.s_instance.SetActiveMicrophone(micNames[defaultMic]);
+            voiceChatManager.SetActiveMicrophone(micNames[defaultMic]);
 
             PostInit?.Invoke();
         }
@@ -192,7 +193,7 @@ namespace AnyVr.LobbySystem
 
         public void SetMuteSelf(bool muteSelf)
         {
-            LiveKitManager.s_instance.SetMicrophoneEnabled(!muteSelf);
+            VoiceChatManager.GetInstance()?.SetMicrophoneEnabled(!muteSelf);
         }
 
         [CanBeNull]

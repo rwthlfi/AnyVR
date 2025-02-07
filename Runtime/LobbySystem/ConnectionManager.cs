@@ -149,7 +149,7 @@ namespace AnyVr.LobbySystem
 
             Logger.LogVerbose("Stopping server.");
             _networkManager.ClientManager.StopConnection();
-            LiveKitManager.s_instance.Disconnect();
+            VoiceChatManager.GetInstance()?.Disconnect();
         }
 
         [CanBeNull]
@@ -191,7 +191,7 @@ namespace AnyVr.LobbySystem
             _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
             _networkManager.ClientManager.StartConnection();
 
-            LiveKitManager.s_instance.SetTokenServerAddress(liveKitAddress.ip, liveKitAddress.port);
+            VoiceChatManager.GetInstance()?.SetTokenServerAddress(liveKitAddress.ip, liveKitAddress.port);
 
             return true;
         }

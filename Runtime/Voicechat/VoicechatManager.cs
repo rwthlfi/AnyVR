@@ -9,7 +9,7 @@ using UnityEngine.Networking;
 
 namespace AnyVr.Voicechat
 {
-    public class LiveKitManager : MonoBehaviour
+    public class VoiceChatManager : MonoBehaviour
     {
         private const string k_tokenURL = "http://{0}/requestToken?room_name={1}&user_name={2}";
 
@@ -106,7 +106,7 @@ namespace AnyVr.Voicechat
         public event Action<Participant> VideoReceived;
 
         [CanBeNull]
-        public static LiveKitManager GetInstance()
+        public static VoiceChatManager GetInstance()
         {
             return s_instance;
         }
@@ -282,7 +282,7 @@ namespace AnyVr.Voicechat
 
         #region Singleton
 
-        private static LiveKitManager s_instance;
+        private static VoiceChatManager s_instance;
 
         private void InitSingleton()
         {

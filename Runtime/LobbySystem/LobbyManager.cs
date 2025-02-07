@@ -389,7 +389,7 @@ namespace AnyVr.LobbySystem
         private void OnLobbyJoinedRpc(NetworkConnection _, LobbyMetaData lmd)
         {
             _currentLobby = lmd;
-            LiveKitManager.GetInstance()?.TryConnectToRoom(lmd.LobbyId.ToString(), ConnectionManager.UserName);
+            VoiceChatManager.GetInstance()?.TryConnectToRoom(lmd.LobbyId.ToString(), ConnectionManager.UserName);
         }
 
         /// <summary>
@@ -398,7 +398,7 @@ namespace AnyVr.LobbySystem
         [TargetRpc]
         private void OnLobbyLeftRpc(NetworkConnection _)
         {
-            LiveKitManager.s_instance.Disconnect(); // Disconnecting from voicechat
+            VoiceChatManager.GetInstance()?.Disconnect();
         }
 
         private IEnumerator LoadWelcomeScene()
