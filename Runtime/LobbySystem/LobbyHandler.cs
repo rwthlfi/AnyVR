@@ -154,7 +154,6 @@ namespace AnyVr.LobbySystem
         private void Server_AddClient(int clientId, string clientName)
         {
             _clientIds.Add(clientId);
-            Logger.LogDebug($"Client {clientId} joined lobby {_lobbyId.Value}");
             ClientJoin?.Invoke(clientId, clientName);
         }
 
