@@ -1,14 +1,12 @@
 ﻿using System;
+using UnityEngine.Serialization;
 
 namespace AnyVr.Voicechat
 {
     [Serializable]
     public class TokenResponse
     {
-        // ReSharper disable once InconsistentNaming
+        public bool isSuccess;
         public string token;
-
-        // ReSharper disable once InconsistentNaming
-        public string livekit_server_address;
     }
 }

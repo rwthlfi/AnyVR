@@ -1,79 +1,23 @@
-#if UNITY_WEBGL
-using UnityEngine.Networking;
-#else
-using System.Net.Http;
-using System.Threading.Tasks;
-#endif
+using JetBrains.Annotations;
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace AnyVr.Voicechat
 {
     public class LiveKitManager : MonoBehaviour
     {
-        #region Singleton
+        private const string k_tokenURL = "http://{0}/requestToken?room_name={1}&user_name={2}";
 
-        public static LiveKitManager s_instance; // TODO: set singleton accessibility to internal
-
-        private void InitSingleton()
-        {
-            if (s_instance != null)
-            {
-                Destroy(gameObject);
-                Destroy(this);
-                return;
-            }
-
-            s_instance = this;
-        }
-
-        #endregion
+        private VoiceChatClient _chatClient;
+        private string _tokenServerAddr;
 
         private Dictionary<string, Participant> RemoteParticipants => _chatClient.RemoteParticipants;
         private Participant LocalParticipant => _chatClient.LocalParticipant;
-
-        private VoiceChatClient _chatClient;
-        [Header("LiveKit")] [SerializeField] private string _tokenServerAddr;
-
-        /// <summary>
-        ///     Will be invoked when the user successfully connects to a room
-        /// </summary>
-        public event Action ConnectedToRoom;
-
-        /// <summary>
-        ///     Will be invoked when a connection attempt to a room was unsuccessful
-        /// </summary>
-        public event Action RoomConnectionFailed;
-
-        /// <summary>
-        ///     Will be invoked when remote participant connected to the room.
-        ///     The participant is the joined remote participant
-        /// </summary>
-        public event Action<Participant> ParticipantConnected;
-
-        /// <summary>
-        ///     Will be invoked when remote participant disconnected from the room.
-        ///     The participant is the disconnected remote participant
-        /// </summary>
-        public event Action<Participant> ParticipantDisconnected;
-
-        /// <summary>
-        ///     Will be invoked when a participant started/stopped sending an audio stream
-        ///     The participant is the participant who stopped/started sending an audio stream
-        /// </summary>
-        public event Action<Participant> ParticipantIsSpeakingUpdate;
-
-
-        /// <summary>
-        ///     Will be invoked when remote participant started sending a video stream
-        ///     The participant is the participant who stopped/started sending an audio stream
-        /// </summary>
-        public event Action<Participant> VideoReceived;
-
-        private const string k_tokenURL = "http://{0}/requestToken?room_name={1}&user_name={2}";
 
         private void Awake()
         {
@@ -121,6 +65,52 @@ namespace AnyVr.Voicechat
             };
         }
 
+        private void OnApplicationQuit()
+        {
+            Disconnect();
+        }
+
+        /// <summary>
+        ///     Will be invoked when the user successfully connects to a room
+        /// </summary>
+        public event Action ConnectedToRoom;
+
+        /// <summary>
+        ///     Will be invoked when a connection attempt to a room was unsuccessful
+        /// </summary>
+        public event Action RoomConnectionFailed;
+
+        /// <summary>
+        ///     Will be invoked when remote participant connected to the room.
+        ///     The participant is the joined remote participant
+        /// </summary>
+        public event Action<Participant> ParticipantConnected;
+
+        /// <summary>
+        ///     Will be invoked when remote participant disconnected from the room.
+        ///     The participant is the disconnected remote participant
+        /// </summary>
+        public event Action<Participant> ParticipantDisconnected;
+
+        /// <summary>
+        ///     Will be invoked when a participant started/stopped sending an audio stream
+        ///     The participant is the participant who stopped/started sending an audio stream
+        /// </summary>
+        public event Action<Participant> ParticipantIsSpeakingUpdate;
+
+
+        /// <summary>
+        ///     Will be invoked when remote participant started sending a video stream
+        ///     The participant is the participant who stopped/started sending an audio stream
+        /// </summary>
+        public event Action<Participant> VideoReceived;
+
+        [CanBeNull]
+        public static LiveKitManager GetInstance()
+        {
+            return s_instance;
+        }
+
         /// <summary>
         ///     Start a connection to a LiveKit room.
         ///     This will request a LiveKit token from the token server and connect to the corresponding room if possible.
@@ -131,7 +121,7 @@ namespace AnyVr.Voicechat
         /// <param name="roomName">The unique identifier of the room</param>
         /// <param name="userName">The name of the local user</param>
         /// <param name="activateMic">If the microphone track should automatically be published</param>
-        public void TryConnectToRoom(string roomName, string userName, bool activateMic = false)
+        public async void TryConnectToRoom(string roomName, string userName, bool activateMic = false)
         {
             if (_chatClient == null)
             {
@@ -140,20 +130,18 @@ namespace AnyVr.Voicechat
             }
             // TODO: ensure that the passed names will result in a valid url for token server
 
-            RequestTokenAndServerAddressAsync(roomName, userName, (token, serverAddress) =>
+            TokenResponse response = await RequestLiveKitToken(roomName, userName);
+            _chatClient.Connect(_tokenServerAddr, response.token);
+            _chatClient.ConnectedToRoom += () =>
             {
-                _chatClient.Connect(serverAddress, token);
-                _chatClient.ConnectedToRoom += () =>
+                if (activateMic)
                 {
-                    if (activateMic)
-                    {
-                        _chatClient.SetMicrophoneEnabled(true);
-                    }
-                };
+                    _chatClient.SetMicrophoneEnabled(true);
+                }
+            };
 
-                // TODO: Handle Exception when token not received
-                // OnRoomConnectionFailed?.Invoke();
-            });
+            // TODO: Handle Exception when token not received
+            // OnRoomConnectionFailed?.Invoke();
         }
 
         /// <summary>
@@ -226,52 +214,49 @@ namespace AnyVr.Voicechat
             return true;
         }
 
-        private void RequestTokenAndServerAddressAsync(string roomName, string participantName,
-            Action<string, string> callback)
+        private async Task<TokenResponse> RequestLiveKitToken(string roomName, string participantName)
         {
-            StartCoroutine(GetToken(roomName, participantName, response =>
-            {
-                // const string decryptionKey = "cKvNaFjpeDXLWxKWQvgmLseWaTrWLeqS";
-                TokenResponse jsonResponse = JsonUtility.FromJson<TokenResponse>(response);
-                callback?.Invoke(jsonResponse.token, jsonResponse.livekit_server_address);
-            }));
+            TokenResponse response = Application.platform == RuntimePlatform.WebGLPlayer
+                ? await WEBGL_GetToken(roomName, participantName)
+                : await GetToken(roomName, participantName);
+            Debug.Log($"Token response: {response}");
+            return response;
         }
 
-#if UNITY_WEBGL
-        private IEnumerator GetToken(string roomName, string participantName, Action<string> callback)
+        private async Task<TokenResponse> WEBGL_GetToken(string roomName, string participantName)
         {
             string url = string.Format(k_tokenURL, _tokenServerAddr, roomName, participantName);
             using UnityWebRequest webRequest = UnityWebRequest.Get(url);
-            yield return webRequest.SendWebRequest();
+            await webRequest.SendWebRequest();
 
-            if (webRequest.result is UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.ProtocolError)
+            TokenResponse res = new();
+            if (webRequest.result == UnityWebRequest.Result.Success)
             {
-                Debug.Log("Error: " + webRequest.error);
+                res = JsonUtility.FromJson<TokenResponse>(webRequest.downloadHandler.text);
             }
             else
             {
-                callback.Invoke(webRequest.downloadHandler.text);
+                Debug.Log("Error: " + webRequest.error);
             }
+
+            res.isSuccess = webRequest.result == UnityWebRequest.Result.Success;
+            return res;
         }
-#else
-        // ReSharper disable Unity.PerformanceAnalysis
-        private IEnumerator GetToken(string roomName, string participantName, Action<string> callback)
+
+        private async Task<TokenResponse> GetToken(string roomName, string participantName)
         {
             string url = string.Format(k_tokenURL, _tokenServerAddr, roomName, participantName);
             Debug.Log($"Getting token from: {url}");
             HttpClient client = new();
-            Task<HttpResponseMessage> task = client.GetAsync(url);
-            while (!task.IsCompleted)
+            HttpResponseMessage response = await client.GetAsync(url);
+            TokenResponse res = new();
+            if (response.IsSuccessStatusCode)
             {
-                yield return null;
+                res = JsonUtility.FromJson<TokenResponse>(response.Content.ReadAsStringAsync().Result);
             }
 
-            callback.Invoke(task.Result.Content.ReadAsStringAsync().Result);
-        }
-#endif
-        private void OnApplicationQuit()
-        {
-            Disconnect();
+            res.isSuccess = response.IsSuccessStatusCode;
+            return res;
         }
 
         /// <summary>
@@ -294,5 +279,23 @@ namespace AnyVr.Voicechat
             micNames = null;
             return false;
         }
+
+        #region Singleton
+
+        private static LiveKitManager s_instance;
+
+        private void InitSingleton()
+        {
+            if (s_instance != null)
+            {
+                Destroy(gameObject);
+                Destroy(this);
+                return;
+            }
+
+            s_instance = this;
+        }
+
+        #endregion
     }
 }

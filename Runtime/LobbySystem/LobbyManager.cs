@@ -389,14 +389,7 @@ namespace AnyVr.LobbySystem
         private void OnLobbyJoinedRpc(NetworkConnection _, LobbyMetaData lmd)
         {
             _currentLobby = lmd;
-            if (LiveKitManager.s_instance != null)
-            {
-                LiveKitManager.s_instance.TryConnectToRoom(lmd.LobbyId.ToString(), ConnectionManager.UserName);
-            }
-            else
-            {
-                Logger.LogWarning("LivKitManager is not initialized");
-            }
+            LiveKitManager.GetInstance()?.TryConnectToRoom(lmd.LobbyId.ToString(), ConnectionManager.UserName);
         }
 
         /// <summary>
