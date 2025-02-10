@@ -16,67 +16,73 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using FishNet.Object;
-using System;
 using UnityEngine;
+using UnityEngine.Animations;
 
 namespace AnyVr.LobbySystem
 {
     public class OnlinePlayerHandler : NetworkBehaviour
     {
-        [SerializeField] private Transform _head;
-        [SerializeField] private Transform _leftController;
-        [SerializeField] private Transform _rightController;
+        [SerializeField] private PositionConstraint headPositionConstraint;
+        [SerializeField] private RotationConstraint headRotationConstraint;
+
+        [SerializeField] private PositionConstraint leftHandPositionConstraint;
+        [SerializeField] private RotationConstraint leftHandRotationConstraint;
+
+        [SerializeField] private PositionConstraint rightHandPositionConstraint;
+        [SerializeField] private RotationConstraint rightHandRotationConstraint;
+
+        private IConstraint[] _constraints;
 
         private PlayerInteractionHandler _handler;
 
-        private bool _isOwnerInit;
-
-        private Renderer[] _renderers;
-
-        private void Update()
-        {
-            if (!_isOwnerInit)
-            {
-                return;
-            }
-
-            transform.position = _handler._rig.position;
-
-            _head.position = _handler._cam.position;
-            _head.rotation = _handler._cam.rotation;
-            _leftController.position = _handler._leftController.position;
-            _leftController.rotation = _handler._leftController.rotation;
-            _rightController.position = _handler._rightController.position;
-            _rightController.rotation = _handler._rightController.rotation;
-        }
-
-        public event Action<int, bool> SetClientId;
 
         public override void OnStartClient()
         {
             base.OnStartClient();
 
-            SetClientId?.Invoke(OwnerId, ClientManager.Connection.ClientId == OwnerId);
-
-            if (!IsOwner)
-            {
-                return;
-            }
-
-            _handler = PlayerInteractionHandler.s_interactionHandler;
+            _handler = PlayerInteractionHandler.GetInstance();
             if (_handler == null)
             {
                 Logger.LogError("Could not find an instance of PlayerInteractionHandler");
+                return;
             }
 
-            _renderers = gameObject.transform.GetComponentsInChildren<Renderer>();
-            int ownerLayer = LayerMask.NameToLayer("OwnerRenderLayer");
-            foreach (Renderer r in _renderers)
+            headPositionConstraint.AddSource(new ConstraintSource { sourceTransform = _handler.Head, weight = 1 });
+            headRotationConstraint.AddSource(new ConstraintSource { sourceTransform = _handler.Head, weight = 1 });
+            leftHandPositionConstraint.AddSource(new ConstraintSource
             {
-                r.gameObject.layer = ownerLayer;
+                sourceTransform = _handler.LeftHand, weight = 1
+            });
+            leftHandRotationConstraint.AddSource(new ConstraintSource
+            {
+                sourceTransform = _handler.LeftHand, weight = 1
+            });
+            rightHandPositionConstraint.AddSource(new ConstraintSource
+            {
+                sourceTransform = _handler.RightHand, weight = 1
+            });
+            rightHandRotationConstraint.AddSource(new ConstraintSource
+            {
+                sourceTransform = _handler.RightHand, weight = 1
+            });
+
+            _constraints = new IConstraint[]
+            {
+                headPositionConstraint, headRotationConstraint, leftHandPositionConstraint,
+                leftHandRotationConstraint, rightHandPositionConstraint, rightHandRotationConstraint
+            };
+
+            foreach (IConstraint c in _constraints)
+            {
+                c.constraintActive = true;
             }
 
-            _isOwnerInit = true;
+            // Disable renderers for the owning player.
+            foreach (Renderer r in gameObject.GetComponentsInChildren<Renderer>())
+            {
+                r.enabled = false;
+            }
         }
     }
 }

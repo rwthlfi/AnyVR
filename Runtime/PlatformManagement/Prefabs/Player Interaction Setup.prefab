@@ -296,10 +296,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56ee6fc87babba04186f39c367934008, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _leftController: {fileID: 3734158499584020801}
-  _rightController: {fileID: 2112403094284849162}
-  _rig: {fileID: 5773151223020242178}
-  _cam: {fileID: 5172732584847187038}
+  head: {fileID: 5172732584847187038}
+  leftHand: {fileID: 3734158499584020801}
+  rightHand: {fileID: 2112403094284849162}
 --- !u!114 &6208928440011608016
 MonoBehaviour:
   m_ObjectHideFlags: 0

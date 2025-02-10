@@ -15,34 +15,46 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace AnyVr.LobbySystem
 {
     public class PlayerInteractionHandler : MonoBehaviour
     {
-        [SerializeField] internal Transform _leftController, _rightController;
-        [SerializeField] internal Transform _rig;
-        [SerializeField] internal Transform _cam;
+        [SerializeField] private Transform head;
+
+        [SerializeField] private Transform leftHand;
+
+        [SerializeField] private Transform rightHand;
+        public Transform Head => head;
+        public Transform LeftHand => leftHand;
+        public Transform RightHand => rightHand;
 
         private void OnDestroy()
         {
-            s_interactionHandler = null;
+            s_instance = null;
         }
 
         #region Singleton
 
-        internal static PlayerInteractionHandler s_interactionHandler;
+        private static PlayerInteractionHandler s_instance;
+
+        [CanBeNull]
+        public static PlayerInteractionHandler GetInstance()
+        {
+            return s_instance;
+        }
 
         private void Awake()
         {
-            if (s_interactionHandler != null)
+            if (s_instance != null)
             {
-                Destroy(s_interactionHandler.gameObject);
+                Destroy(s_instance.gameObject);
                 return;
             }
 
-            s_interactionHandler = this;
+            s_instance = this;
         }
 
         #endregion
