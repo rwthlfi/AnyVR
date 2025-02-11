@@ -62,8 +62,13 @@ namespace AnyVr.Samples.NewLobbySetup
         }
 
 
-        private void OnGlobalSceneLoaded(bool obj)
+        private void OnGlobalSceneLoaded(bool isServer)
         {
+            if (isServer)
+            {
+                return;
+            }
+
             // The global scene automatically loads locally when the client connects to a server.
             // The global scene contains the LobbyManager which is initialized at this point on.
             LobbyManager lobbyManager = LobbyManager.GetInstance();
