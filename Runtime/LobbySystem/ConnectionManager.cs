@@ -49,7 +49,7 @@ namespace AnyVr.LobbySystem
             }
         }
 
-        public static string UserName { get; }
+        public static string UserName { get; private set; }
 
         private void Awake()
         {
@@ -187,6 +187,7 @@ namespace AnyVr.LobbySystem
             }
 
             Logger.LogVerbose("Connecting to server ...");
+            UserName = userName;
             _networkManager.TransportManager.Transport.SetClientAddress(fishnetAddress.ip);
             _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
             _networkManager.ClientManager.StartConnection();
