@@ -12,6 +12,8 @@ namespace AnyVr.Samples.NewLobbySetup
 
         private LobbyUI _lobbyUI;
 
+        private Action<Guid> _refreshLobbyUI;
+
         private void Start()
         {
             Debug.Log("Welcome to AnyVr");
@@ -38,9 +40,49 @@ namespace AnyVr.Samples.NewLobbySetup
             _connectionManager.StartServer();
         }
 
+        private void Update()
+        {
+            // Refresh lobby list
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                _refreshLobbyUI?.Invoke(Guid.Empty);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            if (lobbyManager == null)
+            {
+                return;
+            }
+
+            lobbyManager.LobbyOpened -= _refreshLobbyUI;
+            lobbyManager.LobbyClosed -= _refreshLobbyUI;
+        }
+
+
         private void OnGlobalSceneLoaded(bool obj)
         {
-            _lobbyUI.SetAvailableLobbyScenes(LobbyManager.GetInstance()?.LobbyScenes);
+            // The global scene automatically loads locally when the client connects to a server.
+            // The global scene contains the LobbyManager which is initialized at this point on.
+            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            if (lobbyManager == null)
+            {
+                return;
+            }
+
+            _lobbyUI.SetAvailableLobbyScenes(lobbyManager.LobbyScenes);
+            _lobbyUI.SetLobbies(lobbyManager.GetLobbies());
+            _refreshLobbyUI = Handle;
+            lobbyManager.LobbyOpened += Handle;
+            lobbyManager.LobbyClosed += Handle;
+            return;
+
+            void Handle(Guid id)
+            {
+                _lobbyUI.SetLobbies(lobbyManager.GetLobbies());
+            }
         }
 
         private static void JoinLobby(Guid lobbyId)
