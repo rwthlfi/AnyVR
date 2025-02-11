@@ -25,7 +25,6 @@ namespace AnyVr.LobbySystem
         private void SpawnPlayer(NetworkConnection conn = null)
         {
             NetworkObject nob = Instantiate(_playerPrefab);
-            nob.gameObject.name = $"Player ({PlayerNameTracker.GetPlayerName(conn)})";
             nob.transform.position = transform.position;
             Spawn(nob, conn, gameObject.scene);
         }

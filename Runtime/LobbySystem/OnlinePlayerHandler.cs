@@ -37,6 +37,12 @@ namespace AnyVr.LobbySystem
         private PlayerInteractionHandler _handler;
 
 
+        public override void OnStartNetwork()
+        {
+            base.OnStartNetwork();
+            gameObject.name = $"Player ({PlayerNameTracker.GetPlayerName(OwnerId)})";
+        }
+
         public override void OnStartClient()
         {
             base.OnStartClient();
