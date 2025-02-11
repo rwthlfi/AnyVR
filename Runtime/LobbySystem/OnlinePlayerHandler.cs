@@ -41,6 +41,11 @@ namespace AnyVr.LobbySystem
         {
             base.OnStartClient();
 
+            if (!IsOwner)
+            {
+                return;
+            }
+
             _handler = PlayerInteractionHandler.GetInstance();
             if (_handler == null)
             {
