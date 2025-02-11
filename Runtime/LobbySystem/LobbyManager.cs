@@ -47,13 +47,13 @@ namespace AnyVr.LobbySystem
         private void Start()
         {
             LobbyClosed += lobbyId => { Logger.LogVerbose($"Lobby {lobbyId} closed"); };
-            LobbyOpened += lmd => { Logger.LogVerbose($"Lobby {lmd.LobbyId} opened"); };
+            LobbyOpened += lobbyId => { Logger.LogVerbose($"Lobby {lobbyId} opened"); };
         }
 
         /// <summary>
         ///     Invoked when a remote client opened a new lobby
         /// </summary>
-        public event Action<LobbyMetaData> LobbyOpened;
+        public event Action<Guid> LobbyOpened;
 
         /// <summary>
         ///     Invoked when a remote client closed a lobby
@@ -321,13 +321,13 @@ namespace AnyVr.LobbySystem
 
             Logger.LogVerbose($"Lobby created. {lobbyMetaData}");
             AddClientToLobby(lobbyMetaData.LobbyId, conn); // Auto join lobby
-            InvokeLobbyOpened(lobbyMetaData);
+            InvokeLobbyOpened(lobbyMetaData.LobbyId);
         }
 
         [ObserversRpc(ExcludeServer = false)]
-        private void InvokeLobbyOpened(LobbyMetaData lobbyMetaData)
+        private void InvokeLobbyOpened(Guid id)
         {
-            LobbyOpened?.Invoke(lobbyMetaData);
+            LobbyOpened?.Invoke(id);
         }
 
         public void Client_JoinLobby(Guid lobbyId, string password)
