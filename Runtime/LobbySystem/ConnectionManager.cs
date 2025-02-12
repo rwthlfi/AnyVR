@@ -122,7 +122,7 @@ namespace AnyVr.LobbySystem
         }
 
         public event Action<ConnectionState> ConnectionState;
-        
+
         public event Action<bool> GlobalSceneLoaded;
         private event Action<bool> LobbySceneLoaded;
 

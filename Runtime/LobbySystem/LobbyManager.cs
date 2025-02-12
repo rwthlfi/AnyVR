@@ -9,6 +9,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
@@ -77,6 +79,7 @@ namespace AnyVr.LobbySystem
             base.OnStartServer();
             _lobbyHandlers = new Dictionary<Guid, LobbyHandler>();
             _clientLobbyDict = new Dictionary<int, Guid>();
+            _lobbyPasswordHashes = new Dictionary<Guid, byte[]>();
             SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
         }
 
@@ -287,8 +290,14 @@ namespace AnyVr.LobbySystem
             }
 
             maxClients = (ushort)Mathf.Max(1, maxClients);
-            LobbyMetaData lobbyMetaData = new(CreateLobbyId(), lobbyName, conn.ClientId, scenePath, maxClients);
+            LobbyMetaData lobbyMetaData = new(CreateLobbyId(), lobbyName, conn.ClientId, scenePath, maxClients,
+                !string.IsNullOrWhiteSpace(password));
             _lobbies.Add(lobbyMetaData.LobbyId, lobbyMetaData);
+
+            if (lobbyMetaData.IsPasswordProtected)
+            {
+                _lobbyPasswordHashes.Add(lobbyMetaData.LobbyId, ComputeSha256(password));
+            }
 
             // Starts the lobby scene without clients. When loaded, the LoadEnd callback will be called and we spawn a LobbyHandler. After that clients are able to join.
             Logger.LogVerbose("Loading lobby scene. Waiting for lobby handler");
@@ -320,7 +329,7 @@ namespace AnyVr.LobbySystem
             }
 
             Logger.LogVerbose($"Lobby created. {lobbyMetaData}");
-            AddClientToLobby(lobbyMetaData.LobbyId, conn); // Auto join lobby
+            AddClientToLobby(lobbyMetaData.LobbyId, password, conn); // Auto join lobby
             InvokeLobbyOpened(lobbyMetaData.LobbyId);
         }
 
@@ -330,7 +339,7 @@ namespace AnyVr.LobbySystem
             LobbyOpened?.Invoke(id);
         }
 
-        public void Client_JoinLobby(Guid lobbyId, string password)
+        public void Client_JoinLobby(Guid lobbyId, string password = null)
         {
             Logger.LogVerbose("Requesting to join lobby");
             JoinLobby(lobbyId, password, ClientManager.Connection);
@@ -339,11 +348,17 @@ namespace AnyVr.LobbySystem
         [ServerRpc(RequireOwnership = false)]
         private void JoinLobby(Guid lobbyId, string password, NetworkConnection conn)
         {
-            AddClientToLobby(lobbyId, conn);
+            AddClientToLobby(lobbyId, password, conn);
+        }
+
+        private static byte[] ComputeSha256(string s)
+        {
+            using SHA256 sha256 = SHA256.Create();
+            return sha256.ComputeHash(Encoding.UTF8.GetBytes(s));
         }
 
         [Server]
-        private void AddClientToLobby(Guid lobbyId, NetworkConnection conn)
+        private void AddClientToLobby(Guid lobbyId, string password, NetworkConnection conn)
         {
             Assert.IsNotNull(conn);
 
@@ -374,6 +389,30 @@ namespace AnyVr.LobbySystem
                 Logger.LogWarning(
                     $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'.");
                 return;
+            }
+
+            if (lobby.IsPasswordProtected)
+            {
+                if (!_lobbyPasswordHashes.TryGetValue(lobbyId, out byte[] passwordHash))
+                {
+                    Logger.LogError(
+                        $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Lobby '{lobbyId}' is password protected but the password hash is not available.");
+                    return;
+                }
+
+                if (passwordHash == null)
+                {
+                    Logger.LogError(
+                        $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Password hash is null");
+                    return;
+                }
+
+                if (!ComputeSha256(password).SequenceEqual(passwordHash))
+                {
+                    Logger.LogVerbose(
+                        $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Password hashes do not match.");
+                    return;
+                }
             }
 
             Logger.LogVerbose(
@@ -434,6 +473,7 @@ namespace AnyVr.LobbySystem
 
             _lobbyHandlers.Remove(lobbyId);
             _lobbies.Remove(lobbyId);
+            _lobbyPasswordHashes.Remove(lobbyId);
             LobbyClosed?.Invoke(lobbyId);
             Logger.LogVerbose($"Lobby with id '{lobbyId}' is closed");
         }
@@ -570,6 +610,8 @@ namespace AnyVr.LobbySystem
         ///     Only initialized on the server.
         /// </summary>
         private Dictionary<int, Guid> _clientLobbyDict;
+
+        private Dictionary<Guid, byte[]> _lobbyPasswordHashes;
 
         #endregion
     }

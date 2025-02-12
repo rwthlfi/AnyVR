@@ -10,6 +10,7 @@ namespace AnyVr.LobbySystem
     {
         private readonly SceneLoadData _sceneLoadData;
         public readonly int CreatorId;
+        public readonly bool IsPasswordProtected;
         public readonly ushort LobbyCapacity;
 
         /// <summary>
@@ -23,13 +24,15 @@ namespace AnyVr.LobbySystem
 
         public LobbyMetaData() { }
 
-        public LobbyMetaData(Guid lobbyId, string name, int creatorId, string scene, ushort lobbyCapacity)
+        public LobbyMetaData(Guid lobbyId, string name, int creatorId, string scene, ushort lobbyCapacity,
+            bool isPasswordProtected)
         {
             Name = name;
             Scene = scene;
             CreatorId = creatorId;
             LobbyCapacity = lobbyCapacity;
             LobbyId = lobbyId;
+            IsPasswordProtected = isPasswordProtected;
             _sceneHandle = null;
             _sceneLoadData = new SceneLoadData(scene)
             {
@@ -97,7 +100,7 @@ namespace AnyVr.LobbySystem
         public override string ToString()
         {
             return
-                $"LobbyMetaData (Id={LobbyId}, Name={Name}, Scene={Scene}, Creator={CreatorId}, MaxClients={LobbyCapacity})";
+                $"LobbyMetaData (Id={LobbyId}, Name={Name}, Scene={Scene}, Creator={CreatorId}, MaxClients={LobbyCapacity}, IsPasswordProtected={IsPasswordProtected})";
         }
 
         public override bool Equals(object obj)
