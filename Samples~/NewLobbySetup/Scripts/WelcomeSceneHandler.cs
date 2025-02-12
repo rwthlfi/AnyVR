@@ -90,13 +90,15 @@ namespace AnyVr.Samples.NewLobbySetup
             }
         }
 
-        private static void JoinLobby(Guid lobbyId)
+        private static void JoinLobby(Guid lobbyId, string password)
         {
-            LobbyManager.GetInstance()?.Client_JoinLobby(lobbyId, null);
+            Debug.Log($"joining with password: {password}");
+            LobbyManager.GetInstance()?.Client_JoinLobby(lobbyId, password);
         }
 
         private static void OpenLobby(string lobbyName, string password, string scenePath)
         {
+            Debug.Log($"open lobby with password: {password}");
             LobbyManager.GetInstance()?.Client_CreateLobby(lobbyName, password, scenePath, 16, null);
         }
 

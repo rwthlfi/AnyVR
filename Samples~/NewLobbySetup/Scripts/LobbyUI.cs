@@ -28,12 +28,24 @@ namespace AnyVr.Samples.NewLobbySetup
         [SerializeField] private GameObject lobbyItemPrefab;
         [SerializeField] private RectTransform lobbyListContainer;
 
+        [Header("Password Panel")] [SerializeField]
+        private RectTransform passwordPanel;
+
+        [SerializeField] private TMP_InputField passwordInputField;
+        [SerializeField] private Button joinButton, cancelButton;
+
+
         private Dictionary<Guid, LobbyMetaData> _lobbies = new();
 
         private void Start()
         {
             connectionPanel.gameObject.SetActive(true);
             lobbyPanel.gameObject.SetActive(false);
+            passwordPanel.gameObject.SetActive(false);
+            cancelButton.onClick.AddListener(() =>
+            {
+                passwordPanel.gameObject.SetActive(false);
+            });
             connectButton.onClick.AddListener(() =>
             {
                 OnConnectButtonPressed?.Invoke(serverIpInputField.text, userNameInputField.text);
@@ -56,7 +68,7 @@ namespace AnyVr.Samples.NewLobbySetup
 
         internal event Action<string, string> OnConnectButtonPressed;
         internal event Action<string, string, string> OnLobbyOpenButtonPressed;
-        internal event Action<Guid> OnLobbyJoinButtonPressed;
+        internal event Action<Guid, string> OnLobbyJoinButtonPressed;
 
         private void PopulateLobbyList()
         {
@@ -70,7 +82,29 @@ namespace AnyVr.Samples.NewLobbySetup
                 GameObject entry = Instantiate(lobbyItemPrefab, lobbyListContainer);
                 entry.transform.Find("LobbyName").GetComponent<TextMeshProUGUI>().text = kvp.Value.Name;
                 entry.transform.Find("JoinButton").GetComponent<Button>().onClick
-                    .AddListener(() => OnLobbyJoinButtonPressed?.Invoke(kvp.Key));
+                    .AddListener(() => JoinLobby(kvp.Key));
+            }
+        }
+
+        private void JoinLobby(Guid id)
+        {
+            if (!_lobbies.TryGetValue(id, out LobbyMetaData lobby))
+            {
+                return;
+            }
+
+            if (!lobby.IsPasswordProtected)
+            {
+                OnLobbyJoinButtonPressed?.Invoke(id, null);
+            }
+            else
+            {
+                joinButton.onClick.RemoveAllListeners();
+                joinButton.onClick.AddListener(() =>
+                {
+                    OnLobbyJoinButtonPressed?.Invoke(id, passwordInputField.text);
+                });
+                passwordPanel.gameObject.SetActive(true);
             }
         }
 
