@@ -306,19 +306,14 @@ namespace AnyVr.LobbySystem
             // Wait for Lobby Handler
             float timeout = 20f;
             bool receivedLobbyHandler = false;
-            LobbyHandlerRegistered += lobbyId =>
-            {
-                if (lobbyId == lobbyMetaData.LobbyId)
-                {
-                    receivedLobbyHandler = true;
-                }
-            };
+            LobbyHandlerRegistered += Handler;
 
             while (!receivedLobbyHandler && timeout > 0)
             {
                 yield return null;
                 timeout -= Time.deltaTime;
             }
+            LobbyHandlerRegistered -= Handler;
 
             if (!receivedLobbyHandler)
             {
@@ -331,6 +326,15 @@ namespace AnyVr.LobbySystem
             Logger.LogVerbose($"Lobby created. {lobbyMetaData}");
             AddClientToLobby(lobbyMetaData.LobbyId, password, conn); // Auto join lobby
             InvokeLobbyOpened(lobbyMetaData.LobbyId);
+            yield break;
+
+            void Handler(Guid lobbyId)
+            {
+                if (lobbyId == lobbyMetaData.LobbyId)
+                {
+                    receivedLobbyHandler = true;
+                }
+            }
         }
 
         [ObserversRpc(ExcludeServer = false)]
