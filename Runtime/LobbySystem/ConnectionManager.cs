@@ -233,6 +233,11 @@ namespace AnyVr.LobbySystem
         private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs state)
         {
             ConnectionState?.Invoke(State);
+
+            if (state.ConnectionState == LocalConnectionState.Stopped)
+            {
+                SceneManager.UnloadSceneAsync("GlobalScene");
+            }
         }
 
         private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs state)
