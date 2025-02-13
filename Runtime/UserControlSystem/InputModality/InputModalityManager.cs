@@ -16,6 +16,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using AnyVR.PlatformManagement;
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
@@ -51,7 +52,7 @@ namespace AnyVR.UserControlSystem
             ToggleXRControls(isXRActive);
             InitializeTurnProvider(isXRActive);
             InitializeGazeInteractor(isXRActive);
-            ToggleCursorVisibility(isXRActive);
+            SetCursorVisibility(isXRActive);
         }
 
         private void ToggleXRControls(bool isXRActive)
@@ -72,9 +73,14 @@ namespace AnyVR.UserControlSystem
             _gazeInteractor.rayOriginTransform = isXRActive ? _xrGazeInteractionOrigin : _pcGazeInteractionOrigin;
         }
 
-        private void ToggleCursorVisibility(bool isXRActive)
+        private void SetCursorVisibility(bool visible)
         {
-            _pcInterface.ToggleCursorLock(!isXRActive);
+            PCInterface.SetCursorLock(!visible);
+        }
+
+        private void OnDestroy()
+        {
+            PCInterface.SetCursorLock(false);
         }
     }
 }

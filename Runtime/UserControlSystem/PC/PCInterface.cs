@@ -21,10 +21,10 @@ namespace AnyVR.UserControlSystem
 {
     public class PCInterface : MonoBehaviour
     {
-        public void ToggleCursorLock(bool shouldBeLocked)
+        public static void SetCursorLock(bool locked)
         {
-            Cursor.visible = !shouldBeLocked;
-            Cursor.lockState = shouldBeLocked ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !locked;
+            Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
         }
     }
 }
