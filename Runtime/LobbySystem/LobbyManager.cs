@@ -112,19 +112,19 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
-            if (IsUnloadingLobby(args.QueueData, false, out string _))
+            if (IsUnloadingLobby(args.QueueData, false, out Guid _))
             {
                 StartCoroutine(LoadWelcomeScene());
             }
         }
 
-        private static bool IsUnloadingLobby(UnloadQueueData queueData, bool asServer, out string lobbyId)
+        private static bool IsUnloadingLobby(UnloadQueueData queueData, bool asServer, out Guid lobbyId)
         {
             object[] loadParams = asServer
                 ? queueData.SceneUnloadData.Params.ServerParams
                 : LobbyMetaData.DeserializeClientParams(queueData.SceneUnloadData.Params.ClientParams);
 
-            lobbyId = string.Empty;
+            lobbyId = Guid.Empty;
 
             if (loadParams.Length < 2 || loadParams[0] is not SceneLoadParam)
             {
@@ -137,12 +137,12 @@ namespace AnyVr.LobbySystem
                 return false;
             }
 
-            if (loadParams[1] is not string)
+            if (loadParams[1] is not Guid)
             {
                 return false;
             }
 
-            lobbyId = loadParams[1] as string;
+            lobbyId = (Guid)loadParams[1];
             return true;
         }
 
@@ -313,6 +313,7 @@ namespace AnyVr.LobbySystem
                 yield return null;
                 timeout -= Time.deltaTime;
             }
+
             LobbyHandlerRegistered -= Handler;
 
             if (!receivedLobbyHandler)
@@ -519,7 +520,6 @@ namespace AnyVr.LobbySystem
                     Params = { ServerParams = new object[] { SceneLoadParam.k_lobby, lmd.LobbyId } }
                 };
                 sud.Params.ClientParams = LobbyMetaData.SerializeObjects(sud.Params.ServerParams);
-                Logger.LogWarning("Unloading Connection scenes");
                 SceneManager.UnloadConnectionScenes(clientConnection, sud);
             }
 

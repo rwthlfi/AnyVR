@@ -56,6 +56,14 @@ namespace AnyVr.LobbySystem
             InitSingleton();
             _networkManager = GetComponent<NetworkManager>();
             Assert.IsNotNull(_networkManager);
+        }
+
+        private void Start()
+        {
+            if (!_networkManager.Initialized)
+            {
+                return;
+            }
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
             _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
@@ -80,6 +88,10 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
+            if (!_networkManager.Initialized)
+            {
+                return;
+            }
             _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
             _networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
             _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;

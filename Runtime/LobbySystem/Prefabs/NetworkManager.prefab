@@ -59,7 +59,7 @@ MonoBehaviour:
   _runInBackground: 1
   _dontDestroyOnLoad: 1
   _objectPool: {fileID: 0}
-  _persistence: 1
+  _persistence: 0
 --- !u!114 &5009998975569126252
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -149,7 +149,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5dd12f33e8151e43bc7ebf18ee1ad94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _tokenServerAddr: 
 --- !u!114 &2423351291345961283
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -174,7 +173,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e838fcb1542f77b4aace907895a68966, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  globalScene: Assets/Samples/AnyVr/1.0.1/NewLobbySetup/Scenes/GlobalScene.unity
+  globalScene: Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity
 --- !u!114 &6287520840629278902
 MonoBehaviour:
   m_ObjectHideFlags: 0
