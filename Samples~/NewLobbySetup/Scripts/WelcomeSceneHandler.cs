@@ -21,12 +21,22 @@ namespace AnyVr.Samples.NewLobbySetup
             Assert.IsNotNull(_connectionManager);
 
             _connectionManager.ConnectionState += OnConnectionStateUpdate;
-            _connectionManager.GlobalSceneLoaded += OnGlobalSceneLoaded;
+            
+            // The global scene automatically loads locally when the client connects to a server.
+            // The global scene contains the LobbyManager which is initialized at this point on.
+            _connectionManager.GlobalSceneLoaded += InitializeLobbyPanel;
 
             _lobbyUI = GetComponent<LobbyUI>();
             _lobbyUI.OnConnectButtonPressed += OnConnectBtnClicked;
             _lobbyUI.OnLobbyOpenButtonPressed += OpenLobby;
             _lobbyUI.OnLobbyJoinButtonPressed += JoinLobby;
+
+            // Activate lobby panel if the client is already connected ta a server.
+            // E.g. when disconnecting from a lobby.
+            if (_connectionManager.State == ConnectionState.k_client)
+            {
+                InitializeLobbyPanel(false);
+            }
 
             // Autostart server for server builds
             // The ServerManager component on the NetworkManager prefab has the attribute '_startOnHeadless', which does the same thing.
@@ -46,6 +56,7 @@ namespace AnyVr.Samples.NewLobbySetup
             if (Input.GetKeyDown(KeyCode.R))
             {
                 _refreshLobbyUI?.Invoke(Guid.Empty);
+                _lobbyUI.SetAvailableLobbyScenes(LobbyManager.GetInstance()?.LobbyScenes);
             }
         }
 
@@ -59,18 +70,21 @@ namespace AnyVr.Samples.NewLobbySetup
 
             lobbyManager.LobbyOpened -= _refreshLobbyUI;
             lobbyManager.LobbyClosed -= _refreshLobbyUI;
+            _connectionManager.ConnectionState -= OnConnectionStateUpdate;
+            _connectionManager.GlobalSceneLoaded -= InitializeLobbyPanel;
+            _lobbyUI.OnConnectButtonPressed -= OnConnectBtnClicked;
+            _lobbyUI.OnLobbyOpenButtonPressed -= OpenLobby;
+            _lobbyUI.OnLobbyJoinButtonPressed -= JoinLobby;
         }
 
 
-        private void OnGlobalSceneLoaded(bool isServer)
+        private void InitializeLobbyPanel(bool isServer)
         {
             if (isServer)
             {
                 return;
             }
 
-            // The global scene automatically loads locally when the client connects to a server.
-            // The global scene contains the LobbyManager which is initialized at this point on.
             LobbyManager lobbyManager = LobbyManager.GetInstance();
             if (lobbyManager == null)
             {
@@ -82,6 +96,7 @@ namespace AnyVr.Samples.NewLobbySetup
             _refreshLobbyUI = Handle;
             lobbyManager.LobbyOpened += Handle;
             lobbyManager.LobbyClosed += Handle;
+            _lobbyUI.SetLobbyPanelActive(true);
             return;
 
             void Handle(Guid id)
@@ -92,13 +107,11 @@ namespace AnyVr.Samples.NewLobbySetup
 
         private static void JoinLobby(Guid lobbyId, string password)
         {
-            Debug.Log($"joining with password: {password}");
             LobbyManager.GetInstance()?.Client_JoinLobby(lobbyId, password);
         }
 
         private static void OpenLobby(string lobbyName, string password, string scenePath)
         {
-            Debug.Log($"open lobby with password: {password}");
             LobbyManager.GetInstance()?.Client_CreateLobby(lobbyName, password, scenePath, 16, null);
         }
 

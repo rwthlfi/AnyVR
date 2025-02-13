@@ -38,11 +38,15 @@ namespace AnyVr.Samples.NewLobbySetup
 
         private Dictionary<Guid, LobbyMetaData> _lobbies = new();
 
-        private void Start()
+        private void Awake()
         {
             connectionPanel.gameObject.SetActive(true);
             lobbyPanel.gameObject.SetActive(false);
             passwordPanel.gameObject.SetActive(false);
+        }
+
+        private void Start()
+        {
             cancelButton.onClick.AddListener(() =>
             {
                 passwordPanel.gameObject.SetActive(false);
@@ -62,7 +66,6 @@ namespace AnyVr.Samples.NewLobbySetup
             leaveServerButton.onClick.AddListener(() =>
             {
                 ConnectionManager.GetInstance()?.LeaveServer();
-                
             });
             lobbySceneDropdown.ClearOptions();
         }
