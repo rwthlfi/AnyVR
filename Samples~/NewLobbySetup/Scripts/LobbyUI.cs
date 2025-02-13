@@ -20,6 +20,7 @@ namespace AnyVr.Samples.NewLobbySetup
         [Header("Lobby Panel")] [SerializeField]
         private RectTransform lobbyPanel;
 
+        [SerializeField] private Button leaveServerButton;
         [SerializeField] private TMP_InputField lobbyNameInputField;
         [SerializeField] private TMP_InputField lobbyPasswordInputField;
         [SerializeField] private TMP_Dropdown lobbySceneDropdown;
@@ -57,6 +58,11 @@ namespace AnyVr.Samples.NewLobbySetup
                 string lobbyScene = lobbySceneDropdown.options[lobbySceneDropdown.value].text;
 
                 OnLobbyOpenButtonPressed?.Invoke(lobbyName, lobbyPassword, lobbyScene);
+            });
+            leaveServerButton.onClick.AddListener(() =>
+            {
+                ConnectionManager.GetInstance()?.LeaveServer();
+                
             });
             lobbySceneDropdown.ClearOptions();
         }
