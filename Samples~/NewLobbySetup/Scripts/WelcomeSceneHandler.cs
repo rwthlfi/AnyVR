@@ -21,7 +21,7 @@ namespace AnyVr.Samples.NewLobbySetup
             Assert.IsNotNull(_connectionManager);
 
             _connectionManager.ConnectionState += OnConnectionStateUpdate;
-            
+
             // The global scene automatically loads locally when the client connects to a server.
             // The global scene contains the LobbyManager which is initialized at this point on.
             _connectionManager.GlobalSceneLoaded += InitializeLobbyPanel;
@@ -40,14 +40,10 @@ namespace AnyVr.Samples.NewLobbySetup
 
             // Autostart server for server builds
             // The ServerManager component on the NetworkManager prefab has the attribute '_startOnHeadless', which does the same thing.
-            if (Application.platform != RuntimePlatform.LinuxServer &&
-                Application.platform != RuntimePlatform.WindowsServer)
-            {
-                return;
-            }
-
+#if UNITY_SERVER
             Debug.Log("Starting Server...");
             _connectionManager.StartServer();
+#endif
         }
 
         private void Update()
