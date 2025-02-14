@@ -118,10 +118,10 @@ namespace AnyVr.Voicechat
         ///     The method will either invoke the callback <see cref="ConnectedToRoom" /> or
         ///     <see cref="RoomConnectionFailed" />
         /// </summary>
-        /// <param name="roomName">The unique identifier of the room</param>
+        /// <param name="roomId">The unique identifier of the room</param>
         /// <param name="userName">The name of the local user</param>
         /// <param name="activateMic">If the microphone track should automatically be published</param>
-        public async void TryConnectToRoom(string roomName, string userName, bool activateMic = false)
+        public async void TryConnectToRoom(Guid roomId, string userName, bool activateMic = false)
         {
             if (_chatClient == null)
             {
@@ -130,7 +130,7 @@ namespace AnyVr.Voicechat
             }
             // TODO: ensure that the passed names will result in a valid url for token server
 
-            TokenResponse response = await RequestLiveKitToken(roomName, userName);
+            TokenResponse response = await RequestLiveKitToken(roomId.ToString(), userName);
             _chatClient.Connect(_tokenServerAddr, response.token);
             _chatClient.ConnectedToRoom += () =>
             {
@@ -214,11 +214,11 @@ namespace AnyVr.Voicechat
             return true;
         }
 
-        private async Task<TokenResponse> RequestLiveKitToken(string roomName, string participantName)
+        private async Task<TokenResponse> RequestLiveKitToken(string roomId, string participantName)
         {
             TokenResponse response = Application.platform == RuntimePlatform.WebGLPlayer
-                ? await WEBGL_GetToken(roomName, participantName)
-                : await GetToken(roomName, participantName);
+                ? await WEBGL_GetToken(roomId, participantName)
+                : await GetToken(roomId, participantName);
             Debug.Log($"Token response: {response}");
             return response;
         }

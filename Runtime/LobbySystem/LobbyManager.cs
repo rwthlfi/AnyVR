@@ -433,7 +433,7 @@ namespace AnyVr.LobbySystem
         private void OnLobbyJoinedRpc(NetworkConnection _, LobbyMetaData lmd)
         {
             _currentLobby = lmd;
-            VoiceChatManager.GetInstance()?.TryConnectToRoom(lmd.LobbyId.ToString(), ConnectionManager.UserName);
+            VoiceChatManager.GetInstance()?.TryConnectToRoom(lmd.LobbyId, ConnectionManager.UserName);
         }
 
         /// <summary>
