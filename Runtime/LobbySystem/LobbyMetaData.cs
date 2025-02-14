@@ -10,6 +10,7 @@ namespace AnyVr.LobbySystem
     {
         private readonly SceneLoadData _sceneLoadData;
         public readonly int CreatorId;
+        public readonly DateTime? ExpireDate;
         public readonly bool IsPasswordProtected;
         public readonly ushort LobbyCapacity;
 
@@ -20,8 +21,7 @@ namespace AnyVr.LobbySystem
 
         public readonly string Name;
         public readonly string Scene;
-        public readonly DateTime? ExpireDate;
-        private int? _sceneHandle;
+
 
         public LobbyMetaData() { }
 
@@ -35,11 +35,11 @@ namespace AnyVr.LobbySystem
             LobbyId = lobbyId;
             IsPasswordProtected = isPasswordProtected;
             ExpireDate = expireDate;
-            _sceneHandle = null;
+            SceneHandle = null;
             _sceneLoadData = new SceneLoadData(scene)
             {
                 ReplaceScenes = ReplaceOption.OnlineOnly,
-                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None },
+                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None, AutomaticallyUnload = false },
                 // By adding SceneLoadParam.Lobby the LobbyManager knows this scene is a lobby when the SceneManager.LoadEnd callback fires.
                 // By adding the lobbyId the LobbyManager can register a corresponding LobbyHandler.
                 // By adding the creatorId the LobbyManager can give that client administration rights in the lobby
@@ -48,20 +48,25 @@ namespace AnyVr.LobbySystem
             _sceneLoadData.Params.ClientParams = SerializeObjects(_sceneLoadData.Params.ServerParams);
         }
 
+        public int? SceneHandle { get; private set; }
+
         /// <summary>
         ///     Returns the SceneLoadData of the lobby as handle if possible.
         /// </summary>
         public SceneLoadData GetSceneLoadData()
         {
-            if (_sceneHandle == null)
+            if (SceneHandle == null)
             {
                 return _sceneLoadData;
             }
 
-            SceneLoadData sceneLoadData = new((int)_sceneHandle)
+            SceneLoadData sceneLoadData = new((int)SceneHandle)
             {
                 ReplaceScenes = ReplaceOption.OnlineOnly,
-                Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None },
+                Options =
+                {
+                    AllowStacking = true, LocalPhysics = LocalPhysicsMode.None, AutomaticallyUnload = false
+                },
                 Params = { ServerParams = new object[] { SceneLoadParam.k_lobby, LobbyId, CreatorId } }
             };
             sceneLoadData.Params.ClientParams = SerializeObjects(sceneLoadData.Params.ServerParams);
@@ -96,7 +101,7 @@ namespace AnyVr.LobbySystem
 
         internal void SetSceneHandle(int sceneHandle)
         {
-            _sceneHandle = sceneHandle;
+            SceneHandle = sceneHandle;
         }
 
         public override string ToString()

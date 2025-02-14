@@ -335,12 +335,13 @@ namespace AnyVr.LobbySystem
             Logger.LogVerbose($"Lobby created. {lobbyMetaData}");
             AddClientToLobby(lobbyMetaData.LobbyId, password, conn); // Auto join lobby
             InvokeLobbyOpened(lobbyMetaData.LobbyId);
-            
+
             if (expirationDate.HasValue)
             {
                 Coroutine routine = StartCoroutine(ExpireLobby(lobbyMetaData.LobbyId, expirationDate.Value));
                 _lobbyExpirationRoutines.Add(lobbyMetaData.LobbyId, routine);
             }
+
             yield break;
 
             void Handler(Guid lobbyId)
@@ -362,7 +363,7 @@ namespace AnyVr.LobbySystem
             {
                 yield return new WaitForSeconds(timeUntilExpiration);
             }
-            
+
             Logger.LogVerbose($"Lobby {lobbyId} expired");
             _lobbyExpirationRoutines.Remove(lobbyId);
             CloseLobby(lobbyId);
@@ -466,7 +467,7 @@ namespace AnyVr.LobbySystem
             }
 
             Logger.LogVerbose(
-                $"Client '{conn.ClientId}' joined lobby with id '{lobbyId}");
+                $"Client '{conn.ClientId}' joined lobby '{lobbyId}'");
             OnLobbyJoinedRpc(conn, lobby);
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
         }
@@ -521,9 +522,20 @@ namespace AnyVr.LobbySystem
                 TryRemoveClientFromLobby(clientConn);
             }
 
+            SceneUnloadData sud = CreateUnloadData(lobbyId);
             _lobbyHandlers.Remove(lobbyId);
             _lobbies.Remove(lobbyId);
             _lobbyPasswordHashes.Remove(lobbyId);
+
+            if (sud == null)
+            {
+                Logger.LogError("Can't unload connection scene. SceneHandle is null");
+            }
+            else
+            {
+                SceneManager.UnloadConnectionScenes(sud);
+            }
+
             LobbyClosed?.Invoke(lobbyId);
             Logger.LogVerbose($"Lobby with id '{lobbyId}' is closed");
         }
@@ -558,13 +570,13 @@ namespace AnyVr.LobbySystem
             handler.Server_RemoveClient(clientConnection.ClientId);
             _clientLobbyDict.Remove(clientConnection.ClientId);
 
-            if (_lobbies.TryGetValue(lobbyId, out LobbyMetaData lmd))
+            SceneUnloadData sud = CreateUnloadData(lobbyId);
+            if (sud == null)
             {
-                SceneUnloadData sud = new(new[] { lmd.Scene })
-                {
-                    Params = { ServerParams = new object[] { SceneLoadParam.k_lobby, lmd.LobbyId } }
-                };
-                sud.Params.ClientParams = LobbyMetaData.SerializeObjects(sud.Params.ServerParams);
+                Logger.LogError("Can't unload connection scene. SceneHandle is null");
+            }
+            else
+            {
                 SceneManager.UnloadConnectionScenes(clientConnection, sud);
             }
 
@@ -572,10 +584,70 @@ namespace AnyVr.LobbySystem
 
             if (!handler.GetClients().Any())
             {
-                CloseLobby(lobbyId);
+                StartCoroutine(CloseInactiveLobby(lobbyId, 10));
             }
 
             return true;
+        }
+
+        [CanBeNull]
+        private SceneUnloadData CreateUnloadData(Guid guid)
+        {
+            if (!_lobbies.TryGetValue(guid, out LobbyMetaData lmd))
+            {
+                return null;
+            }
+
+            if (lmd.SceneHandle == null)
+            {
+                return null;
+            }
+
+            SceneLookupData sld = new() { Handle = lmd.SceneHandle.Value, Name = lmd.Scene };
+            object[] unloadParams = { SceneLoadParam.k_lobby, lmd.LobbyId };
+            SceneUnloadData sud = new(new[] { sld })
+            {
+                Options = { Mode = UnloadOptions.ServerUnloadMode.KeepUnused },
+                Params =
+                {
+                    ServerParams = unloadParams, ClientParams = LobbyMetaData.SerializeObjects(unloadParams)
+                }
+            };
+            return sud;
+        }
+
+        /// <summary>
+        ///     Checks if a lobby remains empty for a duration. Then closes the lobby if it remained empty.
+        /// </summary>
+        /// <param name="lobbyId">The ID of the lobby to close.</param>
+        /// <param name="duration">Duration in seconds until expiration</param>
+        [Server]
+        private IEnumerator CloseInactiveLobby(Guid lobbyId, ushort duration)
+        {
+            float elapsed = 0;
+            const float interval = 1;
+
+            if (!_lobbyHandlers.TryGetValue(lobbyId, out LobbyHandler handler))
+            {
+                Logger.LogError($"Can't close lobby {lobbyId} due to inactivity. LobbyHandler not found");
+                yield break;
+            }
+
+            while (elapsed < duration)
+            {
+                Logger.LogVerbose($"Closing lobby {lobbyId} in {duration - elapsed} seconds due to inactivity.");
+                if (handler.GetClients().Length > 0)
+                {
+                    Logger.LogVerbose($"Cancel inactive lobby closing. Lobby {lobbyId} is no longer inactive.");
+                    yield break;
+                }
+
+                elapsed += interval;
+                yield return new WaitForSeconds(interval);
+            }
+
+            Logger.LogWarning($"Closing lobby {lobbyId} due to inactivity.");
+            CloseLobby(lobbyId);
         }
 
         [Server]
