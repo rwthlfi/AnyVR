@@ -20,12 +20,13 @@ namespace AnyVr.LobbySystem
 
         public readonly string Name;
         public readonly string Scene;
+        public readonly DateTime? ExpireDate;
         private int? _sceneHandle;
 
         public LobbyMetaData() { }
 
         public LobbyMetaData(Guid lobbyId, string name, int creatorId, string scene, ushort lobbyCapacity,
-            bool isPasswordProtected)
+            bool isPasswordProtected, DateTime? expireDate)
         {
             Name = name;
             Scene = scene;
@@ -33,6 +34,7 @@ namespace AnyVr.LobbySystem
             LobbyCapacity = lobbyCapacity;
             LobbyId = lobbyId;
             IsPasswordProtected = isPasswordProtected;
+            ExpireDate = expireDate;
             _sceneHandle = null;
             _sceneLoadData = new SceneLoadData(scene)
             {

@@ -259,8 +259,16 @@ namespace AnyVr.LobbySystem
             return Guid.NewGuid();
         }
 
+        /// <summary>
+        ///     Initiates the creation of a new lobby on the server with a remote procedure call.
+        /// </summary>
+        /// <param name="lobbyName">The name of the lobby.</param>
+        /// <param name="password">The password for the lobby (if any). Pass null or white space for no password.</param>
+        /// <param name="scenePath">The scene to be loaded for the lobby.</param>
+        /// <param name="maxClients">The maximum number of clients allowed in the lobby.</param>
+        /// <param name="expirationDate">Optional expiration date for the lobby.</param>
         public void Client_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients,
-            DateTime? expirationDate)
+            DateTime? expirationDate = null)
         {
             CreateLobby(lobbyName, password, scenePath, maxClients, expirationDate, ClientManager.Connection);
         }
@@ -291,7 +299,7 @@ namespace AnyVr.LobbySystem
 
             maxClients = (ushort)Mathf.Max(1, maxClients);
             LobbyMetaData lobbyMetaData = new(CreateLobbyId(), lobbyName, conn.ClientId, scenePath, maxClients,
-                !string.IsNullOrWhiteSpace(password));
+                !string.IsNullOrWhiteSpace(password), expirationDate);
             _lobbies.Add(lobbyMetaData.LobbyId, lobbyMetaData);
 
             if (lobbyMetaData.IsPasswordProtected)
@@ -327,6 +335,12 @@ namespace AnyVr.LobbySystem
             Logger.LogVerbose($"Lobby created. {lobbyMetaData}");
             AddClientToLobby(lobbyMetaData.LobbyId, password, conn); // Auto join lobby
             InvokeLobbyOpened(lobbyMetaData.LobbyId);
+            
+            if (expirationDate.HasValue)
+            {
+                Coroutine routine = StartCoroutine(ExpireLobby(lobbyMetaData.LobbyId, expirationDate.Value));
+                _lobbyExpirationRoutines.Add(lobbyMetaData.LobbyId, routine);
+            }
             yield break;
 
             void Handler(Guid lobbyId)
@@ -335,6 +349,37 @@ namespace AnyVr.LobbySystem
                 {
                     receivedLobbyHandler = true;
                 }
+            }
+        }
+
+        [Server]
+        private IEnumerator ExpireLobby(Guid lobbyId, DateTime expirationDate)
+        {
+            float timeUntilExpiration = (float)(expirationDate - DateTime.UtcNow).TotalSeconds;
+
+            Logger.LogVerbose($"Expire lobby {lobbyId} in {timeUntilExpiration} seconds");
+            if (timeUntilExpiration > 0)
+            {
+                yield return new WaitForSeconds(timeUntilExpiration);
+            }
+            
+            Logger.LogVerbose($"Lobby {lobbyId} expired");
+            _lobbyExpirationRoutines.Remove(lobbyId);
+            CloseLobby(lobbyId);
+        }
+
+        public void UpdateLobbyExpirationDate(Guid lobbyId, DateTime? expirationDate)
+        {
+            if (!_lobbyExpirationRoutines.TryGetValue(lobbyId, out Coroutine routine))
+            {
+                return;
+            }
+
+            StopCoroutine(routine);
+            _lobbyExpirationRoutines.Remove(lobbyId);
+            if (expirationDate.HasValue)
+            {
+                StartCoroutine(ExpireLobby(lobbyId, expirationDate.Value));
             }
         }
 
@@ -616,6 +661,8 @@ namespace AnyVr.LobbySystem
         private Dictionary<int, Guid> _clientLobbyDict;
 
         private Dictionary<Guid, byte[]> _lobbyPasswordHashes;
+
+        private Dictionary<Guid, Coroutine> _lobbyExpirationRoutines;
 
         #endregion
     }

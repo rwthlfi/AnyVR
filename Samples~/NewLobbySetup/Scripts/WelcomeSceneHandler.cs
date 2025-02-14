@@ -112,7 +112,7 @@ namespace AnyVr.Samples.NewLobbySetup
 
         private static void OpenLobby(string lobbyName, string password, string scenePath)
         {
-            LobbyManager.GetInstance()?.Client_CreateLobby(lobbyName, password, scenePath, 16, null);
+            LobbyManager.GetInstance()?.Client_CreateLobby(lobbyName, password, scenePath, 16);
         }
 
         private void OnConnectionStateUpdate(ConnectionState state)
