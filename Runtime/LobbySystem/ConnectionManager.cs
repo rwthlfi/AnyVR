@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Networking;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVr.LobbySystem
@@ -340,7 +341,15 @@ namespace AnyVr.LobbySystem
         {
             const string tokenURL = "http://{0}:{1}/requestServerIp";
             string url = string.Format(tokenURL, _tokenServerAddress.ip, _tokenServerAddress.port);
-            Logger.LogVerbose($"Requesting server ip: {url}");
+            if (Application.platform == RuntimePlatform.WebGLPlayer)
+            {
+                return await WEBGL_RequestServerIp(url);
+            }
+            return await StandaloneRequestServerIp(url);
+        }
+
+        private static async Task<ServerAddressResponse> StandaloneRequestServerIp(string url)
+        {
             HttpResponseMessage response = await new HttpClient().GetAsync(url);
             ServerAddressResponse res = new();
             if (response.IsSuccessStatusCode)
@@ -358,6 +367,25 @@ namespace AnyVr.LobbySystem
                 Logger.LogWarning("Could not fetch server ip");
             }
 
+            return res;
+        }
+        
+        private static async Task<ServerAddressResponse> WEBGL_RequestServerIp(string url)
+        {
+            using UnityWebRequest webRequest = UnityWebRequest.Get(url);
+            await webRequest.SendWebRequest();
+
+            ServerAddressResponse res = new();
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                res = JsonUtility.FromJson<ServerAddressResponse>(webRequest.downloadHandler.text);
+            }
+            else
+            {
+                Debug.Log("Error: " + webRequest.error);
+            }
+
+            res.success = webRequest.result == UnityWebRequest.Result.Success;
             return res;
         }
 
