@@ -131,17 +131,31 @@ namespace AnyVr.Voicechat
             // TODO: ensure that the passed names will result in a valid url for token server
 
             TokenResponse response = await RequestLiveKitToken(roomId.ToString(), userName);
-            _chatClient.Connect(_tokenServerAddr, response.token);
-            _chatClient.ConnectedToRoom += () =>
-            {
-                if (activateMic)
-                {
-                    _chatClient.SetMicrophoneEnabled(true);
-                }
-            };
 
-            // TODO: Handle Exception when token not received
-            // OnRoomConnectionFailed?.Invoke();
+            if (false)
+            {
+                // TODO: Handle Exception when token not received
+                // OnRoomConnectionFailed?.Invoke();
+                return;
+            }
+
+            Debug.Log($"Token received: {response.token}");
+
+            try
+            {
+                _chatClient.Connect(_tokenServerAddr, response.token);
+                _chatClient.ConnectedToRoom += () =>
+                {
+                    if (activateMic)
+                    {
+                        _chatClient.SetMicrophoneEnabled(true);
+                    }
+                };
+            }
+            catch
+            {
+                // OnRoomConnectionFailed?.Invoke();
+            }
         }
 
         /// <summary>
@@ -167,7 +181,7 @@ namespace AnyVr.Voicechat
 
         public void SetTokenServerAddress(string ip, ushort port)
         {
-            SetTokenServerAddress($"{ip}:{port}");
+            _tokenServerAddr = $"{ip}:{port}";
         }
 
         private void SetTokenServerAddress(string address)
@@ -219,7 +233,6 @@ namespace AnyVr.Voicechat
             TokenResponse response = Application.platform == RuntimePlatform.WebGLPlayer
                 ? await WEBGL_GetToken(roomId, participantName)
                 : await GetToken(roomId, participantName);
-            Debug.Log($"Token response: {response}");
             return response;
         }
 
@@ -239,7 +252,7 @@ namespace AnyVr.Voicechat
                 Debug.Log("Error: " + webRequest.error);
             }
 
-            res.isSuccess = webRequest.result == UnityWebRequest.Result.Success;
+            res.IsSuccess = webRequest.result == UnityWebRequest.Result.Success;
             return res;
         }
 
@@ -247,21 +260,31 @@ namespace AnyVr.Voicechat
         {
             string url = string.Format(k_tokenURL, _tokenServerAddr, roomName, participantName);
             Debug.Log($"Getting token from: {url}");
+
+            TokenResponse res = null;
             HttpClient client = new();
             HttpResponseMessage response = await client.GetAsync(url);
-            TokenResponse res = new();
-            if (response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
             {
-                res = JsonUtility.FromJson<TokenResponse>(response.Content.ReadAsStringAsync().Result);
+                res = new TokenResponse { IsSuccess = false };
+                Debug.LogError($"Error receiving token. Status code: {response.StatusCode.ToString()}");
             }
 
-            res.isSuccess = response.IsSuccessStatusCode;
+            try
+            {
+                res = JsonUtility.FromJson<TokenResponse>(response.Content.ReadAsStringAsync().Result);
+                res.IsSuccess = response.IsSuccessStatusCode;
+            }
+            catch (Exception _)
+            {
+                Debug.LogError("Error parsing json response.");
+            }
+
             return res;
         }
 
         /// <summary>
         ///     Sets the active microphone for the voice chat.
-        ///     Only works on Standalone Win!
         /// </summary>
         public void SetActiveMicrophone(string micName)
         {
