@@ -25,6 +25,8 @@ namespace AnyVr.LobbySystem
 
         private NetworkManager _networkManager;
 
+        private (string ip, ushort port) _tokenServerAddress;
+
         public ConnectionState State
         {
             get
@@ -64,6 +66,7 @@ namespace AnyVr.LobbySystem
             {
                 return;
             }
+
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
             _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
@@ -92,6 +95,7 @@ namespace AnyVr.LobbySystem
             {
                 return;
             }
+
             _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
             _networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
             _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
@@ -204,7 +208,7 @@ namespace AnyVr.LobbySystem
             _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
             _networkManager.ClientManager.StartConnection();
 
-            VoiceChatManager.GetInstance()?.SetTokenServerAddress(liveKitAddress.ip, liveKitAddress.port);
+            VoiceChatManager.GetInstance()?.SetTokenServerAddress(_tokenServerAddress.ip, _tokenServerAddress.port);
 
             return true;
         }
@@ -332,10 +336,10 @@ namespace AnyVr.LobbySystem
             _networkManager.ServerManager.StopConnection(false);
         }
 
-        public static async Task<ServerAddressResponse> RequestServerIp(string tokenServerIp)
+        public async Task<ServerAddressResponse> RequestServerIp()
         {
-            const string tokenURL = "http://{0}/requestServerIp";
-            string url = string.Format(tokenURL, tokenServerIp);
+            const string tokenURL = "http://{0}:{1}/requestServerIp";
+            string url = string.Format(tokenURL, _tokenServerAddress.ip, _tokenServerAddress.port);
             Logger.LogVerbose($"Requesting server ip: {url}");
             HttpResponseMessage response = await new HttpClient().GetAsync(url);
             ServerAddressResponse res = new();
@@ -355,6 +359,14 @@ namespace AnyVr.LobbySystem
             }
 
             return res;
+        }
+
+        public void SetTokenServerIp(string tokenServerIp)
+        {
+            if (TryParseAddress(tokenServerIp, out (string, ushort) res))
+            {
+                _tokenServerAddress = res;
+            }
         }
 
         #region Singleton

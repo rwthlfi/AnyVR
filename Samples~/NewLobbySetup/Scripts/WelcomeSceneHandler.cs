@@ -118,7 +118,8 @@ namespace AnyVr.Samples.NewLobbySetup
 
         private async void OnConnectBtnClicked(string tokenServerIp, string username)
         {
-            ServerAddressResponse result = await ConnectionManager.RequestServerIp(tokenServerIp);
+            _connectionManager.SetTokenServerIp(tokenServerIp);
+            ServerAddressResponse result = await _connectionManager.RequestServerIp();
             if (result.success)
             {
                 _connectionManager.ConnectToServer(result, username);
