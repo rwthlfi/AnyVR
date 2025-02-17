@@ -3,6 +3,7 @@ using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
 using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
 using System;
@@ -81,6 +82,15 @@ namespace AnyVr.LobbySystem
             _clientLobbyDict = new Dictionary<int, Guid>();
             _lobbyPasswordHashes = new Dictionary<Guid, byte[]>();
             SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
+            ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
+        }
+
+        private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        {
+            if (args.ConnectionState == RemoteConnectionState.Stopped)
+            {
+                TryRemoveClientFromLobby(conn);
+            }
         }
 
         public override void OnStartClient()
