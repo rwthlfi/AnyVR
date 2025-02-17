@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Voicechat
+namespace AnyVr.Voicechat
 {
     internal class WebGLVoiceChatClient : VoiceChatClient
     {
@@ -93,7 +93,6 @@ namespace Voicechat
 
         internal override void SetActiveMicrophone(string micName)
         {
-            
         }
 
         private IEnumerator Co_Connect(string address, string token)
