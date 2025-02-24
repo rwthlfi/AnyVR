@@ -6,17 +6,17 @@
 
 ## Install
 
-1. Open a project
+1. Open a project.
 
-2. Install XR Plugin Management
+2. Install XR Plugin Management.
 
-3. Add OpenXR Plug-in Provider
+3. Add OpenXR Plug-in Provider.
 
-4. In OpenXR Settings: Add 'Oculus Touch Controller Profile' to Enabled Interaction Profiles
+4. In OpenXR Settings: Add 'Oculus Touch Controller Profile' to Enabled Interaction Profiles.
 
-5. Import xr starter assets & keyboard
+5. Import xr starter assets & keyboard.
 
-6. Import packages with the Unity Package Manager
+6. Import packages with the Unity Package Manager.
 
 ```
     "rwth.lfi.anyvr": "https://git.rwth-aachen.de/LFI/xr/anyvr.git#package",
@@ -26,7 +26,7 @@
     "com.firstgeargames.fishnet.bayou": "https://github.com/FirstGearGames/Bayou.git?path=FishNet/Plugins/Bayou",
 ```
 
-7. Import LobbySetup Sample (Optional)
+7. Import LobbySetup Sample (Optional).
 
 8. Enable AnyVr Tests (Optional):
    Add '"testables": "rwth.lfi.anyvr"' to the manifest
