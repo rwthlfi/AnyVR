@@ -147,7 +147,7 @@ namespace AnyVr.Voicechat
                 _input.loop = true;
                 _input.Play();
 
-                RtcAudioSource rtcSource = new(_input);
+                RtcAudioSource rtcSource = new BasicAudioSource(_input);
                 LocalAudioTrack track = LocalAudioTrack.CreateAudioTrack("my-track", rtcSource, _room);
 
                 TrackPublishOptions options = new() { Source = TrackSource.SourceMicrophone };
