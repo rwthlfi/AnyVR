@@ -2,6 +2,7 @@ using AnyVr.LobbySystem;
 using System;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.InputSystem;
 
 namespace AnyVr.Samples.NewLobbySetup
 {
@@ -44,16 +45,6 @@ namespace AnyVr.Samples.NewLobbySetup
             Debug.Log("Starting Server...");
             _connectionManager.StartServer();
 #endif
-        }
-
-        private void Update()
-        {
-            // Refresh lobby list
-            if (Input.GetKeyDown(KeyCode.R))
-            {
-                _refreshLobbyUI?.Invoke(Guid.Empty);
-                _lobbyUI.SetAvailableLobbyScenes(LobbyManager.GetInstance()?.LobbyScenes);
-            }
         }
 
         private void OnDestroy()
