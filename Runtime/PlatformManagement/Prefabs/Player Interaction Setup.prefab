@@ -385,7 +385,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4258023574131119462}
   - component: {fileID: 755025296100357020}
-  - component: {fileID: 3251950445047117652}
   m_Layer: 0
   m_Name: Input Modality
   m_TagString: Untagged
@@ -427,19 +426,6 @@ MonoBehaviour:
   _xrGazeInteractionOrigin: {fileID: 2068856353336312879}
   _pcGazeInteractionOrigin: {fileID: 3265475331533018597}
   _gazeInteractor: {fileID: 622465744784237031}
-  _pcInterface: {fileID: 3251950445047117652}
---- !u!114 &3251950445047117652
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8242069881165127159}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 72421fe4575f95e469878ef0d10373d2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &8286797619201299925
 PrefabInstance:
   m_ObjectHideFlags: 0

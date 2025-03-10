@@ -36,7 +36,6 @@ namespace AnyVR.UserControlSystem
         [SerializeField] private Transform _xrGazeInteractionOrigin;
         [SerializeField] private Transform _pcGazeInteractionOrigin;
         [SerializeField] private XRGazeInteractor _gazeInteractor;
-        [SerializeField] private PCInterface _pcInterface;
 
         private void Start()
         {
@@ -52,7 +51,7 @@ namespace AnyVR.UserControlSystem
             ToggleXRControls(isXRActive);
             InitializeTurnProvider(isXRActive);
             InitializeGazeInteractor(isXRActive);
-            SetCursorVisibility(isXRActive);
+            SetCursorVisibility(false);
         }
 
         private void ToggleXRControls(bool isXRActive)
@@ -73,14 +72,10 @@ namespace AnyVR.UserControlSystem
             _gazeInteractor.rayOriginTransform = isXRActive ? _xrGazeInteractionOrigin : _pcGazeInteractionOrigin;
         }
 
-        private void SetCursorVisibility(bool visible)
+        private static void SetCursorVisibility(bool visible)
         {
-            PCInterface.SetCursorLock(!visible);
-        }
-
-        private void OnDestroy()
-        {
-            PCInterface.SetCursorLock(false);
+            Cursor.visible = visible;
+            Cursor.lockState = visible ? CursorLockMode.None : CursorLockMode.Locked;
         }
     }
 }
