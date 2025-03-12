@@ -31,11 +31,6 @@ namespace AnyVr.LobbySystem
         public Transform LeftHand => leftHand;
         public Transform RightHand => rightHand;
 
-        private void OnDestroy()
-        {
-            s_instance = null;
-        }
-
         #region Singleton
 
         private static PlayerInteractionHandler s_instance;
@@ -51,7 +46,6 @@ namespace AnyVr.LobbySystem
             if (s_instance != null)
             {
                 Destroy(s_instance.gameObject);
-                return;
             }
 
             s_instance = this;
