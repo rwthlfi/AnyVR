@@ -14,6 +14,7 @@ namespace AnyVr.Samples.NewLobbySetup
             {
                 LobbyHandler.GetInstance()?.Leave();
             });
+            LobbyHandler.GetInstance()?.SetMuteSelf(false);
         }
     }
 }

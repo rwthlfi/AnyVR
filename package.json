@@ -1,8 +1,8 @@
 {
   "name": "rwth.lfi.anyvr",
-  "version": "0.1.0",
-  "displayName": "AnyVr",
-  "description": "An open-source framework for multi-platform, multi-user experiences in XR.",
+  "version": "1.0.0",
+  "displayName": "AnyVR",
+  "description": "An open-source framework for multi-platform, multi-user experiences in VR.",
   "unity": "2022.3",
   "unityRelease": "20f1",
   "documentationUrl": "https://example.com/",
@@ -14,13 +14,13 @@
   },
   "keywords": [],
   "author": {
-    "name": "Unity",
-    "email": "unity@example.com",
-    "url": "https://www.unity3d.com"
+    "name": "Engineering Hydrology, RWTH Aachen University",
+    "email": "vr@lfi.rwth-aachen.de",
+    "url": "https://lfi.rwth-aachen.de/en/"
   },
   "samples": [
     {
-      "displayName": "(new) LobbySetup",
+      "displayName": "LobbySetup",
       "description": "Example lobby setup with two lobby scenes",
       "path": "Samples~/NewLobbySetup"
     }

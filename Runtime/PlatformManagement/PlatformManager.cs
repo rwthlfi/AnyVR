@@ -63,6 +63,10 @@ namespace AnyVR.PlatformManagement
 
         private IEnumerator InitializeXR()
         {
+            while (XRGeneralSettings.Instance == null)
+            {
+                yield return null;
+            }
             XRManagerSettings settingsManager = XRGeneralSettings.Instance.Manager;
             yield return settingsManager.InitializeLoader();
             OnXRInitializationFinished?.Invoke();

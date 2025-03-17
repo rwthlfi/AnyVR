@@ -72,10 +72,11 @@ namespace AnyVr.LobbySystem
             _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
+            _networkManager.SceneManager.OnLoadStart += SceneManager_OnLoadStart;
             ConnectionState += OnConnectionState;
 
             // The WelcomeScene gets only unloaded for clients
-            LobbySceneLoaded += asServer =>
+            LobbySceneLoadStart += asServer =>
             {
                 if (!asServer)
                 {
@@ -141,7 +142,7 @@ namespace AnyVr.LobbySystem
         public event Action<ConnectionState> ConnectionState;
 
         public event Action<bool> GlobalSceneLoaded;
-        private event Action<bool> LobbySceneLoaded;
+        private event Action<bool> LobbySceneLoadStart;
 
 
         public void StartServer()
@@ -293,39 +294,70 @@ namespace AnyVr.LobbySystem
             _networkManager.SceneManager.LoadGlobalScenes(sld);
         }
 
-        private void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
+        [CanBeNull]
+        private SceneLoadParam? GetSceneLoadParam(LoadQueueData queueData)
         {
             SceneLoadParam param;
-            if (args.QueueData.AsServer)
+            if (queueData.AsServer)
             {
-                object[] serverParams = args.QueueData.SceneLoadData.Params.ServerParams;
+                object[] serverParams = queueData.SceneLoadData.Params.ServerParams;
                 if (serverParams.Length < 1 || serverParams[0] is not SceneLoadParam)
                 {
-                    return;
+                    return null;
                 }
 
                 param = (SceneLoadParam)serverParams[0];
             }
             else
             {
-                byte[] arr = args.QueueData.SceneLoadData.Params.ClientParams;
+                byte[] arr = queueData.SceneLoadData.Params.ClientParams;
                 object[] clientParams = LobbyMetaData.DeserializeClientParams(arr);
 
                 if (clientParams.Length < 1)
                 {
-                    return;
+                    return null;
                 }
 
                 param = (SceneLoadParam)clientParams[0];
             }
 
-            switch (param)
+            return param;
+        }
+
+        private void SceneManager_OnLoadStart(SceneLoadStartEventArgs args)
+        {
+            SceneLoadParam? param = GetSceneLoadParam(args.QueueData);
+            if (param == null)
+            {
+                return;
+            }
+
+            switch (param.Value)
+            {
+                case SceneLoadParam.k_global:
+                    break;
+                case SceneLoadParam.k_lobby:
+                    LobbySceneLoadStart?.Invoke(args.QueueData.AsServer);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        private void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
+        {
+            SceneLoadParam? param = GetSceneLoadParam(args.QueueData);
+            if (param == null)
+            {
+                return;
+            }
+
+            switch (param.Value)
             {
                 case SceneLoadParam.k_global:
                     GlobalSceneLoaded?.Invoke(args.QueueData.AsServer);
                     break;
                 case SceneLoadParam.k_lobby:
-                    LobbySceneLoaded?.Invoke(args.QueueData.AsServer);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -345,6 +377,7 @@ namespace AnyVr.LobbySystem
             {
                 return await WEBGL_RequestServerIp(url);
             }
+
             return await StandaloneRequestServerIp(url);
         }
 
@@ -369,7 +402,7 @@ namespace AnyVr.LobbySystem
 
             return res;
         }
-        
+
         private static async Task<ServerAddressResponse> WEBGL_RequestServerIp(string url)
         {
             using UnityWebRequest webRequest = UnityWebRequest.Get(url);
