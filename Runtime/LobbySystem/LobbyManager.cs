@@ -124,7 +124,8 @@ namespace AnyVr.LobbySystem
 
             if (IsUnloadingLobby(args.QueueData, false, out Guid _))
             {
-                StartCoroutine(LoadWelcomeScene());
+                UnityEngine.SceneManagement.SceneManager.LoadScene(offlineScene, LoadSceneMode.Additive);
+                // StartCoroutine(LoadWelcomeScene());
             }
         }
 
@@ -501,16 +502,16 @@ namespace AnyVr.LobbySystem
             VoiceChatManager.GetInstance()?.Disconnect();
         }
 
-        private IEnumerator LoadWelcomeScene()
-        {
-            AsyncOperation op = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("UIScene");
-            while (op is { isDone: false })
-            {
-                yield return null;
-            }
-
-            UnityEngine.SceneManagement.SceneManager.LoadScene(offlineScene, LoadSceneMode.Additive);
-        }
+        // private IEnumerator LoadWelcomeScene()
+        // {
+        //     AsyncOperation op = UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync("UIScene");
+        //     while (op is { isDone: false })
+        //     {
+        //         yield return null;
+        //     }
+        //
+        //     UnityEngine.SceneManagement.SceneManager.LoadScene(offlineScene, LoadSceneMode.Additive);
+        // }
 
         [Server]
         private void CloseLobby(Guid lobbyId)
