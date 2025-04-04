@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace AnyVr.LobbySystem
 {
@@ -19,11 +19,12 @@ namespace AnyVr.LobbySystem
         // Only assigned on client
         [CanBeNull] private static LobbyHandler s_instance;
 
-        [SerializeField] [Scene] private string uiScene;
-        private readonly SyncVar<int> _adminId = new();
-        private readonly SyncHashSet<int> _clientIds = new();
-        private readonly SyncVar<bool> _initialized = new(false);
-        private readonly SyncVar<Guid> _lobbyId = new();
+        // [FormerlySerializedAs("uiScene")]
+        // [SerializeField] [Scene] private string _uiScene;
+        private readonly SyncVar<int> _adminId = new SyncVar<int>();
+        private readonly SyncHashSet<int> _clientIds = new SyncHashSet<int>();
+        private readonly SyncVar<bool> _initialized = new SyncVar<bool>(false);
+        private readonly SyncVar<Guid> _lobbyId = new SyncVar<Guid>();
 
         public TextChatManager TextChat { get; private set; }
 
@@ -91,10 +92,10 @@ namespace AnyVr.LobbySystem
 
             AddClient();
 
-            if (!string.IsNullOrEmpty(uiScene))
-            {
-                UnityEngine.SceneManagement.SceneManager.LoadScene(uiScene, LoadSceneMode.Additive);
-            }
+            // if (!string.IsNullOrEmpty(_uiScene))
+            // {
+            //     UnityEngine.SceneManagement.SceneManager.LoadScene(_uiScene, LoadSceneMode.Additive);
+            // }
 
             VoiceChatManager voiceChatManager = VoiceChatManager.GetInstance();
             if (voiceChatManager == null || !voiceChatManager.TryGetAvailableMicrophoneNames(out string[] micNames))

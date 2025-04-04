@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVr.LobbySystem
@@ -20,7 +21,10 @@ namespace AnyVr.LobbySystem
     [RequireComponent(typeof(NetworkManager))]
     public class ConnectionManager : MonoBehaviour
     {
-        [SerializeField] [Scene] private string globalScene;
+        [FormerlySerializedAs("globalScene")]
+        [SerializeField] [Scene] private string _globalScene;
+        [FormerlySerializedAs("welcomeScene")]
+        [SerializeField] [Scene] private string _welcomeScene;
 
         private bool _isServerInitialized;
 
@@ -80,7 +84,7 @@ namespace AnyVr.LobbySystem
             {
                 if (!asServer)
                 {
-                    SceneManager.UnloadSceneAsync("WelcomeScene");
+                    SceneManager.UnloadSceneAsync(_welcomeScene);
                 }
             };
         }
@@ -107,20 +111,7 @@ namespace AnyVr.LobbySystem
 
         private static void OnConnectionState(ConnectionState state)
         {
-            switch (state)
-            {
-                case LobbySystem.ConnectionState.k_client:
-                    Logger.LogVerbose("Connected to server.");
-                    break;
-                case LobbySystem.ConnectionState.k_server:
-                    Logger.LogVerbose("Server started.");
-                    break;
-                case LobbySystem.ConnectionState.k_disconnected:
-                    Logger.LogVerbose("Disconnected from server.");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(state), state, null);
-            }
+            Logger.LogVerbose($"Updated connection state: {state.ToString()}");
         }
 
         private static void ServerManager_OnRemoteConnectionState(NetworkConnection conn,
@@ -278,7 +269,7 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
-            string scene = Path.GetFileNameWithoutExtension(globalScene);
+            string scene = Path.GetFileNameWithoutExtension(_globalScene);
             SceneLoadData sld = new(scene)
             {
                 Params =

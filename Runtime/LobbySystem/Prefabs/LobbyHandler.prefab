@@ -50,7 +50,7 @@ MonoBehaviour:
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 9052915785183046015}
   _networkObjectCache: {fileID: 0}
-  uiScene: Assets/Samples/AnyVr/0.1.0/NewLobbySetup/Scenes/UIScene.unity
+  _uiScene: 
 --- !u!114 &4292095357965459054
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -99,8 +99,7 @@ MonoBehaviour:
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    LocalScale: {x: 0, y: 0, z: 0}
   <IsNested>k__BackingField: 0
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
