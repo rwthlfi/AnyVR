@@ -22,6 +22,7 @@ namespace AnyVr.LobbySystem
         public readonly string Name;
         public readonly string Scene;
 
+        public string SceneName => Path.GetFileNameWithoutExtension(Scene);
 
         public LobbyMetaData() { }
 
