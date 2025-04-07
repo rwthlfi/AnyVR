@@ -3,13 +3,13 @@ using AnyVr.Voicechat;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Serialization;
+using UnityEngine.SceneManagement;
+using USceneManger = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVr.LobbySystem
 {
@@ -104,10 +104,9 @@ namespace AnyVr.LobbySystem
 
             AddClient();
 
-            // if (!string.IsNullOrEmpty(_uiScene))
-            // {
-            //     UnityEngine.SceneManagement.SceneManager.LoadScene(_uiScene, LoadSceneMode.Additive);
-            // }
+            // Reapply environmental settings
+            Scene lobbyScene = USceneManger.GetSceneByPath(MetaData.Scene);
+            USceneManger.SetActiveScene(lobbyScene);
 
             VoiceChatManager voiceChatManager = VoiceChatManager.GetInstance();
             if (voiceChatManager == null || !voiceChatManager.TryGetAvailableMicrophoneNames(out string[] micNames))
