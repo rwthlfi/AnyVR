@@ -364,6 +364,7 @@ namespace AnyVr.LobbySystem
         {
             const string tokenURL = "http://{0}:{1}/requestServerIp";
             string url = string.Format(tokenURL, _tokenServerAddress.ip, _tokenServerAddress.port);
+            Logger.LogVerbose($"Requesting server ip from '{url}'");
             if (Application.platform == RuntimePlatform.WebGLPlayer)
             {
                 return await WEBGL_RequestServerIp(url);
