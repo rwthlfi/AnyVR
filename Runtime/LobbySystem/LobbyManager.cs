@@ -278,10 +278,11 @@ namespace AnyVr.LobbySystem
         /// <param name="scenePath">The scene to be loaded for the lobby.</param>
         /// <param name="maxClients">The maximum number of clients allowed in the lobby.</param>
         /// <param name="expirationDate">Optional expiration date for the lobby.</param>
+        /// <param name="autoJoin">If the client should automatically join the lobby.</param>
         public void Client_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients,
-            DateTime? expirationDate = null)
+            DateTime? expirationDate = null, bool autoJoin = false)
         {
-            CreateLobby(lobbyName, password, scenePath, maxClients, expirationDate, ClientManager.Connection);
+            CreateLobby(lobbyName, password, scenePath, maxClients, expirationDate, ClientManager.Connection, autoJoin);
         }
 
         /// <summary>
@@ -289,19 +290,19 @@ namespace AnyVr.LobbySystem
         /// </summary>
         [ServerRpc(RequireOwnership = false)]
         private void CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients,
-            DateTime? expirationDate, NetworkConnection conn = null)
+            DateTime? expirationDate, NetworkConnection conn = null, bool autoJoin = false)
         {
             if (conn == null)
             {
                 return;
             }
 
-            StartCoroutine(Co_CreateLobby(lobbyName, password, scenePath, maxClients, expirationDate, conn));
+            StartCoroutine(Co_CreateLobby(lobbyName, password, scenePath, maxClients, expirationDate, conn, autoJoin));
         }
 
         [Server]
         private IEnumerator Co_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients,
-            DateTime? expirationDate, NetworkConnection conn = null)
+            DateTime? expirationDate, NetworkConnection conn = null, bool autoJoin = false)
         {
             if (conn is null)
             {
@@ -344,7 +345,12 @@ namespace AnyVr.LobbySystem
             }
 
             Logger.LogVerbose($"Lobby created. {lobbyMetaData}");
-            AddClientToLobby(lobbyMetaData.LobbyId, password, conn); // Auto join lobby
+
+            if (autoJoin)
+            {
+                AddClientToLobby(lobbyMetaData.LobbyId, password, conn);
+            }
+
             InvokeLobbyOpened(lobbyMetaData.LobbyId);
 
             if (expirationDate.HasValue)
@@ -696,6 +702,8 @@ namespace AnyVr.LobbySystem
         {
             return _lobbies.Collection;
         }
+
+        public bool TryGetLobby(Guid lobbyId, out LobbyMetaData lmd) => _lobbies.TryGetValue(lobbyId, out lmd);
 
         #region Singleton
 

@@ -3,13 +3,13 @@ using AnyVr.Voicechat;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Serialization;
+using UnityEngine.SceneManagement;
+using USceneManger = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVr.LobbySystem
 {
@@ -19,12 +19,24 @@ namespace AnyVr.LobbySystem
         // Only assigned on client
         [CanBeNull] private static LobbyHandler s_instance;
 
-        // [FormerlySerializedAs("uiScene")]
-        // [SerializeField] [Scene] private string _uiScene;
-        private readonly SyncVar<int> _adminId = new SyncVar<int>();
-        private readonly SyncHashSet<int> _clientIds = new SyncHashSet<int>();
-        private readonly SyncVar<bool> _initialized = new SyncVar<bool>(false);
-        private readonly SyncVar<Guid> _lobbyId = new SyncVar<Guid>();
+        private readonly SyncVar<int> _adminId = new();
+        private readonly SyncHashSet<int> _clientIds = new();
+        private readonly SyncVar<bool> _initialized = new(false);
+        private readonly SyncVar<Guid> _lobbyId = new();
+
+        public LobbyMetaData MetaData
+        {
+            get
+            {
+                LobbyManager lobbyManager = LobbyManager.GetInstance();
+                if (lobbyManager == null)
+                {
+                    return null;
+                }
+
+                return !lobbyManager.TryGetLobby(_lobbyId.Value, out LobbyMetaData lmd) ? null : lmd;
+            }
+        }
 
         public TextChatManager TextChat { get; private set; }
 
@@ -47,7 +59,7 @@ namespace AnyVr.LobbySystem
         public event Action<int, string> ClientJoin;
 
         /// <summary>
-        ///     Invoked when an remote client left the lobby of thk local client
+        ///     Invoked when a remote client left the lobby of thk local client
         /// </summary>
         public event Action<int> ClientLeft;
 
@@ -92,10 +104,9 @@ namespace AnyVr.LobbySystem
 
             AddClient();
 
-            // if (!string.IsNullOrEmpty(_uiScene))
-            // {
-            //     UnityEngine.SceneManagement.SceneManager.LoadScene(_uiScene, LoadSceneMode.Additive);
-            // }
+            // Reapply environmental settings
+            Scene lobbyScene = USceneManger.GetSceneByPath(MetaData.Scene);
+            USceneManger.SetActiveScene(lobbyScene);
 
             VoiceChatManager voiceChatManager = VoiceChatManager.GetInstance();
             if (voiceChatManager == null || !voiceChatManager.TryGetAvailableMicrophoneNames(out string[] micNames))
