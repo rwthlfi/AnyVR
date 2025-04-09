@@ -105,7 +105,7 @@ namespace AnyVr.LobbySystem
             AddClient();
 
             // Reapply environmental settings
-            Scene lobbyScene = USceneManger.GetSceneByPath(MetaData.Scene);
+            Scene lobbyScene = USceneManger.GetSceneByPath(MetaData.ScenePath);
             USceneManger.SetActiveScene(lobbyScene);
 
             VoiceChatManager voiceChatManager = VoiceChatManager.GetInstance();

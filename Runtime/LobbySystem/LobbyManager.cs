@@ -277,19 +277,20 @@ namespace AnyVr.LobbySystem
         /// <param name="password">The password for the lobby (if any). Pass null or white space for no password.</param>
         /// <param name="scenePath">The scene to be loaded for the lobby.</param>
         /// <param name="maxClients">The maximum number of clients allowed in the lobby.</param>
+        /// <param name="sceneName">The name of the scene to be loaded.</param>
         /// <param name="expirationDate">Optional expiration date for the lobby.</param>
         /// <param name="autoJoin">If the client should automatically join the lobby.</param>
-        public void Client_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients,
+        public void Client_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients, string sceneName,
             DateTime? expirationDate = null, bool autoJoin = false)
         {
-            CreateLobby(lobbyName, password, scenePath, maxClients, expirationDate, ClientManager.Connection, autoJoin);
+            CreateLobby(lobbyName, password, scenePath, maxClients, sceneName, expirationDate, ClientManager.Connection, autoJoin);
         }
 
         /// <summary>
         ///     Server Rpc to create a new lobby on the server.
         /// </summary>
         [ServerRpc(RequireOwnership = false)]
-        private void CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients,
+        private void CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients, string sceneName,
             DateTime? expirationDate, NetworkConnection conn = null, bool autoJoin = false)
         {
             if (conn == null)
@@ -297,11 +298,11 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
-            StartCoroutine(Co_CreateLobby(lobbyName, password, scenePath, maxClients, expirationDate, conn, autoJoin));
+            StartCoroutine(Co_CreateLobby(lobbyName, password, scenePath, maxClients, sceneName, expirationDate, conn, autoJoin));
         }
 
         [Server]
-        private IEnumerator Co_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients,
+        private IEnumerator Co_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients, string sceneName,
             DateTime? expirationDate, NetworkConnection conn = null, bool autoJoin = false)
         {
             if (conn is null)
@@ -310,7 +311,11 @@ namespace AnyVr.LobbySystem
             }
 
             maxClients = (ushort)Mathf.Max(1, maxClients);
-            LobbyMetaData lobbyMetaData = new(CreateLobbyId(), lobbyName, conn.ClientId, scenePath, maxClients,
+            if (string.IsNullOrEmpty(lobbyName))
+            {
+                lobbyName = $"{PlayerNameTracker.GetPlayerName(conn.ClientId)}'s {sceneName}";
+            }
+            LobbyMetaData lobbyMetaData = new(CreateLobbyId(), lobbyName, conn.ClientId, scenePath, sceneName, maxClients,
                 !string.IsNullOrWhiteSpace(password), expirationDate);
             _lobbies.Add(lobbyMetaData.LobbyId, lobbyMetaData);
 
@@ -620,7 +625,7 @@ namespace AnyVr.LobbySystem
                 return null;
             }
 
-            SceneLookupData sld = new() { Handle = lmd.SceneHandle.Value, Name = lmd.Scene };
+            SceneLookupData sld = new() { Handle = lmd.SceneHandle.Value, Name = lmd.ScenePath };
             object[] unloadParams = { SceneLoadParam.k_lobby, lmd.LobbyId };
             SceneUnloadData sud = new(new[] { sld })
             {
