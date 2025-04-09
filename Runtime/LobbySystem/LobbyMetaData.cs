@@ -20,24 +20,24 @@ namespace AnyVr.LobbySystem
         public readonly Guid LobbyId;
 
         public readonly string Name;
-        public readonly string Scene;
-
-        public string SceneName => Path.GetFileNameWithoutExtension(Scene);
+        public readonly string ScenePath;
+        public readonly string SceneName;
 
         public LobbyMetaData() { }
 
-        public LobbyMetaData(Guid lobbyId, string name, int creatorId, string scene, ushort lobbyCapacity,
+        public LobbyMetaData(Guid lobbyId, string name, int creatorId, string scenePath, string sceneName, ushort lobbyCapacity,
             bool isPasswordProtected, DateTime? expireDate)
         {
             Name = name;
-            Scene = scene;
+            ScenePath = scenePath;
+            SceneName = sceneName;
             CreatorId = creatorId;
             LobbyCapacity = lobbyCapacity;
             LobbyId = lobbyId;
             IsPasswordProtected = isPasswordProtected;
             ExpireDate = expireDate;
             SceneHandle = null;
-            _sceneLoadData = new SceneLoadData(scene)
+            _sceneLoadData = new SceneLoadData(scenePath)
             {
                 ReplaceScenes = ReplaceOption.OnlineOnly,
                 Options = { AllowStacking = true, LocalPhysics = LocalPhysicsMode.None, AutomaticallyUnload = false },
@@ -108,7 +108,7 @@ namespace AnyVr.LobbySystem
         public override string ToString()
         {
             return
-                $"LobbyMetaData (Id={LobbyId}, Name={Name}, Scene={Scene}, Creator={CreatorId}, MaxClients={LobbyCapacity}, IsPasswordProtected={IsPasswordProtected})";
+                $"LobbyMetaData (Id={LobbyId}, Name={Name}, Scene={ScenePath}, Creator={CreatorId}, MaxClients={LobbyCapacity}, IsPasswordProtected={IsPasswordProtected})";
         }
 
         public override bool Equals(object obj)
@@ -124,7 +124,7 @@ namespace AnyVr.LobbySystem
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(LobbyId, Name, CreatorId, Scene, LobbyCapacity);
+            return HashCode.Combine(LobbyId, Name, CreatorId, ScenePath, LobbyCapacity);
         }
     }
 }
