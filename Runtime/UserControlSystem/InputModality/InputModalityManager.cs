@@ -37,9 +37,17 @@ namespace AnyVR.UserControlSystem
         [SerializeField] private Transform _pcGazeInteractionOrigin;
         [SerializeField] private XRGazeInteractor _gazeInteractor;
 
+        private static bool s_isXRInitializationFinished = false;
+
         private void Start()
         {
             PlatformManager.Instance.OnXRInitializationFinished += InitializeUserInput;
+            PlatformManager.Instance.OnXRInitializationFinished += () => s_isXRInitializationFinished = true;
+
+            if (s_isXRInitializationFinished)
+            {
+                InitializeUserInput();
+            }
         }
 
         /// <summary>
