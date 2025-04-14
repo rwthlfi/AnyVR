@@ -15,6 +15,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
+using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVr.LobbySystem
 {
@@ -122,10 +123,17 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
-            if (IsUnloadingLobby(args.QueueData, false, out Guid _))
+            if (!IsUnloadingLobby(args.QueueData, false, out Guid _))
             {
-                UnityEngine.SceneManagement.SceneManager.LoadScene(offlineScene, LoadSceneMode.Additive);
-                // StartCoroutine(LoadWelcomeScene());
+                return;
+            }
+            AsyncOperation op = USceneManager.LoadSceneAsync(offlineScene, LoadSceneMode.Additive);
+            if (op != null)
+            {
+                op.completed += _ =>
+                {
+                    USceneManager.SetActiveScene(USceneManager.GetSceneByPath(offlineScene));
+                };
             }
         }
 
