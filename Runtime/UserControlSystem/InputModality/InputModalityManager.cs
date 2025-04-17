@@ -48,6 +48,8 @@ namespace AnyVR.UserControlSystem
             {
                 InitializeUserInput();
             }
+
+            SetCursorVisibility(false);
         }
 
         /// <summary>

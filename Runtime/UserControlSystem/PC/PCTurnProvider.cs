@@ -28,6 +28,9 @@ namespace AnyVR.UserControlSystem
         // Private fields
         [SerializeField] private Transform _turnOrigin;
 
+        [SerializeField] [Tooltip("The speed at which the camera turns.")] [Range(0f, 100f)]
+        private float _turnSpeed = 30f;
+
         [SerializeField] [Tooltip("Max/min degrees of pitching the camera")] [Range(-89f, 89f)]
         private float _pitchThreshhold = 60f;
 
@@ -39,7 +42,7 @@ namespace AnyVR.UserControlSystem
         private Vector2 _turnRotation;
 
         // Properties
-        public float TurnSpeed => 30f;
+        public float TurnSpeed => _turnSpeed;
 
         private void Update()
         {
