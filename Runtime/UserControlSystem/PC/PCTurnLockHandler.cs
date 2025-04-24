@@ -1,5 +1,5 @@
 // AnyVR is a multiuser, multiplatform XR framework.
-// Copyright (C) 2024 Engineering Hydrology, RWTH Aachen University.
+// Copyright (C) 2025 Engineering Hydrology, RWTH Aachen University.
 // 
 // AnyVR is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published
@@ -17,26 +17,16 @@
 
 using AnyVR.PlatformManagement;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 namespace AnyVR.UserControlSystem
 {
-    [RequireComponent(typeof(DynamicMoveProvider))]
-    public class PCMovementLockHandler : MonoBehaviour
+    public class PCTurnLockHandler : MonoBehaviour
     {
-        private DynamicMoveProvider _moveProvider;
-        
-        private static PCMovementLockHandler s_instance;
-
-        /// <summary>
-        /// Read-only property that indicates whether the movement is currently locked or not.
-        /// </summary>
-        public static bool IsMovementLocked => !s_instance._moveProvider.enabled;
+        private static PCTurnLockHandler s_instance;
+        private PCTurnProvider _turnProvider;
 
         [SerializeField]
-        private ushort _movementLockCounter; 
-
-
+        private ushort _turnLockCounter;
 
         private void Awake()
         {
@@ -49,8 +39,8 @@ namespace AnyVR.UserControlSystem
                 Destroy(gameObject);
             }
 
-            _moveProvider = GetComponent<DynamicMoveProvider>();
-            _movementLockCounter = 0;
+            _turnProvider = GetComponent<PCTurnProvider>();
+            _turnLockCounter = 0;
         }
 
         private async void Start()
@@ -65,35 +55,35 @@ namespace AnyVR.UserControlSystem
 
 
 
-        private static void TogglePCMovement()
+        private static void TogglePCTurning()
         {
-            bool isLocked = s_instance._movementLockCounter > 0;
-            s_instance._moveProvider.enabled = !isLocked;
+            bool isLocked = s_instance._turnLockCounter > 0;
+            s_instance._turnProvider.enabled = !isLocked;
         }
-        
-        public static void EnablePCMovement()
+
+        public static void EnablePCTurning()
         {
             if (s_instance == null)
             {
-                Debug.LogError($"Could not enable PC movement. PCMovementLockHandler is null.");
+                Debug.LogError("PCTurnLockHandler instance is null. Ensure it is initialized before calling this method.");
                 return;
             }
-            if (s_instance._movementLockCounter > 0)
+            if (s_instance._turnLockCounter > 0)
             {
-                s_instance._movementLockCounter--;
+                s_instance._turnLockCounter--;
             }
-            TogglePCMovement();
+            TogglePCTurning();
         }
-        
-        public static void DisablePCMovement()
+
+        public static void DisablePCTurning()
         {
             if (s_instance == null)
             {
-                Debug.LogError($"Could not disable PC movement. PCMovementLockHandler is null.");
+                Debug.LogError("PCTurnLockHandler instance is null. Ensure it is initialized before calling this method.");
                 return;
             }
-            s_instance._movementLockCounter++;
-            TogglePCMovement();
+            s_instance._turnLockCounter++;
+            TogglePCTurning();
         }
     }
 }

@@ -2,7 +2,7 @@ using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     /// <summary>
     ///     Spawns a player object for clients when they connect.

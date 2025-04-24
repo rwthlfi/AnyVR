@@ -3,7 +3,7 @@ using System;
 using System.IO;
 using UnityEngine;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     [CreateAssetMenu(menuName = "AnyVr/LobbySceneMetaData")]
     public class LobbySceneMetaData : ScriptableObject

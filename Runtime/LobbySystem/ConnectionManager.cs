@@ -1,7 +1,10 @@
-using AnyVr.Voicechat;
+using AnyVR.Voicechat;
+using FishNet;
 using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Managing.Scened;
+using FishNet.Managing.Timing;
+using FishNet.Object;
 using FishNet.Transporting;
 using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
@@ -16,7 +19,7 @@ using UnityEngine.Networking;
 using UnityEngine.Serialization;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     [RequireComponent(typeof(NetworkManager))]
     public class ConnectionManager : MonoBehaviour
@@ -30,7 +33,9 @@ namespace AnyVr.LobbySystem
 
         private NetworkManager _networkManager;
 
-        private (string ip, ushort port) _tokenServerAddress;
+        private string _tokenServerAddress;
+        
+        private TimeManager _tm;
 
         public ConnectionState State
         {
@@ -62,6 +67,7 @@ namespace AnyVr.LobbySystem
         {
             InitSingleton();
             _networkManager = GetComponent<NetworkManager>();
+            _tm = _networkManager.TimeManager;
             Assert.IsNotNull(_networkManager);
         }
 
@@ -161,6 +167,19 @@ namespace AnyVr.LobbySystem
             VoiceChatManager.GetInstance()?.Disconnect();
         }
 
+        public uint Latency
+        {
+            get {
+                if (_tm == null)
+                {
+                    return 0;
+                }
+                long ping = _tm.RoundTripTime;
+                long deduction = (long)(_tm.TickDelta * 2000d);
+                return (uint)Mathf.Max(1, ping - deduction);
+            }
+        }
+
         [CanBeNull]
         public static ConnectionManager GetInstance()
         {
@@ -201,7 +220,7 @@ namespace AnyVr.LobbySystem
             _networkManager.TransportManager.Transport.SetPort(fishnetAddress.port);
             _networkManager.ClientManager.StartConnection();
 
-            VoiceChatManager.GetInstance()?.SetTokenServerAddress(_tokenServerAddress.ip, _tokenServerAddress.port);
+            VoiceChatManager.GetInstance()?.SetTokenServerAddress(_tokenServerAddress);
 
             return true;
         }
@@ -217,24 +236,21 @@ namespace AnyVr.LobbySystem
         private static bool TryParseAddress(string address, out (string, ushort) res)
         {
             res = (null, 0);
-            if (!Regex.IsMatch(address, ".+:[0-9]+"))
+            
+            const string pattern = @"^(?:\[(.+)\]|(.+)):(\d+)$";
+            Match m = Regex.Match(address, pattern);
+            if (!m.Success)
             {
                 return false;
             }
 
-            string[] arr = address.Split(':'); // [ip, port]
-
-            if (!uint.TryParse(arr[1], out uint port))
+            if (!ushort.TryParse(m.Groups[3].Value, out ushort port))
             {
                 return false;
             }
 
-            if (port > ushort.MaxValue)
-            {
-                return false;
-            }
-
-            res = (arr[0], (ushort)port);
+            string ip = m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value;
+            res = (ip, port);
             return true;
         }
 
@@ -360,10 +376,10 @@ namespace AnyVr.LobbySystem
             _networkManager.ServerManager.StopConnection(false);
         }
 
-        public async Task<ServerAddressResponse> RequestServerIp()
+        public async Task<ServerAddressResponse> RequestServerIp(bool useHttp = false)
         {
-            const string tokenURL = "http://{0}:{1}/requestServerIp";
-            string url = string.Format(tokenURL, _tokenServerAddress.ip, _tokenServerAddress.port);
+            const string tokenURL = "{0}://{1}/requestServerIp";
+            string url = string.Format(tokenURL, useHttp? "http" : "https", _tokenServerAddress);
             Logger.LogVerbose($"Requesting server ip from '{url}'");
             if (Application.platform == RuntimePlatform.WebGLPlayer)
             {
@@ -414,12 +430,9 @@ namespace AnyVr.LobbySystem
             return res;
         }
 
-        public void SetTokenServerIp(string tokenServerIp)
+        public void SetTokenServerIp(string tokenServerAddress)
         {
-            if (TryParseAddress(tokenServerIp, out (string, ushort) res))
-            {
-                _tokenServerAddress = res;
-            }
+            _tokenServerAddress = tokenServerAddress;
         }
 
         #region Singleton
@@ -444,8 +457,11 @@ namespace AnyVr.LobbySystem
     [Serializable]
     public class ServerAddressResponse
     {
+        // ReSharper disable once InconsistentNaming
         public bool success;
+        // ReSharper disable once InconsistentNaming
         public string fishnet_server_address;
+        // ReSharper disable once InconsistentNaming
         public string livekit_server_address;
 
         public ServerAddressResponse() { }

@@ -6,7 +6,7 @@ using FishNet.Transporting.Tugboat;
 using FishNet.Transporting.Multipass;
 using UnityEngine;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     [RequireComponent(typeof(Multipass))]
     public class MultipassHandler : MonoBehaviour

@@ -3,7 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace AnyVr.Editor
+namespace AnyVR.Editor
 {
     /// <summary>
     ///     Decorates each new code file with a GPL license header containing basic

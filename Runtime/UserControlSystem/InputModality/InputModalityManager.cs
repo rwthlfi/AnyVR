@@ -16,7 +16,6 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using AnyVR.PlatformManagement;
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
@@ -37,27 +36,17 @@ namespace AnyVR.UserControlSystem
         [SerializeField] private Transform _pcGazeInteractionOrigin;
         [SerializeField] private XRGazeInteractor _gazeInteractor;
 
-        private static bool s_isXRInitializationFinished = false;
-
-        private void Start()
+        private async void Start()
         {
-            PlatformManager.Instance.OnXRInitializationFinished += InitializeUserInput;
-            PlatformManager.Instance.OnXRInitializationFinished += () => s_isXRInitializationFinished = true;
-
-            if (s_isXRInitializationFinished)
-            {
-                InitializeUserInput();
-            }
-
-            SetCursorVisibility(false);
+            bool isXRActive = await PlatformInfo.IsXRPlatformAsync();
+            InitializeUserInput(isXRActive);
         }
 
         /// <summary>
         ///     Initializes the user input based on the XR platform availability.
         /// </summary>
-        private void InitializeUserInput()
+        private void InitializeUserInput(bool isXRActive)
         {
-            bool isXRActive = PlatformInfo.IsXRPlatform();
             ToggleXRControls(isXRActive);
             InitializeTurnProvider(isXRActive);
             InitializeGazeInteractor(isXRActive);

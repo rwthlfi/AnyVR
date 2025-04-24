@@ -18,7 +18,7 @@
 using JetBrains.Annotations;
 using UnityEngine;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     public class PlayerInteractionHandler : MonoBehaviour
     {

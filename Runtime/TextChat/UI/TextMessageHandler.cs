@@ -15,11 +15,11 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using AnyVr.LobbySystem;
+using AnyVR.LobbySystem;
 using TMPro;
 using UnityEngine;
 
-namespace AnyVr.TextChat.UI
+namespace AnyVR.TextChat.UI
 {
     [RequireComponent(typeof(TextMeshProUGUI))]
     public class TextMessageHandler : MonoBehaviour

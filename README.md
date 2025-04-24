@@ -14,22 +14,25 @@
 
 4. In OpenXR Settings: Add 'Oculus Touch Controller Profile' to Enabled Interaction Profiles.
 
-5. Import xr starter assets & keyboard.
+5. Import xr starter assets & spatial keyboard from XRI's samples catalogue.
 
-6. Import packages with the Unity Package Manager.
+6. Import the following packages with the Unity Package Manager (you can add these lines to your `manifest.json`).
+   <br><br>**Important:** You will have to include `"io.livekit.unity"`, if and only if you aim to build for the web, and `"io.livekit.livekit-sdk"` otherwise. For more info, see below.
 
 ```
-    "rwth.lfi.anyvr": "https://git.rwth-aachen.de/LFI/xr/anyvr.git#package",
+    "rwth.lfi.anyvr": "https://github.com/rwthlfi/AnyVR.git",
     "io.livekit.unity": "https://github.com/livekit/client-sdk-unity-web.git",
     "io.livekit.livekit-sdk": "https://github.com/livekit/client-sdk-unity.git",
     "com.firstgeargames.fishnet": "https://github.com/FirstGearGames/FishNet.git?path=Assets/FishNet",
     "com.firstgeargames.fishnet.bayou": "https://github.com/FirstGearGames/Bayou.git?path=FishNet/Plugins/Bayou",
 ```
 
-7. Import LobbySetup Sample (Optional).
 
-8. Enable AnyVr Tests (Optional):
-   Add '"testables": "rwth.lfi.anyvr"' to the manifest
+7. Import LobbySetup Sample (Optional).
+   This serves as example how to setup an online scene.
+
+8. Enable AnyVR Tests (Optional):
+   Add '"testables": "rwth.lfi.anyvr"' to the manifest.
 
 ### LiveKit
 

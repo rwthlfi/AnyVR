@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     internal enum LogLevel
     {
@@ -14,7 +14,7 @@ namespace AnyVr.LobbySystem
 
     public class Logger : MonoBehaviour
     {
-        [SerializeField] private LogLevel currentLevel = LogLevel.k_warning;
+        [SerializeField] private LogLevel _currentLevel = LogLevel.k_warning;
 
         private void Awake()
         {
@@ -23,7 +23,7 @@ namespace AnyVr.LobbySystem
 
         private bool ShouldLog(LogLevel level)
         {
-            return level <= currentLevel;
+            return level <= _currentLevel;
         }
 
         public static void LogError(object message)
@@ -48,7 +48,7 @@ namespace AnyVr.LobbySystem
 
         internal static void SetLogLevel(LogLevel level)
         {
-            s_instance.currentLevel = level;
+            s_instance._currentLevel = level;
         }
 
         private static void Log(string message, LogLevel level)
@@ -58,7 +58,7 @@ namespace AnyVr.LobbySystem
                 return;
             }
 
-            string prefixedMessage = $"[AnyVr] {message}";
+            string prefixedMessage = $"[AnyVR] {message}";
             switch (level)
             {
                 case LogLevel.k_error:

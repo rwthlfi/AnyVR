@@ -4,7 +4,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine.SceneManagement;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     public class LobbyMetaData
     {

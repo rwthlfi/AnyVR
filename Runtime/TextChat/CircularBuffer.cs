@@ -17,7 +17,7 @@
 
 using System;
 
-namespace AnyVr.TextChat
+namespace AnyVR.TextChat
 {
     public class CircularBuffer<T>
     {
