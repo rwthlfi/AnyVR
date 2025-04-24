@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AnyVr.Voicechat
+namespace AnyVR.Voicechat
 {
     [Serializable]
     public class TokenResponse

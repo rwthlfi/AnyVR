@@ -2657,7 +2657,7 @@
             ]
         },
         {
-            "name": "PC Controls",
+            "name": "PC Default Controls",
             "id": "56cdc231-963a-4e87-b3e6-f741e005c39a",
             "actions": [
                 {
@@ -2677,6 +2677,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "Unlock Cursor",
+                    "type": "Button",
+                    "id": "0afcd042-fc47-432f-880d-13230ea48683",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -2699,6 +2708,45 @@
                     "processors": "",
                     "groups": "",
                     "action": "Turn",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e0bc586c-509d-465c-b2d1-6ca8c77c493e",
+                    "path": "<Keyboard>/alt",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Unlock Cursor",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "PC Cursor Unlocked",
+            "id": "50b56aa2-08d6-4ebb-b46e-d5cafeccdbe4",
+            "actions": [
+                {
+                    "name": "Lock Cursor",
+                    "type": "Button",
+                    "id": "c102ad9a-e99e-487c-bd48-8c371f763ca1",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "e36fb19c-82c9-4ae8-9303-c3a5e1d15adf",
+                    "path": "<Keyboard>/alt",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Lock Cursor",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

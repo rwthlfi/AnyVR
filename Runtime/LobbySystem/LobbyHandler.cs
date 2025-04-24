@@ -1,5 +1,5 @@
-using AnyVr.TextChat;
-using AnyVr.Voicechat;
+using AnyVR.TextChat;
+using AnyVR.Voicechat;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using USceneManger = UnityEngine.SceneManagement.SceneManager;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     [RequireComponent(typeof(TextChatManager))]
     public class LobbyHandler : NetworkBehaviour

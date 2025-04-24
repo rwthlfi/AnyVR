@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace AnyVr.Voicechat
+namespace AnyVR.Voicechat
 {
     public class VoiceChatManager : MonoBehaviour
     {
@@ -179,21 +179,9 @@ namespace AnyVr.Voicechat
             _chatClient.SetClientMute(sid, b);
         }
 
-        public void SetTokenServerAddress(string ip, ushort port)
+        public void SetTokenServerAddress(string address)
         {
-            _tokenServerAddr = $"{ip}:{port}";
-        }
-
-        private void SetTokenServerAddress(string address)
-        {
-            if (TryParseAddress(address, out (string ip, ushort port) res))
-            {
-                _tokenServerAddr = address;
-            }
-            else
-            {
-                Debug.LogWarning($"Error parsing token server address: {address}");
-            }
+            _tokenServerAddr = address;
         }
 
         private static bool TryParseAddress(string address, out (string, ushort) res)

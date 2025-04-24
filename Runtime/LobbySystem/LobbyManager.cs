@@ -1,4 +1,4 @@
-using AnyVr.Voicechat;
+using AnyVR.Voicechat;
 using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
@@ -17,7 +17,7 @@ using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     public class LobbyManager : NetworkBehaviour
     {

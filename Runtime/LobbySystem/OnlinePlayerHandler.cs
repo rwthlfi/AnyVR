@@ -19,7 +19,7 @@ using FishNet.Object;
 using UnityEngine;
 using UnityEngine.Animations;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     public class OnlinePlayerHandler : NetworkBehaviour
     {

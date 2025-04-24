@@ -15,12 +15,12 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using AnyVr.LobbySystem;
+using AnyVR.LobbySystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace AnyVr.TextChat.UI
+namespace AnyVR.TextChat.UI
 {
     public class ChatBoxHandler : MonoBehaviour
     {

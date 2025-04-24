@@ -17,7 +17,7 @@
 
 using UnityEngine;
 
-namespace AnyVr.LobbySystem
+namespace AnyVR.LobbySystem
 {
     public class DestroyOnServer : MonoBehaviour
     {

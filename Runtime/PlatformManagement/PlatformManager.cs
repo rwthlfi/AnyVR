@@ -18,6 +18,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.XR;
 using UnityEngine.XR.Management;
 
 namespace AnyVR.PlatformManagement
@@ -35,13 +36,18 @@ namespace AnyVR.PlatformManagement
                     s_instance = FindAnyObjectByType<PlatformManager>();
                     if (s_instance == null)
                     {
-                        Debug.LogError("PlattformManager not found in scene. Please add it to a gameobject.");
+                        GameObject platformManagerObject = new GameObject("PlatformManager");
+                        s_instance = platformManagerObject.AddComponent<PlatformManager>();
                     }
                 }
-
                 return s_instance;
             }
         }
+
+        /// <summary>
+        /// Invoked when XR has been initialized.
+        /// </summary>
+        public event Action OnXRInitializationFinished;
 
         protected virtual void Awake()
         {
@@ -55,21 +61,44 @@ namespace AnyVR.PlatformManagement
 
             s_instance = this;
             DontDestroyOnLoad(gameObject);
-
-            StartCoroutine(InitializeXR());
         }
 
-        public event Action OnXRInitializationFinished;
-
-        private IEnumerator InitializeXR()
+        protected virtual void Start()
         {
-            while (XRGeneralSettings.Instance == null)
+            StartCoroutine(TryInitializeXR());
+        }
+
+        
+        
+        private IEnumerator TryInitializeXR()
+        {
+            Debug.Log("[PlatformManager] Trying to start XR initialization...");
+            // Waits until XR starts to initialize.
+            while (!IsXRInitializing())
             {
                 yield return null;
             }
-            XRManagerSettings settingsManager = XRGeneralSettings.Instance.Manager;
-            yield return settingsManager.InitializeLoader();
+
+            Debug.Log("[PlatformManager] XR initialization started.");
+            // Waits until XR is initialized.
+            yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
+
+            if (XRGeneralSettings.Instance.Manager.activeLoader == null)
+            {
+                Debug.Log("[PlatformManager] XR initialization failed.");
+                PlatformInfo.s_xRInitializationTCS.SetResult(false);
+                OnXRInitializationFinished?.Invoke();
+                yield break;
+            }
+            Debug.Log("[PlatformManager] XR initialization finished.");
+            PlatformInfo.s_xRInitializationTCS.SetResult(XRSettings.isDeviceActive);
             OnXRInitializationFinished?.Invoke();
+        }
+
+        private bool IsXRInitializing()
+        {
+            XRManagerSettings xrManager = XRGeneralSettings.Instance.Manager;
+            return xrManager != null;
         }
     }
 }
