@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace AnyVr.Voicechat
+namespace AnyVR.Voicechat
 {
     internal class WebGLVoiceChatClient : VoiceChatClient
     {
