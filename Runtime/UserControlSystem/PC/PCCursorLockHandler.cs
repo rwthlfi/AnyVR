@@ -104,8 +104,21 @@ namespace AnyVR.UserControlSystem
         private void ToggleCursorUnlock(bool isUnlocked)
         {
             // Sets visibility and lock state of the Cursor.
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (isUnlocked) 
+            {
+                Application.ExternalEval("document.body.style.cursor = 'default';");
+                Application.ExternalEval("document.exitPointerLock();");
+            }
+            else 
+            {
+                Application.ExternalEval("document.body.style.cursor = 'none';");
+                Application.ExternalEval("document.body.requestPointerLock();");
+            }
+#else
             Cursor.visible = isUnlocked;
             Cursor.lockState = isUnlocked ? CursorLockMode.None : CursorLockMode.Locked;
+#endif
 
             // Disables and enables the respective actions.
             if (isUnlocked)
