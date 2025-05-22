@@ -39,8 +39,6 @@ namespace AnyVR.UserControlSystem
             "The Input System Action that will be used to read Turn data from the mouse. Must be a Value Vector2 Control.")]
         private InputActionProperty _turnAction = new(new InputAction("Turn", expectedControlType: "Vector2"));
 
-        private Vector2 _turnRotation;
-
         // Properties
         public float TurnSpeed => _turnSpeed;
 
@@ -51,6 +49,7 @@ namespace AnyVR.UserControlSystem
 
         private void Turn(Vector2 rotation)
         {
+            Vector2 _turnRotation = _turnOrigin.eulerAngles;
             if (rotation.sqrMagnitude < 0.01)
             {
                 return;
@@ -58,8 +57,27 @@ namespace AnyVR.UserControlSystem
 
             float scaledRotateSpeed = TurnSpeed * Time.deltaTime;
             _turnRotation.y += rotation.x * scaledRotateSpeed;
-            _turnRotation.x = Mathf.Clamp(_turnRotation.x - (rotation.y * scaledRotateSpeed), -_pitchThreshhold,
-                _pitchThreshhold);
+            float inDegrees = _turnRotation.x - (rotation.y * scaledRotateSpeed);
+            if (inDegrees > 180f)
+            {
+                inDegrees = 360f - inDegrees;
+            }
+            else
+            {
+                inDegrees = -inDegrees;
+            }
+            inDegrees = Mathf.Clamp(inDegrees, -_pitchThreshhold, _pitchThreshhold);
+            if (inDegrees > 0f)
+            {
+                inDegrees = 360f - inDegrees;
+            }
+            else
+            {
+                inDegrees = -inDegrees;
+            }
+            _turnRotation.x = inDegrees;
+
+
             _turnOrigin.localEulerAngles = _turnRotation;
         }
     }
