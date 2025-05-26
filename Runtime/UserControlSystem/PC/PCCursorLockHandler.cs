@@ -16,6 +16,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using AnyVR.PlatformManagement;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -75,6 +76,7 @@ namespace AnyVR.UserControlSystem
             }
         }
 
+#if !UNITY_WEBGL
         private async void Start()
         {
             bool isXRPlatform = await PlatformInfo.IsXRPlatformAsync();
@@ -91,6 +93,16 @@ namespace AnyVR.UserControlSystem
             // Locks cursor initially.
             IsCursorUnlocked = false;
         }
+#else
+        private void Start()
+        {
+            // Subscribes to the action events.
+            _cursorUnlockAction.action.performed += UnlockCursorInputActionCallback;
+            _cursorLockAction.action.performed += LockCursorInputActionCallback;
+            // Locks cursor initially.
+            IsCursorUnlocked = false;
+        }
+#endif
 
         private void OnDestroy()
         {
@@ -103,22 +115,8 @@ namespace AnyVR.UserControlSystem
 
         private void ToggleCursorUnlock(bool isUnlocked)
         {
-            // Sets visibility and lock state of the Cursor.
-#if UNITY_WEBGL && !UNITY_EDITOR
-            if (isUnlocked) 
-            {
-                Application.ExternalEval("document.body.style.cursor = 'default';");
-                Application.ExternalEval("document.exitPointerLock();");
-            }
-            else 
-            {
-                Application.ExternalEval("document.body.style.cursor = 'none';");
-                Application.ExternalEval("document.body.requestPointerLock();");
-            }
-#else
             Cursor.visible = isUnlocked;
             Cursor.lockState = isUnlocked ? CursorLockMode.None : CursorLockMode.Locked;
-#endif
 
             // Disables and enables the respective actions.
             if (isUnlocked)
