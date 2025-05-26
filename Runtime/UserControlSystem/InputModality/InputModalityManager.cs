@@ -36,11 +36,19 @@ namespace AnyVR.UserControlSystem
         [SerializeField] private Transform _pcGazeInteractionOrigin;
         [SerializeField] private XRGazeInteractor _gazeInteractor;
 
+#if !UNITY_WEBGL
         private async void Start()
         {
             bool isXRActive = await PlatformInfo.IsXRPlatformAsync();
             InitializeUserInput(isXRActive);
         }
+#else
+        private void Start()
+        {
+            // For WebGL, we assume XR is not available and initialize accordingly.
+            InitializeUserInput(false);
+        }
+#endif
 
         /// <summary>
         ///     Initializes the user input based on the XR platform availability.
