@@ -33,6 +33,11 @@ namespace AnyVR.UserControlSystem
 
         [SerializeField] [Tooltip("Max/min degrees of pitching the camera")] [Range(-89f, 89f)]
         private float _pitchThreshhold = 60f;
+        public float PitchThreshold
+        {
+            get => _pitchThreshhold;
+            set => _pitchThreshhold = value;
+        }
 
         [SerializeField]
         [Tooltip(
@@ -40,7 +45,11 @@ namespace AnyVR.UserControlSystem
         private InputActionProperty _turnAction = new(new InputAction("Turn", expectedControlType: "Vector2"));
 
         // Properties
-        public float TurnSpeed => _turnSpeed;
+        public float TurnSpeed 
+        {
+            get => _turnSpeed;
+            set => _turnSpeed = value;
+        }
 
         private void Update()
         {
