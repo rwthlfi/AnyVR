@@ -60,7 +60,8 @@ namespace AnyVR.UserControlSystem
         /// Passed boolean denotes if the cursor is unlocked. 
         /// Should be subscribed to in Awake(), because it's first called in Start().
         /// </summary>
-        public UnityEvent<bool> OnCursorUnlockToggle = new();
+        private UnityEvent<bool> _onCursorUnlockToggle = new();
+        public static UnityEvent<bool> OnCursorUnlockToggle => s_instance._onCursorUnlockToggle;
 
 
 
