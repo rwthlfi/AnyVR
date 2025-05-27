@@ -35,6 +35,7 @@ namespace AnyVR.UserControlSystem
 
         [SerializeField]
         private ushort _movementLockCounter; 
+        public bool CanMove => _movementLockCounter == 0;
 
 
 

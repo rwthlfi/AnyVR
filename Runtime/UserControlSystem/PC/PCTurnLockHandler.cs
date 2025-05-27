@@ -27,6 +27,7 @@ namespace AnyVR.UserControlSystem
 
         [SerializeField]
         private ushort _turnLockCounter;
+        public bool CanTurn => _turnLockCounter == 0;
 
         private void Awake()
         {
