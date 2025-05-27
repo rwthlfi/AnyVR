@@ -17,6 +17,7 @@
 
 using AnyVR.PlatformManagement;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace AnyVR.UserControlSystem
 {
@@ -28,6 +29,11 @@ namespace AnyVR.UserControlSystem
         [SerializeField]
         private ushort _turnLockCounter;
         public static bool CanTurn => s_instance._turnLockCounter == 0;
+
+        private UnityEvent<bool> _onTurnLockToggle = new();
+        public static UnityEvent<bool> OnTurnLockToggle => s_instance._onTurnLockToggle;
+
+
 
         private void Awake()
         {

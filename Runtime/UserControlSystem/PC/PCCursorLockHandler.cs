@@ -55,11 +55,6 @@ namespace AnyVR.UserControlSystem
             }
         }
 
-        /// <summary>
-        /// Event that is invoked when the cursor lock state changes. 
-        /// Passed boolean denotes if the cursor is unlocked. 
-        /// Should be subscribed to in Awake(), because it's first called in Start().
-        /// </summary>
         private UnityEvent<bool> _onCursorUnlockToggle = new();
         public static UnityEvent<bool> OnCursorUnlockToggle => s_instance._onCursorUnlockToggle;
 

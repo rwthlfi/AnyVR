@@ -17,6 +17,7 @@
 
 using AnyVR.PlatformManagement;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
 namespace AnyVR.UserControlSystem
@@ -36,6 +37,9 @@ namespace AnyVR.UserControlSystem
         [SerializeField]
         private ushort _movementLockCounter; 
         public static bool CanMove => s_instance._movementLockCounter == 0;
+
+        private UnityEvent<bool> _onMovementLockToggle = new();
+        public static UnityEvent<bool> OnMovementLockToggle => s_instance._onMovementLockToggle;
 
 
 
