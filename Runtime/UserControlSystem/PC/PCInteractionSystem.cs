@@ -125,12 +125,20 @@ namespace AnyVR.UserControlSystem
 
         private bool IsThereObject(out XRBaseInteractable target)
         {
+            target = null;
+
+            if (_interactionRaycastOrigin == null)
+            {
+                return false;
+            }
+
             RaycastHit hit;
 
             if (Physics.Raycast(_interactionRaycastOrigin.position, _interactionRaycastOrigin.forward, out hit,
                     _maxInteractionDistance))
             {
                 XRBaseInteractable interactionInteractable = hit.collider.gameObject.GetComponent<XRBaseInteractable>();
+
                 if (interactionInteractable != null)
                 {
                     target = interactionInteractable;
@@ -147,7 +155,6 @@ namespace AnyVR.UserControlSystem
                 }
             }
 
-            target = null;
             return false;
         }
 
