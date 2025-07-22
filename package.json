@@ -1,6 +1,6 @@
 {
   "name": "rwth.lfi.anyvr",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "displayName": "AnyVR",
   "description": "An open-source framework for multi-platform, multi-user experiences in VR.",
   "unity": "2022.3",
