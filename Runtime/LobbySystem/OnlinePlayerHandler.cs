@@ -15,33 +15,37 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using AnyVR.Logging;
 using FishNet.Object;
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.Serialization;
+using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
     public class OnlinePlayerHandler : NetworkBehaviour
     {
-        [SerializeField] private PositionConstraint headPositionConstraint;
-        [SerializeField] private RotationConstraint headRotationConstraint;
+        private const string Tag = nameof(OnlinePlayerHandler);
 
-        [SerializeField] private PositionConstraint leftHandPositionConstraint;
-        [SerializeField] private RotationConstraint leftHandRotationConstraint;
+        [FormerlySerializedAs("headPositionConstraint")]
+        [SerializeField] private PositionConstraint _headPositionConstraint;
+        [FormerlySerializedAs("headRotationConstraint")]
+        [SerializeField] private RotationConstraint _headRotationConstraint;
 
-        [SerializeField] private PositionConstraint rightHandPositionConstraint;
-        [SerializeField] private RotationConstraint rightHandRotationConstraint;
+        [FormerlySerializedAs("leftHandPositionConstraint")]
+        [SerializeField] private PositionConstraint _leftHandPositionConstraint;
+        [FormerlySerializedAs("leftHandRotationConstraint")]
+        [SerializeField] private RotationConstraint _leftHandRotationConstraint;
+
+        [FormerlySerializedAs("rightHandPositionConstraint")]
+        [SerializeField] private PositionConstraint _rightHandPositionConstraint;
+        [FormerlySerializedAs("rightHandRotationConstraint")]
+        [SerializeField] private RotationConstraint _rightHandRotationConstraint;
 
         private IConstraint[] _constraints;
 
         private PlayerInteractionHandler _handler;
-
-
-        public override void OnStartNetwork()
-        {
-            base.OnStartNetwork();
-            gameObject.name = $"Player ({PlayerNameTracker.GetPlayerName(OwnerId)})";
-        }
 
         public override void OnStartClient()
         {
@@ -55,44 +59,43 @@ namespace AnyVR.LobbySystem
             _handler = PlayerInteractionHandler.GetInstance();
             if (_handler == null)
             {
-                Logger.LogError("Could not find an instance of PlayerInteractionHandler");
+                Logger.Log(LogLevel.Error, Tag, "Could not find an instance of PlayerInteractionHandler");
                 return;
             }
 
-            headPositionConstraint.AddSource(new ConstraintSource { sourceTransform = _handler.Head, weight = 1 });
-            headRotationConstraint.AddSource(new ConstraintSource { sourceTransform = _handler.Head, weight = 1 });
-            leftHandPositionConstraint.AddSource(new ConstraintSource
+            _headPositionConstraint.AddSource(new ConstraintSource
+            {
+                sourceTransform = _handler.Head, weight = 1
+            });
+            _headRotationConstraint.AddSource(new ConstraintSource
+            {
+                sourceTransform = _handler.Head, weight = 1
+            });
+            _leftHandPositionConstraint.AddSource(new ConstraintSource
             {
                 sourceTransform = _handler.LeftHand, weight = 1
             });
-            leftHandRotationConstraint.AddSource(new ConstraintSource
+            _leftHandRotationConstraint.AddSource(new ConstraintSource
             {
                 sourceTransform = _handler.LeftHand, weight = 1
             });
-            rightHandPositionConstraint.AddSource(new ConstraintSource
+            _rightHandPositionConstraint.AddSource(new ConstraintSource
             {
                 sourceTransform = _handler.RightHand, weight = 1
             });
-            rightHandRotationConstraint.AddSource(new ConstraintSource
+            _rightHandRotationConstraint.AddSource(new ConstraintSource
             {
                 sourceTransform = _handler.RightHand, weight = 1
             });
 
             _constraints = new IConstraint[]
             {
-                headPositionConstraint, headRotationConstraint, leftHandPositionConstraint,
-                leftHandRotationConstraint, rightHandPositionConstraint, rightHandRotationConstraint
+                _headPositionConstraint, _headRotationConstraint, _leftHandPositionConstraint, _leftHandRotationConstraint, _rightHandPositionConstraint, _rightHandRotationConstraint
             };
 
             foreach (IConstraint c in _constraints)
             {
                 c.constraintActive = true;
-            }
-
-            // Disable renderers for the owning player.
-            foreach (Renderer r in gameObject.GetComponentsInChildren<Renderer>())
-            {
-                r.enabled = false;
             }
         }
     }

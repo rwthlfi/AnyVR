@@ -16,71 +16,132 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.Compilation;
+using UnityEditor.PackageManager;
 using UnityEngine;
+using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
 namespace AnyVR.Editor
 {
-    public class LiveKitPackageHandler : EditorWindow
+    public static class LiveKitPackageHandler
     {
-        private static string GetLiveKitAsmdefPath(string packageName)
-        {
-            string packageCacheDir = Path.Combine(Application.dataPath, "../Library/PackageCache");
-            string[] matchingDirectories = Directory.GetDirectories(packageCacheDir, $"{packageName}@*");
+        private const string LiveKitName = "io.livekit.livekit-sdk";
+        private const string LiveKitWebName = "io.livekit.unity";
+        private const string LiveKitImportUrl = "https://github.com/livekit/client-sdk-unity.git";
+        private const string LiveKitWebImportUrl = "https://github.com/livekit/client-sdk-unity-web.git";
+        private const string AsmDefPath = "Runtime/livekit.unity.Runtime.asmdef";
 
-            return matchingDirectories.Length > 0
-                ? Path.Combine(matchingDirectories[0], "Runtime/livekit.unity.Runtime.asmdef")
-                : string.Empty;
+        [InitializeOnLoadMethod]
+        private static void Initialize()
+        {
+            EditorApplication.delayCall += InstallPackages;
         }
 
-        private static void EditAssemblyDefinition(bool isWebGl)
+        [MenuItem("AnyVR/Install LiveKit Packages")]
+        private static void InstallPackages()
         {
-            string standaloneAsmdefPath = GetLiveKitAsmdefPath("io.livekit.livekit-sdk");
-            string webglAsmdefPath = GetLiveKitAsmdefPath("io.livekit.unity");
+            bool liveKitExists = PackageInfo.FindForPackageName(LiveKitName) != null;
+            bool liveKitWebExists = PackageInfo.FindForPackageName(LiveKitWebName) != null;
 
-            Debug.Log($"standalone:\t {standaloneAsmdefPath}");
-            Debug.Log($"webgl:\t {webglAsmdefPath}");
-
-            string standaloneAsmdefContent = File.ReadAllText(standaloneAsmdefPath);
-            AsmdefFile standalone = JsonUtility.FromJson<AsmdefFile>(standaloneAsmdefContent);
-            string webGlAsmdefContent = File.ReadAllText(webglAsmdefPath);
-            AsmdefFile wegbl = JsonUtility.FromJson<AsmdefFile>(webGlAsmdefContent);
-
-            if (isWebGl)
+            if (!liveKitExists || !liveKitWebExists)
             {
-                wegbl.includePlatforms = new[] { "Editor", "WebGL" };
-                standalone.includePlatforms = new[] { "WindowsStandalone64", "LinuxStandalone64" };
-            }
-            else
-            {
-                wegbl.includePlatforms = new[] { "WebGL" };
-                standalone.includePlatforms = new[] { "Editor", "WindowsStandalone64", "LinuxStandalone64" };
+                InstallMissingPackages(liveKitExists, liveKitWebExists);
+                Debug.LogWarning("LiveKit packages added. Waiting for script compilation ...");
             }
 
-            File.WriteAllText(standaloneAsmdefPath, JsonUtility.ToJson(standalone, true));
-            File.WriteAllText(webglAsmdefPath, JsonUtility.ToJson(wegbl, true));
+            RefreshAsmDefs();
         }
 
-        [MenuItem("AnyVr/SetTarget/Standalone")]
-        private static void MakeStandalone()
+        private static void InstallMissingPackages(bool liveKitExists, bool liveKitWebExists)
         {
-            string standaloneAsmdefPath = GetLiveKitAsmdefPath("io.livekit.livekit-sdk");
-            string webglAsmdefPath = GetLiveKitAsmdefPath("io.livekit.unity");
-            Debug.Log($"standalone:\t {standaloneAsmdefPath}");
-            Debug.Log($"webgl:\t {webglAsmdefPath}");
-            EditAssemblyDefinition(false);
+#if UNITY_EDITOR
+            if (!liveKitExists)
+            {
+                Client.Add(LiveKitImportUrl);
+            }
+
+            if (!liveKitWebExists)
+            {
+                Client.Add(LiveKitWebImportUrl);
+            }
+#endif
         }
 
-        [MenuItem("AnyVr/SetTarget/WebGL")]
-        private static void MakeWebGl()
+        [MenuItem("AnyVR/Refresh LiveKit AsmDefs")]
+        private static void RefreshAsmDefs()
         {
-            EditAssemblyDefinition(true);
+            bool isWebGl = EditorUserBuildSettings.activeBuildTarget == BuildTarget.WebGL;
+            try
+            {
+                PackageInfo liveKitPackage = PackageInfo.FindForPackageName(LiveKitName);
+                PackageInfo liveKitWebPackage = PackageInfo.FindForPackageName(LiveKitWebName);
+
+                if (liveKitPackage == null || liveKitWebPackage == null)
+                {
+                    Debug.LogError("LiveKit packages not found!");
+                    return;
+                }
+
+                string asmdefStandalonePath = Path.Combine(liveKitPackage.assetPath, AsmDefPath);
+                string asmdefWebPath = Path.Combine(liveKitWebPackage.assetPath, AsmDefPath);
+
+                if (!File.Exists(asmdefStandalonePath) || !File.Exists(asmdefWebPath))
+                {
+                    Debug.LogError("Assembly definition files not found!");
+                    return;
+                }
+
+                List<string> standaloneInclude = new()
+                {
+                    "WindowsStandalone64", "LinuxStandalone64"
+                };
+                List<string> webInclude = new()
+                {
+                    "WebGL"
+                };
+
+                if (isWebGl)
+                {
+                    webInclude.Add("Editor");
+                }
+                else
+                {
+                    standaloneInclude.Add("Editor");
+                }
+
+                bool update = ModifyAsmDef(asmdefStandalonePath, standaloneInclude.ToArray()) | ModifyAsmDef(asmdefWebPath, webInclude.ToArray());
+                if (update)
+                {
+                    CompilationPipeline.RequestScriptCompilation();
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to configure LiveKit: {e.Message}");
+            }
+        }
+
+        private static bool ModifyAsmDef(string path, string[] platforms)
+        {
+            string content = File.ReadAllText(path);
+            AsmdefFile config = JsonUtility.FromJson<AsmdefFile>(content);
+            config.includePlatforms = platforms;
+            string newContent = JsonUtility.ToJson(config, true);
+            if (string.Equals(content, newContent))
+            {
+                return false;
+            }
+            File.WriteAllText(path, JsonUtility.ToJson(config, true));
+            return true;
         }
     }
 
+    // ReSharper disable InconsistentNaming
     [Serializable]
-    public class AsmdefFile
+    internal class AsmdefFile
     {
         public string name;
         public string rootNamespace;

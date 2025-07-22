@@ -18,7 +18,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace AnyVR.UserControlSystem
+namespace AnyVR.UserControlSystem.PC
 {
     /// <summary>
     ///     Provides the functionality to turn the camera using mouse input on PC.
@@ -33,19 +33,19 @@ namespace AnyVR.UserControlSystem
 
         [SerializeField] [Tooltip("Max/min degrees of pitching the camera")] [Range(-89f, 89f)]
         private float _pitchThreshhold = 60f;
+
+        [SerializeField]
+        [Tooltip(
+            "The Input System Action that will be used to read Turn data from the mouse. Must be a Value Vector2 Control.")]
+        private InputActionProperty _turnAction = new(new InputAction("Turn", expectedControlType: "Vector2"));
         public float PitchThreshold
         {
             get => _pitchThreshhold;
             set => _pitchThreshhold = value;
         }
 
-        [SerializeField]
-        [Tooltip(
-            "The Input System Action that will be used to read Turn data from the mouse. Must be a Value Vector2 Control.")]
-        private InputActionProperty _turnAction = new(new InputAction("Turn", expectedControlType: "Vector2"));
-
         // Properties
-        public float TurnSpeed 
+        public float TurnSpeed
         {
             get => _turnSpeed;
             set => _turnSpeed = value;
@@ -58,15 +58,15 @@ namespace AnyVR.UserControlSystem
 
         private void Turn(Vector2 rotation)
         {
-            Vector2 _turnRotation = _turnOrigin.eulerAngles;
+            Vector2 turnRotation = _turnOrigin.eulerAngles;
             if (rotation.sqrMagnitude < 0.01)
             {
                 return;
             }
 
             float scaledRotateSpeed = TurnSpeed * Time.deltaTime;
-            _turnRotation.y += rotation.x * scaledRotateSpeed;
-            float inDegrees = _turnRotation.x - (rotation.y * scaledRotateSpeed);
+            turnRotation.y += rotation.x * scaledRotateSpeed;
+            float inDegrees = turnRotation.x - rotation.y * scaledRotateSpeed;
             if (inDegrees > 180f)
             {
                 inDegrees = 360f - inDegrees;
@@ -84,10 +84,10 @@ namespace AnyVR.UserControlSystem
             {
                 inDegrees = -inDegrees;
             }
-            _turnRotation.x = inDegrees;
+            turnRotation.x = inDegrees;
 
 
-            _turnOrigin.localEulerAngles = _turnRotation;
+            _turnOrigin.localEulerAngles = turnRotation;
         }
     }
 }

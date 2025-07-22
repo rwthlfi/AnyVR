@@ -16,12 +16,13 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using AnyVR.PlatformManagement;
+using AnyVR.UserControlSystem.PC;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning;
 
-namespace AnyVR.UserControlSystem
+namespace AnyVR.UserControlSystem.InputModality
 {
     /// <summary>
     ///     Manages the user input based on the XR platform availability. Supports PC and XR input modalities.

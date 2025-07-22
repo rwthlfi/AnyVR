@@ -1,42 +1,50 @@
-using GameKit.Dependencies.Utilities.Types;
 using System;
-using System.IO;
+using System.Runtime.CompilerServices;
+using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
+using UnityEngine.Serialization;
+
+[assembly: InternalsVisibleTo("AnyVR.Tests.Runtime")]
 
 namespace AnyVR.LobbySystem
 {
-    [CreateAssetMenu(menuName = "AnyVr/LobbySceneMetaData")]
     public class LobbySceneMetaData : ScriptableObject
     {
-        [SerializeField] 
-        [Scene] 
-        private string _scenePath;
+        [SerializeField]
+        [Scene]
+        internal string _scenePath;
 
         [SerializeField]
-        private string _sceneName;
+        internal string _sceneName;
 
-        [SerializeField] 
+        [SerializeField]
         [TextArea]
-        private string _description;
-        
-        [SerializeField] 
-        private Sprite _thumbnail;
+        internal string _description;
 
         [SerializeField]
-        private MinMaxRange _recommendedUsers;
+        internal Sprite _thumbnail;
+
+        [SerializeField]
+        internal MinMaxRange _recommendedUsers;
 
         public string Name => _sceneName;
         public string ScenePath => _scenePath;
         public string Description => _description;
         public Sprite Thumbnail => _thumbnail;
-        public int MinUsers => _recommendedUsers.min;
-        public int MaxUsers => _recommendedUsers.max;
+        public ushort MinUsers => _recommendedUsers._min;
+        public ushort MaxUsers => _recommendedUsers._max;
 
         [Serializable]
-        public class MinMaxRange
+        internal class MinMaxRange
         {
-            public int min;
-            public int max;
+            public ushort _min;
+            public ushort _max;
+
+            public MinMaxRange(ushort min, ushort max)
+            {
+                _min = min;
+                _max = max;
+            }
         }
     }
 }

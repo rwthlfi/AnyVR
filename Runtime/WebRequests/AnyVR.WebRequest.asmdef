@@ -1,11 +1,7 @@
 {
-  "name": "PlatformManagement",
-  "rootNamespace": "",
-  "references": [
-    "Unity.TextMeshPro",
-    "Unity.XR.Interaction.Toolkit",
-    "Unity.XR.Management"
-  ],
+  "name": "AnyVR.WebRequest",
+  "rootNamespace": "AnyVR.WebRequest",
+  "references": [],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

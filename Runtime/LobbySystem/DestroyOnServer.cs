@@ -24,7 +24,7 @@ namespace AnyVR.LobbySystem
         private void Awake()
         {
 #if UNITY_SERVER
-                Destroy(gameObject);
+            Destroy(gameObject);
 #endif
         }
     }

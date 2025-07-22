@@ -202,9 +202,6 @@ MonoBehaviour:
       m_Flags: 0
     m_Reference: {fileID: 2623089451494689615, guid: 40eee974618b10508bf944a19ac75728, type: 3}
   _isCursorUnlocked: 0
-  OnCursorUnlockToggle:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!1 &6979400652453598251
 GameObject:
   m_ObjectHideFlags: 0
@@ -432,9 +429,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56ee6fc87babba04186f39c367934008, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  head: {fileID: 3265475331533018597}
-  leftHand: {fileID: 6433978367736944890}
-  rightHand: {fileID: 8631345560487254449}
+  _head: {fileID: 3265475331533018597}
+  _leftHand: {fileID: 6433978367736944890}
+  _rightHand: {fileID: 8631345560487254449}
 --- !u!114 &6208928440011608016
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -550,10 +547,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: XR Origin (XR Rig)
       objectReference: {fileID: 0}
+    - target: {fileID: 6796444231111330885, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: m_Parameters.widthMultiplier
+      value: 0.01
+      objectReference: {fileID: 0}
     - target: {fileID: 8909228145186272306, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
       propertyPath: m_InteractionManager
       value: 
       objectReference: {fileID: 2241289018356184566}
+    - target: {fileID: 8909228145186272306, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: m_SelectInput.m_InputActionReferencePerformed
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 9200491679783168092, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: m_Parameters.widthMultiplier
+      value: 0.01
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -606,6 +615,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2677797fa43cf1ebabc719ef8e67f8f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _movementLockCounter: 0
 --- !u!1 &4122543599534662391 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5347647460570904354, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
@@ -623,6 +633,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f71a518b267c66143be27edea3eaebc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _turnLockCounter: 0
 --- !u!4 &4217104354681801913 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5298120571266275692, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}

@@ -12,17 +12,18 @@ namespace AnyVR.Voicechat
 
         protected bool Connected;
 
-        protected Participant Local;
-        public bool IsMicEnabled { get; protected set; }
-
         internal Dictionary<string, Participant> RemoteParticipants => Remotes.ToDictionary(e => e.Key, e => e.Value);
 
-        internal Participant LocalParticipant => Local;
+        public Participant LocalParticipant { get; protected set; }
+
+        public bool IsMicEnabled { get; protected set; }
 
         /// <summary>
         ///     Returns if the client is connected to any room
         /// </summary>
         internal bool IsConnected => Connected;
+
+        public abstract string GetRoomName();
 
         internal abstract event Action<Participant> ParticipantConnected;
 
@@ -40,7 +41,6 @@ namespace AnyVR.Voicechat
 
         internal abstract void Disconnect();
 
-        internal abstract bool TryGetAvailableMicrophoneNames(out string[] micNames);
         internal abstract void SetActiveMicrophone(string micName);
         internal abstract void SetMicrophoneEnabled(bool b);
 
@@ -49,7 +49,7 @@ namespace AnyVR.Voicechat
         protected void UpdateActiveSpeakers(HashSet<string> activeSpeakers)
         {
             List<string> sids = Remotes.Keys.ToList();
-            sids.Add(Local.Sid);
+            sids.Add(LocalParticipant.Sid);
             foreach (string sid in sids)
             {
                 if (_activeSpeakers.Contains(sid) && !activeSpeakers.Contains(sid))

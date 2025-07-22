@@ -19,18 +19,18 @@ using AnyVR.PlatformManagement;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace AnyVR.UserControlSystem
+namespace AnyVR.UserControlSystem.PC
 {
     public class PCTurnLockHandler : MonoBehaviour
     {
         private static PCTurnLockHandler s_instance;
-        private PCTurnProvider _turnProvider;
 
         [SerializeField]
         private ushort _turnLockCounter;
-        public static bool CanTurn => s_instance._turnLockCounter == 0;
 
-        private UnityEvent<bool> _onTurnLockToggle = new();
+        private readonly UnityEvent<bool> _onTurnLockToggle = new();
+        private PCTurnProvider _turnProvider;
+        public static bool CanTurn => s_instance._turnLockCounter == 0;
         public static UnityEvent<bool> OnTurnLockToggle => s_instance._onTurnLockToggle;
 
 
@@ -55,8 +55,7 @@ namespace AnyVR.UserControlSystem
             bool isXRPlatform = await PlatformInfo.IsXRPlatformAsync();
             if (isXRPlatform)
             {
-                this.enabled = false;
-                return;
+                enabled = false;
             }
         }
 

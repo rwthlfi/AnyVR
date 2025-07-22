@@ -36,7 +36,7 @@ namespace AnyVR.PlatformManagement
                     s_instance = FindAnyObjectByType<PlatformManager>();
                     if (s_instance == null)
                     {
-                        GameObject platformManagerObject = new GameObject("PlatformManager");
+                        GameObject platformManagerObject = new("PlatformManager");
                         s_instance = platformManagerObject.AddComponent<PlatformManager>();
                     }
                 }
@@ -44,16 +44,11 @@ namespace AnyVR.PlatformManagement
             }
         }
 
-        /// <summary>
-        /// Invoked when XR has been initialized.
-        /// </summary>
-        public event Action OnXRInitializationFinished;
-
         protected virtual void Awake()
         {
             bool isServer = Application.platform == RuntimePlatform.LinuxServer ||
-                            Application.platform == RuntimePlatform.WindowsServer;
-            if ((s_instance != null && s_instance != this) || isServer)
+                Application.platform == RuntimePlatform.WindowsServer;
+            if (s_instance != null && s_instance != this || isServer)
             {
                 Destroy(gameObject);
                 return;
@@ -68,8 +63,13 @@ namespace AnyVR.PlatformManagement
             StartCoroutine(TryInitializeXR());
         }
 
-        
-        
+        /// <summary>
+        ///     Invoked when XR has been initialized.
+        /// </summary>
+        public event Action OnXRInitializationFinished;
+
+
+
         private IEnumerator TryInitializeXR()
         {
             Debug.Log("[PlatformManager] Trying to start XR initialization...");
@@ -86,12 +86,12 @@ namespace AnyVR.PlatformManagement
             if (XRGeneralSettings.Instance.Manager.activeLoader == null)
             {
                 Debug.Log("[PlatformManager] XR initialization failed.");
-                PlatformInfo.s_xRInitializationTCS.SetResult(false);
+                //PlatformInfo.s_xRInitializationTCS.SetResult(false);
                 OnXRInitializationFinished?.Invoke();
                 yield break;
             }
             Debug.Log("[PlatformManager] XR initialization finished.");
-            PlatformInfo.s_xRInitializationTCS.SetResult(XRSettings.isDeviceActive);
+            PlatformInfo.xrInitializationTcs.SetResult(XRSettings.isDeviceActive);
             OnXRInitializationFinished?.Invoke();
         }
 
