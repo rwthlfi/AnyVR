@@ -1,10 +1,10 @@
 {
-  "name": "Voicechat",
-  "rootNamespace": "",
+  "name": "AnyVR.PlatformManagement",
+  "rootNamespace": "AnyVR.PlatformManagement",
   "references": [
     "GUID:6055be8ebefd69e48b49212b09b47b2f",
-    "GUID:702f733b4deb246808c6ce84d93b5c9c",
-    "GUID:ea9451ff16a9bab499ea5677a2d67939"
+    "Unity.XR.Interaction.Toolkit",
+    "Unity.XR.Management"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

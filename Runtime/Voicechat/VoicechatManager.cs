@@ -1,23 +1,25 @@
-using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using AnyVR.Logging;
+using AnyVR.WebRequests;
+using JetBrains.Annotations;
 using UnityEngine;
-using UnityEngine.Networking;
+using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.Voicechat
 {
     public class VoiceChatManager : MonoBehaviour
     {
-        private const string k_tokenURL = "http://{0}/requestToken?room_name={1}&user_name={2}";
+        private const string Tag = nameof(VoiceChatManager);
 
-        private VoiceChatClient _chatClient;
+        private const string TokenUrl = "{0}://{1}/requestToken?room_name={2}&user_name={3}";
+
+        private VoiceChatClient _client;
+        private string _liveKitServerAddr;
         private string _tokenServerAddr;
 
-        private Dictionary<string, Participant> RemoteParticipants => _chatClient.RemoteParticipants;
-        private Participant LocalParticipant => _chatClient.LocalParticipant;
+        private Dictionary<string, Participant> RemoteParticipants => _client.RemoteParticipants;
+        private Participant LocalParticipant => _client.LocalParticipant;
 
         private void Awake()
         {
@@ -26,37 +28,49 @@ namespace AnyVR.Voicechat
 
         private void Start()
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            Debug.Log("VoiceChatManager initialized. Platform: WEBGL");
-            _chatClient = gameObject.AddComponent<WebGLVoiceChatClient>();
+#if UNITY_EDITOR
+            Logger.Log(LogLevel.Verbose, Tag, "VoiceChatManager not initialized. Platform: EDITOR");
+            return;
+#elif UNITY_WEBGL
+            _client = gameObject.AddComponent<WebGLVoiceChatClient>();
+            Logger.Log(LogLevel.Verbose, Tag,"VoiceChatManager initialized. Platform: WEBGL");
 #elif !UNITY_WEBGL && !UNITY_SERVER
-            Debug.Log("VoiceChatManager initialized. Platform: EDITOR/STANDALONE");
-            _chatClient = gameObject.AddComponent<StandaloneVoiceChatClient>();
+            _client = gameObject.AddComponent<StandaloneVoiceChatClient>();
+            Logger.Log(LogLevel.Verbose, Tag, "VoiceChatManager initialized. Platform: EDITOR/STANDALONE");
+#elif UNITY_SERVER
+            Logger.Log(LogLevel.Verbose, Tag, "VoiceChatManager not initialized. Platform: SERVER");
+            return;
 #else
-            Debug.LogWarning("VoiceChatManager not initialized.");
+            Logger.Log(LogLevel.Error, Tag, "VoiceChatManager not initialized. Platform: UNKNOWN");
             return;
 #endif
-            _chatClient.Init();
-            _chatClient.ConnectedToRoom += () => { ConnectedToRoom?.Invoke(); };
-            _chatClient.ParticipantConnected += p =>
+
+            _client.Init();
+            _client.ConnectedToRoom += () =>
+            {
+                Logger.Log(LogLevel.Debug, Tag, $"Connected to room '{_client.GetRoomName()}'");
+                ConnectedToRoom?.Invoke();
+                _client.SetMicrophoneEnabled(true);
+            };
+            _client.ParticipantConnected += p =>
             {
                 ParticipantConnected?.Invoke(p);
             };
-            _chatClient.ParticipantDisconnected += sid =>
+            _client.ParticipantDisconnected += sid =>
             {
                 if (TryGetParticipantBySid(sid, out Participant p))
                 {
                     ParticipantDisconnected?.Invoke(p);
                 }
             };
-            _chatClient.ParticipantIsSpeakingUpdate += (sid, _) =>
+            _client.ParticipantIsSpeakingUpdate += (sid, _) =>
             {
                 if (TryGetParticipantBySid(sid, out Participant p))
                 {
                     ParticipantIsSpeakingUpdate?.Invoke(p);
                 }
             };
-            _chatClient.VideoReceived += sid =>
+            _client.VideoReceived += sid =>
             {
                 if (TryGetParticipantBySid(sid, out Participant p))
                 {
@@ -108,7 +122,7 @@ namespace AnyVR.Voicechat
         [CanBeNull]
         public static VoiceChatManager GetInstance()
         {
-            return s_instance;
+            return _instance;
         }
 
         /// <summary>
@@ -120,41 +134,38 @@ namespace AnyVR.Voicechat
         /// </summary>
         /// <param name="roomId">The unique identifier of the room</param>
         /// <param name="userName">The name of the local user</param>
-        /// <param name="activateMic">If the microphone track should automatically be published</param>
-        public async void TryConnectToRoom(Guid roomId, string userName, bool activateMic = false)
+        /// <param name="useSecureProt"></param>
+        public async void TryConnectToRoom(Guid roomId, string userName, bool useSecureProt = true)
         {
-            if (_chatClient == null)
+            if (_client == null)
             {
-                Debug.LogWarning("VoiceChatClient is not initialized!");
+                Logger.Log(LogLevel.Warning, Tag, "Client is not initialized!");
                 return;
             }
-            // TODO: ensure that the passed names will result in a valid url for token server
 
-            TokenResponse response = await RequestLiveKitToken(roomId.ToString(), userName);
+            Logger.Log(LogLevel.Verbose, Tag, "Requesting LiveKit Token ...");
+            string url = string.Format(TokenUrl, useSecureProt ? "https" : "http", _tokenServerAddr, roomId, userName);
+            TokenResponse response = await WebRequestHandler.GetAsync<TokenResponse>(url);
 
-            if (false)
+            if (!response.Success)
             {
+                Logger.Log(LogLevel.Error, Tag, $"Token retrieval failed! url = '{url}'");
                 // TODO: Handle Exception when token not received
-                // OnRoomConnectionFailed?.Invoke();
+                // OnTokenRetrievalFailed?.Invoke();
                 return;
             }
 
-            Debug.Log($"Token received: {response.token}");
+            Logger.Log(LogLevel.Verbose, Tag, $"Token received. Connecting to Room '{roomId}' ...");
 
             try
             {
-                _chatClient.Connect(_tokenServerAddr, response.token);
-                _chatClient.ConnectedToRoom += () =>
-                {
-                    if (activateMic)
-                    {
-                        _chatClient.SetMicrophoneEnabled(true);
-                    }
-                };
+                string address = $"{(useSecureProt ? "wss" : "ws")}://{_liveKitServerAddr}";
+                _client.Connect(address, response.token);
             }
-            catch
+            catch (Exception e)
             {
-                // OnRoomConnectionFailed?.Invoke();
+                Logger.Log(LogLevel.Error, Tag, $"Could not connect to LiveKit room. \n{e.Message}");
+                RoomConnectionFailed?.Invoke();
             }
         }
 
@@ -163,47 +174,27 @@ namespace AnyVR.Voicechat
         /// </summary>
         public void Disconnect()
         {
-            if (_chatClient != null)
-            {
-                _chatClient.Disconnect();
-            }
+            _client?.Disconnect();
         }
 
         public void SetMicrophoneEnabled(bool b)
         {
-            _chatClient.SetMicrophoneEnabled(b);
+            _client?.SetMicrophoneEnabled(b);
         }
 
         public void SetParticipantMuteActive(string sid, bool b)
         {
-            _chatClient.SetClientMute(sid, b);
+            _client?.SetClientMute(sid, b);
         }
 
         public void SetTokenServerAddress(string address)
         {
             _tokenServerAddr = address;
         }
-
-        private static bool TryParseAddress(string address, out (string, ushort) res)
+        public void SetLiveKitServerAddress(string address)
         {
-            res = (null, 0);
-            if (!Regex.IsMatch(address, ".+:[0-9]+"))
-            {
-                return false;
-            }
-
-            string[] arr = address.Split(':'); // [ip, port]
-
-            uint port = uint.Parse(arr[1]);
-            if (port > ushort.MaxValue)
-            {
-                return false;
-            }
-
-            res = (arr[0], (ushort)port);
-            return true;
+            _liveKitServerAddr = address;
         }
-
 
         private bool TryGetParticipantBySid(string sid, out Participant participant)
         {
@@ -216,95 +207,29 @@ namespace AnyVR.Voicechat
             return true;
         }
 
-        private async Task<TokenResponse> RequestLiveKitToken(string roomId, string participantName)
-        {
-            TokenResponse response = Application.platform == RuntimePlatform.WebGLPlayer
-                ? await WEBGL_GetToken(roomId, participantName)
-                : await GetToken(roomId, participantName);
-            return response;
-        }
-
-        private async Task<TokenResponse> WEBGL_GetToken(string roomName, string participantName)
-        {
-            string url = string.Format(k_tokenURL, _tokenServerAddr, roomName, participantName);
-            using UnityWebRequest webRequest = UnityWebRequest.Get(url);
-            await webRequest.SendWebRequest();
-
-            TokenResponse res = new();
-            if (webRequest.result == UnityWebRequest.Result.Success)
-            {
-                res = JsonUtility.FromJson<TokenResponse>(webRequest.downloadHandler.text);
-            }
-            else
-            {
-                Debug.Log("Error: " + webRequest.error);
-            }
-
-            res.IsSuccess = webRequest.result == UnityWebRequest.Result.Success;
-            return res;
-        }
-
-        private async Task<TokenResponse> GetToken(string roomName, string participantName)
-        {
-            string url = string.Format(k_tokenURL, _tokenServerAddr, roomName, participantName);
-            Debug.Log($"Getting token from: {url}");
-
-            TokenResponse res = null;
-            HttpClient client = new();
-            HttpResponseMessage response = await client.GetAsync(url);
-            if (!response.IsSuccessStatusCode)
-            {
-                res = new TokenResponse { IsSuccess = false };
-                Debug.LogError($"Error receiving token. Status code: {response.StatusCode.ToString()}");
-            }
-
-            try
-            {
-                res = JsonUtility.FromJson<TokenResponse>(response.Content.ReadAsStringAsync().Result);
-                res.IsSuccess = response.IsSuccessStatusCode;
-            }
-            catch (Exception _)
-            {
-                Debug.LogError("Error parsing json response.");
-            }
-
-            return res;
-        }
-
         /// <summary>
         ///     Sets the active microphone for the voice chat.
         /// </summary>
         public void SetActiveMicrophone(string micName)
         {
-            _chatClient.SetActiveMicrophone(micName);
-        }
-
-        public bool TryGetAvailableMicrophoneNames(out string[] micNames)
-        {
-            if (_chatClient != null && _chatClient.TryGetAvailableMicrophoneNames(out string[] names))
-            {
-                micNames = names;
-                return true;
-            }
-
-            micNames = null;
-            return false;
+            Logger.Log(LogLevel.Debug, Tag, $"Selected Microphone: {micName}");
+            _client.SetActiveMicrophone(micName);
         }
 
         #region Singleton
 
-        private static VoiceChatManager s_instance;
+        private static VoiceChatManager _instance;
 
         private void InitSingleton()
         {
-            if (s_instance != null)
+            if (_instance != null)
             {
                 Destroy(gameObject);
                 Destroy(this);
                 return;
             }
 
-            s_instance = this;
+            _instance = this;
         }
 
         #endregion

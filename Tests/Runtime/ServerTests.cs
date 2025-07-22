@@ -1,16 +1,14 @@
 using System.Collections;
-using Tests.Runtime;
 using UnityEngine.TestTools;
 
-namespace AnyVr.LobbySystem.LobbyTests
+namespace AnyVR.Tests.Runtime
 {
-    public class ServerTests : LobbyTest
+    internal class ServerTests : RuntimeTest
     {
         [UnityTest]
         public IEnumerator StartServerTest()
         {
-            // yield return StartServer();
-            // yield return JoinServer();
+            yield return StartServer();
             yield return null;
         }
     }

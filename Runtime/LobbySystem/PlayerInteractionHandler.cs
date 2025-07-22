@@ -17,38 +17,42 @@
 
 using JetBrains.Annotations;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace AnyVR.LobbySystem
 {
     public class PlayerInteractionHandler : MonoBehaviour
     {
-        [SerializeField] private Transform head;
+        [FormerlySerializedAs("head")]
+        [SerializeField] private Transform _head;
 
-        [SerializeField] private Transform leftHand;
+        [FormerlySerializedAs("leftHand")]
+        [SerializeField] private Transform _leftHand;
 
-        [SerializeField] private Transform rightHand;
-        public Transform Head => head;
-        public Transform LeftHand => leftHand;
-        public Transform RightHand => rightHand;
+        [FormerlySerializedAs("rightHand")]
+        [SerializeField] private Transform _rightHand;
+        public Transform Head => _head;
+        public Transform LeftHand => _leftHand;
+        public Transform RightHand => _rightHand;
 
         #region Singleton
 
-        private static PlayerInteractionHandler s_instance;
+        private static PlayerInteractionHandler _instance;
 
         [CanBeNull]
         public static PlayerInteractionHandler GetInstance()
         {
-            return s_instance;
+            return _instance;
         }
 
         private void Awake()
         {
-            if (s_instance != null)
+            if (_instance != null)
             {
-                Destroy(s_instance.gameObject);
+                Destroy(_instance.gameObject);
             }
 
-            s_instance = this;
+            _instance = this;
         }
 
         #endregion

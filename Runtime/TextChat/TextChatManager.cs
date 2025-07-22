@@ -15,9 +15,9 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using System;
 using FishNet.Connection;
 using FishNet.Object;
-using System;
 using UnityEngine;
 
 namespace AnyVR.TextChat

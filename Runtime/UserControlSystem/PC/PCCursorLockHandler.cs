@@ -16,15 +16,14 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using AnyVR.PlatformManagement;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
-namespace AnyVR.UserControlSystem
+namespace AnyVR.UserControlSystem.PC
 {
     /// <summary>
-    /// Handles the locking and unlocking of the cursor in a PC environment.
+    ///     Handles the locking and unlocking of the cursor in a PC environment.
     /// </summary>
     public class PCCursorLockHandler : MonoBehaviour
     {
@@ -33,17 +32,17 @@ namespace AnyVR.UserControlSystem
         [SerializeField]
         [Tooltip("The Input System Action that will be used to unlock the cursor.")]
         private InputActionProperty _cursorUnlockAction =
-                new(new InputAction("Interaction", expectedControlType: "Button"));
+            new(new InputAction("Interaction", expectedControlType: "Button"));
 
         [SerializeField]
         [Tooltip("The Input System Action that will be used to lock the cursor.")]
         private InputActionProperty _cursorLockAction =
-                new(new InputAction("Interaction", expectedControlType: "Button"));
+            new(new InputAction("Interaction", expectedControlType: "Button"));
 
         [SerializeField]
-        private bool _isCursorUnlocked = false;
+        private bool _isCursorUnlocked;
         /// <summary>
-        /// Read-only property that indicates whether the cursor is currently unlocked or not.
+        ///     Read-only property that indicates whether the cursor is currently unlocked or not.
         /// </summary>
         public static bool IsCursorUnlocked
         {
@@ -55,7 +54,7 @@ namespace AnyVR.UserControlSystem
             }
         }
 
-        private UnityEvent<bool> _onCursorUnlockToggle = new();
+        private readonly UnityEvent<bool> _onCursorUnlockToggle = new();
         public static UnityEvent<bool> OnCursorUnlockToggle => s_instance._onCursorUnlockToggle;
 
 
@@ -78,7 +77,7 @@ namespace AnyVR.UserControlSystem
             bool isXRPlatform = await PlatformInfo.IsXRPlatformAsync();
             if (isXRPlatform)
             {
-                this.enabled = false;
+                enabled = false;
                 return;
             }
 
@@ -153,7 +152,7 @@ namespace AnyVR.UserControlSystem
         }
 
         /// <summary>
-        /// Unlocks the cursor.
+        ///     Unlocks the cursor.
         /// </summary>
         public static void UnlockCursor()
         {
@@ -166,7 +165,7 @@ namespace AnyVR.UserControlSystem
         }
 
         /// <summary>
-        /// Locks the cursor.
+        ///     Locks the cursor.
         /// </summary>
         public static void LockCursor()
         {

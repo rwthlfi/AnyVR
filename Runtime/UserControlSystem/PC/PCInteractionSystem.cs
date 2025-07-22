@@ -20,7 +20,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
-namespace AnyVR.UserControlSystem
+namespace AnyVR.UserControlSystem.PC
 {
     /// <summary>
     ///     Represents a PC interaction system that extends XRBaseInteractor.

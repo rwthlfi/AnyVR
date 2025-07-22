@@ -25,62 +25,66 @@ using UnityEngine.XR.Management;
 namespace AnyVR.PlatformManagement
 {
     /// <summary>
-    /// Static class to provide miscellaneous information about the platform the software is running on.
+    ///     Static class to provide miscellaneous information about the platform the software is running on.
     /// </summary>
-    public static class PlatformInfo
+    public class PlatformInfo : MonoBehaviour
     {
+        internal static readonly TaskCompletionSource<bool> xrInitializationTcs = new();
+
+        private static bool _everythingInitialized;
+
         /// <summary>
-        /// The platform the software is running on.
+        ///     The platform the software is running on.
         /// </summary>
         [Obsolete("Use GetPlatformAsync() instead. This will be removed in a future version.")]
         public static Platform Platform => GetPlatform();
 
         /// <summary>
-        /// The platform family the software is running on.
+        ///     The platform family the software is running on.
         /// </summary>
         [Obsolete("Use GetPlatformTypeAsync() instead. This will be removed in a future version.")]
         public static PlatformType PlatformType => GetPlatformType();
 
         /// <summary>
-        /// The XR hardware that is used.
+        ///     The XR hardware that is used.
         /// </summary>
         [Obsolete("Use GetXRHardwareTypeAsync() instead. This will be removed in a future version.")]
         public static XRHardwareType XRHardwareType => GetXRHardwareType();
 
         /// <summary>
-        /// Reference to the HMD, if there is one. Is null otherwise.
+        ///     Reference to the HMD, if there is one. Is null otherwise.
         /// </summary>
         public static InputDevice? Headset => LookupInputDevice(XRNode.Head);
 
         /// <summary>
-        /// Reference to the left XR controller, if there is one. Is null otherwise.
+        ///     Reference to the left XR controller, if there is one. Is null otherwise.
         /// </summary>
         public static InputDevice? LeftController => LookupInputDevice(XRNode.LeftHand);
 
         /// <summary>
-        /// Reference to the right XR controller, if there is one. Is null otherwise.
+        ///     Reference to the right XR controller, if there is one. Is null otherwise.
         /// </summary>
         public static InputDevice? RightController => LookupInputDevice(XRNode.RightHand);
-
-        internal static TaskCompletionSource<bool> s_xRInitializationTCS = new();
         /// <summary>
-        /// Whether the XR system is initialized, if an XR system is active. <see langword="false"> otherwise.
+        ///     Whether the XR system is initialized, if an XR system is active. <see langword="false" /> otherwise.
         /// </summary>
-        public static bool IsXRInitialized => IsXRPlatform() ? s_xRInitializationTCS.Task.IsCompleted : false;
-
-        private static bool s_isEverythingInitialized = false;
-
-
-
-        public static async Task Initialize()
+        public static bool IsXRInitialized => IsXRPlatform() && xrInitializationTcs.Task.IsCompleted;
+        private void Awake()
         {
-            await s_xRInitializationTCS.Task;
-            s_isEverythingInitialized = true;
+            DontDestroyOnLoad(this);
+        }
+
+
+
+        private static async Task Initialize()
+        {
+            await xrInitializationTcs.Task;
+            _everythingInitialized = true;
         }
 
         private static void CheckInitializationStatus()
         {
-            if (!s_isEverythingInitialized)
+            if (!_everythingInitialized)
             {
                 Debug.LogWarning("[PlatformInfo] PlatformInfo is not fully initialized yet. Results may be faulty. Consider using async function instead.");
             }
@@ -95,51 +99,27 @@ namespace AnyVR.PlatformManagement
         private static Platform GetWindowsEditorPlatform()
         {
             CheckInitializationStatus();
-            if (HasActiveXRDeviceAttached())
-            {
-                return Platform.WindowsXREditor;
-            }
-            else
-            {
-                return Platform.WindowsEditor;
-            }
+            return HasActiveXRDeviceAttached() ? Platform.WindowsXREditor : Platform.WindowsEditor;
         }
 
         private static Platform GetWindowsPlatform()
         {
             CheckInitializationStatus();
-            if (HasActiveXRDeviceAttached())
-            {
-                return Platform.WindowsXR;
-            }
-            else
-            {
-                return Platform.Windows;
-            }
+            return HasActiveXRDeviceAttached() ? Platform.WindowsXR : Platform.Windows;
         }
 
         private static Platform GetAndroidPlatform()
         {
             CheckInitializationStatus();
-            if (HasActiveXRDeviceAttached())
-            {
-                if (XRGeneralSettings.Instance.Manager.activeLoader.name.ToLower().Contains("meta"))
-                {
-                    return Platform.MetaQuest;
-                }
-                else if (XRGeneralSettings.Instance.Manager.activeLoader.name.ToLower().Contains("pico"))
-                {
-                    return Platform.Pico;
-                }
-                else
-                {
-                    return Platform.GenericXR;
-                }
-            }
-            else
+            if (!HasActiveXRDeviceAttached())
             {
                 return Platform.Android;
             }
+            if (XRGeneralSettings.Instance.Manager.activeLoader.name.ToLower().Contains("meta"))
+            {
+                return Platform.MetaQuest;
+            }
+            return XRGeneralSettings.Instance.Manager.activeLoader.name.ToLower().Contains("pico") ? Platform.Pico : Platform.GenericXR;
         }
 
         private static Platform GetGenericPlatform()
@@ -149,60 +129,28 @@ namespace AnyVR.PlatformManagement
             {
                 return Platform.GenericXR;
             }
-            else if (SystemInfo.deviceType == DeviceType.Handheld)
-            {
-                return Platform.GenericMobile;
-            }
-            else
-            {
-                return Platform.GenericDesktop;
-            }
+            return SystemInfo.deviceType == DeviceType.Handheld ? Platform.GenericMobile : Platform.GenericDesktop;
         }
 
         private static Platform GetPlatform()
         {
             CheckInitializationStatus();
             RuntimePlatform platform = Application.platform;
-            if (platform == RuntimePlatform.WindowsEditor)
+            return platform switch
             {
-                // Identifies if XR platform is coupled with editor.
-                return GetWindowsEditorPlatform();
-            }
-            else if (platform == RuntimePlatform.WindowsPlayer)
-            {
-                // Identifies if XR platform is coupled with player.
-                return GetWindowsPlatform();
-            }
-            else if (platform == RuntimePlatform.Android)
-            {
-                // Checks if device is a smartphone or a standalone XR device.
-                return GetAndroidPlatform();
-
-            }
-            else if (platform == RuntimePlatform.LinuxPlayer)
-            {
-                return Platform.Linux;
-            }
-            else if (platform == RuntimePlatform.WindowsServer)
-            {
-                return Platform.WindowsServer;
-            }
-            else if (platform == RuntimePlatform.LinuxServer)
-            {
-                return Platform.LinuxServer;
-            }
-            else if (platform == RuntimePlatform.WebGLPlayer)
-            {
-                return Platform.DesktopWeb;
-            }
-            else
-            {
-                return GetGenericPlatform();
-            }
+                RuntimePlatform.WindowsEditor => GetWindowsEditorPlatform(),
+                RuntimePlatform.WindowsPlayer => GetWindowsPlatform(),
+                RuntimePlatform.Android => GetAndroidPlatform(),
+                RuntimePlatform.LinuxPlayer => Platform.Linux,
+                RuntimePlatform.WindowsServer => Platform.WindowsServer,
+                RuntimePlatform.LinuxServer => Platform.LinuxServer,
+                RuntimePlatform.WebGLPlayer => Platform.DesktopWeb,
+                _ => GetGenericPlatform()
+            };
         }
         public static async Task<Platform> GetPlatformAsync()
         {
-            if (!s_isEverythingInitialized)
+            if (!_everythingInitialized)
             {
                 await Initialize();
             }
@@ -211,33 +159,25 @@ namespace AnyVR.PlatformManagement
 
         private static PlatformType GetPlatformType()
         {
-            CheckInitializationStatus();
-            if (GetPlatform() <= Platform.GenericDesktop)
+            switch (GetPlatform())
             {
-                return PlatformType.Desktop;
-            }
-            else if (GetPlatform() <= Platform.GenericXR)
-            {
-                return PlatformType.XR;
-            }
-            else if (GetPlatform() <= Platform.GenericMobile)
-            {
-                return PlatformType.Mobile;
-            }
-            else if (GetPlatform() <= Platform.WindowsServer)
-            {
-                return PlatformType.Server;
-            }
-            else
-            {
-                // You should never see this.
-                Debug.LogError("[PlatformInfo] Platform type could not be identified. Undefined behavior.");
-                return PlatformType.Unknown;
+                case <= Platform.GenericDesktop:
+                    return PlatformType.Desktop;
+                case <= Platform.GenericXR:
+                    return PlatformType.XR;
+                case <= Platform.GenericMobile:
+                    return PlatformType.Mobile;
+                case <= Platform.WindowsServer:
+                    return PlatformType.Server;
+                default:
+                    // You should never see this.
+                    Debug.LogError("[PlatformInfo] Platform type could not be identified. Undefined behavior.");
+                    return PlatformType.Unknown;
             }
         }
         public static async Task<PlatformType> GetPlatformTypeAsync()
         {
-            if (!s_isEverythingInitialized)
+            if (!_everythingInitialized)
             {
                 await Initialize();
             }
@@ -245,7 +185,7 @@ namespace AnyVR.PlatformManagement
         }
 
         /// <summary>
-        /// Determines if the used platform is an XR platform.
+        ///     Determines if the used platform is an XR platform.
         /// </summary>
         /// <returns>Whether the used platform is an XR platform.</returns>
         public static bool IsXRPlatform()
@@ -255,11 +195,11 @@ namespace AnyVR.PlatformManagement
         }
 
         /// <summary>
-        /// Determines if the used platform is an XR platform. Is an async method.
+        ///     Determines if the used platform is an XR platform. Is an async method.
         /// </summary>
         public static async Task<bool> IsXRPlatformAsync()
         {
-            if (!s_isEverythingInitialized)
+            if (!_everythingInitialized)
             {
                 await Initialize();
             }
@@ -267,10 +207,13 @@ namespace AnyVR.PlatformManagement
         }
 
         /// <summary>
-        /// Determines if the used platform is a server.
+        ///     Determines if the used platform is a server.
         /// </summary>
         /// <returns>Whether the used platform is a server.</returns>
-        public static bool IsServer() => GetPlatformType() == PlatformType.Server;
+        public static bool IsServer()
+        {
+            return GetPlatformType() == PlatformType.Server;
+        }
 
         private static InputDevice? LookupInputDevice(XRNode node)
         {
@@ -283,16 +226,16 @@ namespace AnyVR.PlatformManagement
 
             List<InputDevice> inputDevices = new();
             InputDevices.GetDevicesAtXRNode(node, inputDevices);
-            if (inputDevices.Count > 0)
+            switch (inputDevices.Count)
             {
-                if (inputDevices.Count > 1)
-                {
+                case <= 0:
+                    return null;
+                case > 1:
                     Debug.LogWarning($"[PlatformInfo] Found multiple input devices for {node}. Using the first one.");
-                }
-                return inputDevices[0];
+                    break;
             }
+            return inputDevices[0];
 
-            return null;
         }
 
         private static XRHardwareType GetXRHardwareType()
@@ -306,36 +249,31 @@ namespace AnyVR.PlatformManagement
 
             InputDevice? inputDevice = LeftController == null ? LeftController : RightController;
 
-            if (inputDevice != null)
+            if (inputDevice == null)
             {
-                string deviceName = inputDevice?.name;
-                if (!string.IsNullOrEmpty(deviceName))
+                return IsHandTrackingEnabled() ? XRHardwareType.Handtracked : XRHardwareType.Unknown;
+            }
+            string deviceName = inputDevice.Value.name;
+            if (!string.IsNullOrEmpty(deviceName))
+            {
+                if (deviceName.ToLower().Contains("oculus") || deviceName.ToLower().Contains("quest"))
                 {
-                    if (deviceName.ToLower().Contains("oculus") || deviceName.ToLower().Contains("quest"))
-                    {
-                        return XRHardwareType.Quest;
-                    }
-
-                    if (deviceName.ToLower().Contains("pico"))
-                    {
-                        return XRHardwareType.Pico;
-                    }
+                    return XRHardwareType.Quest;
                 }
 
-                Debug.LogWarning("[PlatformInfo] Could not identify your XR headset, defaulting to Quest series.");
-                return XRHardwareType.Quest;
+                if (deviceName.ToLower().Contains("pico"))
+                {
+                    return XRHardwareType.Pico;
+                }
             }
 
-            if (IsHandTrackingEnabled())
-            {
-                return XRHardwareType.Handtracked;
-            }
+            Debug.LogWarning("[PlatformInfo] Could not identify your XR headset, defaulting to Quest series.");
+            return XRHardwareType.Quest;
 
-            return XRHardwareType.Unknown;
         }
         public static async Task<XRHardwareType> GetXRHardwareTypeAsync()
         {
-            if (!s_isEverythingInitialized)
+            if (!_everythingInitialized)
             {
                 await Initialize();
             }
@@ -343,10 +281,10 @@ namespace AnyVR.PlatformManagement
         }
 
         /// <summary>
-        ///     Returns whether the used XR hardware has handtracking enabled.
+        ///     Returns whether the used XR hardware has hand tracking enabled.
         /// </summary>
-        /// <returns>Whether the used XR hardware has handtracking enabled.</returns>
-        public static bool IsHandTrackingEnabled()
+        /// <returns>Whether the used XR hardware has hand tracking enabled.</returns>
+        private static bool IsHandTrackingEnabled()
         {
             CheckInitializationStatus();
             // TODO implement me.
@@ -354,24 +292,24 @@ namespace AnyVR.PlatformManagement
         }
 
         /// <summary>
-        /// Returns a readable description of the system the software is ran on. Yields information
-        /// about the device (name and model), also its OS and what kind of platform family it belongs
-        /// to.
+        ///     Returns a readable description of the system the software is ran on. Yields information
+        ///     about the device (name and model), also its OS and what kind of platform family it belongs
+        ///     to.
         /// </summary>
         /// <returns>The device description as a string.</returns>
         public static string GetDeviceDescription()
         {
             CheckInitializationStatus();
             return "[PlatformInfo]\n" +
-                   $"Device {SystemInfo.deviceName} ({SystemInfo.deviceModel}):\n" +
-                   $"Platform: {GetPlatform()} ({GetPlatformType()}{(IsXRPlatform() ? $" ({GetXRHardwareType()})" : "")})\n" +
-                   $"OS: {SystemInfo.operatingSystem}, ({SystemInfo.operatingSystemFamily} family)" +
-                   (IsXRPlatform() ? $"\nCharacteristics: {Headset?.characteristics}" : "");
+                $"Device {SystemInfo.deviceName} ({SystemInfo.deviceModel}):\n" +
+                $"Platform: {GetPlatform()} ({GetPlatformType()}{(IsXRPlatform() ? $" ({GetXRHardwareType()})" : "")})\n" +
+                $"OS: {SystemInfo.operatingSystem}, ({SystemInfo.operatingSystemFamily} family)" +
+                (IsXRPlatform() ? $"\nCharacteristics: {Headset?.characteristics}" : "");
         }
     }
 
     /// <summary>
-    /// Enumeration of all supported platforms.
+    ///     Enumeration of all supported platforms.
     /// </summary>
     public enum Platform
     {
@@ -402,7 +340,7 @@ namespace AnyVR.PlatformManagement
     }
 
     /// <summary>
-    /// Enumeration of all supported platform families.
+    ///     Enumeration of all supported platform families.
     /// </summary>
     public enum PlatformType
     {
@@ -415,7 +353,7 @@ namespace AnyVR.PlatformManagement
     }
 
     /// <summary>
-    /// Enumeration for the type of XR hardware that is used.
+    ///     Enumeration for the type of XR hardware that is used.
     /// </summary>
     public enum XRHardwareType
     {

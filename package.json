@@ -22,5 +22,6 @@
       "description": "Example lobby setup with two lobby scenes",
       "path": "Samples~/NewLobbySetup"
     }
-  ]
+  ],
+  "testable": true
 }

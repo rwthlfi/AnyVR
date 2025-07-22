@@ -20,34 +20,33 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
 
-namespace AnyVR.UserControlSystem
+namespace AnyVR.UserControlSystem.PC
 {
     [RequireComponent(typeof(DynamicMoveProvider))]
     public class PCMovementLockHandler : MonoBehaviour
     {
-        private DynamicMoveProvider _moveProvider;
-        
-        private static PCMovementLockHandler s_instance;
-
-        /// <summary>
-        /// Read-only property that indicates whether the movement is currently locked or not.
-        /// </summary>
-        public static bool IsMovementLocked => !s_instance._moveProvider.enabled;
+        private static PCMovementLockHandler _instance;
 
         [SerializeField]
-        private ushort _movementLockCounter; 
-        public static bool CanMove => s_instance._movementLockCounter == 0;
+        private ushort _movementLockCounter;
+        private DynamicMoveProvider _moveProvider;
 
-        private UnityEvent<bool> _onMovementLockToggle = new();
-        public static UnityEvent<bool> OnMovementLockToggle => s_instance._onMovementLockToggle;
+        private readonly UnityEvent<bool> _onMovementLockToggle = new();
+
+        /// <summary>
+        ///     Read-only property that indicates whether the movement is currently locked or not.
+        /// </summary>
+        public static bool IsMovementLocked => !_instance._moveProvider.enabled;
+        public static bool CanMove => _instance._movementLockCounter == 0;
+        public static UnityEvent<bool> OnMovementLockToggle => _instance._onMovementLockToggle;
 
 
 
         private void Awake()
         {
-            if (s_instance == null)
+            if (_instance == null)
             {
-                s_instance = this;
+                _instance = this;
             }
             else
             {
@@ -63,8 +62,7 @@ namespace AnyVR.UserControlSystem
             bool isXRPlatform = await PlatformInfo.IsXRPlatformAsync();
             if (isXRPlatform)
             {
-                this.enabled = false;
-                return;
+                enabled = false;
             }
         }
 
@@ -72,32 +70,32 @@ namespace AnyVR.UserControlSystem
 
         private static void TogglePCMovement()
         {
-            bool isLocked = s_instance._movementLockCounter > 0;
-            s_instance._moveProvider.enabled = !isLocked;
+            bool isLocked = _instance._movementLockCounter > 0;
+            _instance._moveProvider.enabled = !isLocked;
         }
-        
+
         public static void EnablePCMovement()
         {
-            if (s_instance == null)
+            if (_instance == null)
             {
-                Debug.LogError($"Could not enable PC movement. PCMovementLockHandler is null.");
+                Debug.LogError("Could not enable PC movement. PCMovementLockHandler is null.");
                 return;
             }
-            if (s_instance._movementLockCounter > 0)
+            if (_instance._movementLockCounter > 0)
             {
-                s_instance._movementLockCounter--;
+                _instance._movementLockCounter--;
             }
             TogglePCMovement();
         }
-        
+
         public static void DisablePCMovement()
         {
-            if (s_instance == null)
+            if (_instance == null)
             {
-                Debug.LogError($"Could not disable PC movement. PCMovementLockHandler is null.");
+                Debug.LogError("Could not disable PC movement. PCMovementLockHandler is null.");
                 return;
             }
-            s_instance._movementLockCounter++;
+            _instance._movementLockCounter++;
             TogglePCMovement();
         }
     }

@@ -1,15 +1,19 @@
 #if UNITY_WEBGL && !UNITY_EDITOR
+using AnyVR.Logging;
 using LiveKit;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Logger = AnyVR.Logging.Logger;
+using LogLevel = AnyVR.Logging.LogLevel;
 
 namespace AnyVR.Voicechat
 {
     internal class WebGLVoiceChatClient : VoiceChatClient
     {
+        private const string Tag = nameof(WebGLVoiceChatClient);
         private Room _room;
         internal override event Action<Participant> ParticipantConnected;
         internal override event Action<string> ParticipantDisconnected;
@@ -21,18 +25,18 @@ namespace AnyVR.Voicechat
             _room = new Room();
             _room.ParticipantConnected += participant =>
             {
-                Debug.Log($"Participant Connected! Name: {participant.Identity}");
+                Logger.Log(LogLevel.Verbose, Tag, $"Participant Connected! Name: {participant.Identity}");
                 Remotes.Add(participant.Sid, new Participant(participant.Sid, participant.Identity));
                 ParticipantConnected?.Invoke(Remotes[participant.Sid]);
             };
             _room.ParticipantDisconnected += participant =>
             {
-                Debug.Log($"Participant Disconnected! Name: {participant.Identity}");
+                Logger.Log(LogLevel.Verbose, Tag, $"Participant Disconnected! Name: {participant.Identity}");
                 ParticipantDisconnected?.Invoke(participant.Sid);
             };
             _room.TrackSubscribed += (track, _, participant) =>
             {
-                Debug.Log($"Track Subscribed! Participant: {participant.Identity}, Kind: {track.Kind}");
+                Logger.Log(LogLevel.Verbose, Tag, $"Track Subscribed! Participant: {participant.Identity}, Kind: {track.Kind}");
                 switch (track.Kind)
                 {
                     case TrackKind.Video:
@@ -40,9 +44,9 @@ namespace AnyVR.Voicechat
                             HTMLVideoElement video = track.Attach() as HTMLVideoElement;
                             video!.VideoReceived += tex =>
                             {
-                                Debug.Log("video test" + tex.format);
+                                Logger.Log(LogLevel.Verbose, Tag, "video test" + tex.format);
                                 // VideoReceived is called every time the video resolution changes
-                                Debug.Log(
+                                Logger.Log(LogLevel.Verbose, Tag, 
                                     $"Sid: {participant.Sid}, Remotes: {string.Join('|', Remotes.Keys.ToArray())}");
                                 Remotes[participant.Sid].VideoTexture = tex;
 
@@ -61,17 +65,17 @@ namespace AnyVR.Voicechat
             };
             _room.TrackPublished += (_, participant) =>
             {
-                Debug.Log($"Track Published! Participant: {participant.Identity}");
+                Logger.Log(LogLevel.Verbose, Tag, $"Track Published! Participant: {participant.Identity}");
             };
             _room.ActiveSpeakersChanged += speakers =>
             {
                 HashSet<string> sids = speakers.Select(speaker => speaker.Sid).ToHashSet();
                 UpdateActiveSpeakers(sids);
             };
-            _room.LocalTrackPublished += (_, _) => { Debug.Log("Local Track Published!"); };
+            _room.LocalTrackPublished += (_, _) => { Logger.Log(LogLevel.Verbose, Tag, "Local Track Published!"); };
             _room.Disconnected += _ => Connected = false;
 
-            Debug.Log("WebGLVoiceChatClient initialized!");
+            Logger.Log(LogLevel.Verbose, Tag, "WebGLVoiceChatClient initialized!");
         }
 
 
@@ -85,14 +89,13 @@ namespace AnyVR.Voicechat
             _room.Disconnect();
         }
 
-        internal override bool TryGetAvailableMicrophoneNames(out string[] micNames)
-        {
-            micNames = null;
-            return false;
-        }
-
         internal override void SetActiveMicrophone(string micName)
         {
+        }
+        
+        public override string GetRoomName()
+        {
+            return _room.Name;
         }
 
         private IEnumerator Co_Connect(string address, string token)
@@ -107,10 +110,10 @@ namespace AnyVR.Voicechat
             }
             else
             {
-                Debug.Log("Successfully connected to LiveKit room!");
+                Logger.Log(LogLevel.Verbose, Tag, "Successfully connected to LiveKit room!");
                 Connected = true;
 
-                Local = new Participant(_room.LocalParticipant.Sid, _room.LocalParticipant.Identity);
+                LocalParticipant = new Participant(_room.LocalParticipant.Sid, _room.LocalParticipant.Identity);
                 foreach (RemoteParticipant remote in _room.RemoteParticipants.Values)
                 {
                     Remotes.Add(remote.Sid, new Participant(remote.Sid, remote.Identity));
@@ -132,8 +135,7 @@ namespace AnyVR.Voicechat
         internal override void SetMicrophoneEnabled(bool b)
         {
             IsMicEnabled = b;
-            string state = b ? "enabled" : "disabled";
-            Debug.Log($"Setting microphone state: {state}");
+            Logger.Log(LogLevel.Verbose, Tag, $"Setting microphone state: {(b ? "enabled" : "disabled")}");
             _room.LocalParticipant.SetMicrophoneEnabled(b);
         }
     }

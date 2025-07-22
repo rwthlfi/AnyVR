@@ -1,12 +1,14 @@
 {
-  "name": "LobbySystem",
-  "rootNamespace": "",
+  "name": "Runtime.LobbySystem",
+  "rootNamespace": "AnyVR.LobbySystem",
   "references": [
     "GUID:7c88a4a7926ee5145ad2dfa06f454c67",
     "GUID:7bf834368d865d943b0569a8ab0aa1f7",
     "GUID:c4f84dc638add874db5ab2a10bce5a79",
     "GUID:1d82bdf40e2465b44b34adf79595e74c",
-    "GUID:077ec28323254c54d9037d898a74f513"
+    "GUID:077ec28323254c54d9037d898a74f513",
+    "GUID:e9e7d6785e1f908caa76b39377a0c1b1",
+    "GUID:f1f53d788522cff30900036330eedb8a"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

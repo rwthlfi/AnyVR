@@ -1,28 +1,37 @@
+using System;
+using System.Collections.Generic;
+using AnyVR.Logging;
 using AnyVR.TextChat;
 using AnyVR.Voicechat;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Logger = AnyVR.Logging.Logger;
 using USceneManger = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    ///     The Lobby Handler is automatically spawned as a networked object upon the creation of a lobby scene and serves as a
+    ///     container for the lobby's functionalities.
+    /// </summary>
     [RequireComponent(typeof(TextChatManager))]
     public class LobbyHandler : NetworkBehaviour
     {
-        // Only assigned on client
-        [CanBeNull] private static LobbyHandler s_instance;
+        public delegate void ClientEvent(int clientId);
 
-        private readonly SyncVar<int> _adminId = new();
-        private readonly SyncHashSet<int> _clientIds = new();
-        private readonly SyncVar<bool> _initialized = new(false);
+        private const string Tag = nameof(LobbyHandler);
+
         private readonly SyncVar<Guid> _lobbyId = new();
+
+        /// <summary>
+        ///     A dictionary that contains all player information of the players in this lobby.
+        ///     The keys are integers and correspond to the fishnet client ID of that player.
+        /// </summary>
+        private readonly SyncDictionary<int, PlayerInfo> _players = new();
 
         public LobbyMetaData MetaData
         {
@@ -40,140 +49,146 @@ namespace AnyVR.LobbySystem
 
         public TextChatManager TextChat { get; private set; }
 
-        public ushort CurrentClientCount => (ushort)_clientIds.Count;
+        public ushort CurrentClientCount => (ushort)_players.Count;
 
         private void Awake()
         {
             TextChat = GetComponent<TextChatManager>();
+
+#if !UNITY_SERVER
+            if (_instance != null)
+            {
+                Logger.Log(LogLevel.Error, Tag, "Instance of LobbyHandler is already initialized");
+                return;
+            }
+
+            _instance = this;
+#endif
         }
 
         private void OnDestroy()
         {
-            _clientIds.OnChange -= OnClientUpdate;
+            _players.OnChange -= OnPlayersChange;
         }
 
         /// <summary>
-        ///     Invoked when a remote client joined the lobby of the local client
-        ///     |clientId, clientName|
+        ///     Invoked when a remote client joined the lobby of the local client.
         /// </summary>
-        public event Action<int, string> ClientJoin;
+        public event ClientEvent OnPlayerJoined;
 
         /// <summary>
-        ///     Invoked when a remote client left the lobby of thk local client
+        ///     Invoked when a remote client left the lobby of thk local client.
         /// </summary>
-        public event Action<int> ClientLeft;
+        public event ClientEvent OnPlayerLeft;
 
         // Only invoked on client after ClientStart
-        public static event Action PostInit;
+        public static event Action PostInit; // TODO delete this
 
         [Server]
-        internal void Init(Guid lobbyId, int adminId)
+        internal void Init(Guid lobbyId)
         {
             _lobbyId.Value = lobbyId;
-            _adminId.Value = adminId;
-            _initialized.Value = true;
         }
 
-        /// <summary>
-        ///     Returns the client id of the admin
-        /// </summary>
-        public int GetAdminId()
+        public override void OnStartNetwork()
         {
-            return _adminId.Value;
-        }
-
-        public override void OnStartServer()
-        {
-            base.OnStartServer();
-            _clientIds.OnChange += OnClientUpdate;
+            base.OnStartNetwork();
+            _players.OnChange += OnPlayersChange;
         }
 
         public override void OnStartClient()
         {
             base.OnStartClient();
 
-            if (s_instance != null)
-            {
-                Logger.LogError("Instance of LobbyHandler is already initialized");
-                return;
-            }
-
-            s_instance = this;
-
-            _clientIds.OnChange += OnClientUpdate;
-
-            AddClient();
-
             // Reapply environmental settings
             Scene lobbyScene = USceneManger.GetSceneByPath(MetaData.ScenePath);
             USceneManger.SetActiveScene(lobbyScene);
 
-            VoiceChatManager voiceChatManager = VoiceChatManager.GetInstance();
-            if (voiceChatManager == null || !voiceChatManager.TryGetAvailableMicrophoneNames(out string[] micNames))
+            _voiceChatManager = VoiceChatManager.GetInstance();
+            if (_voiceChatManager != null)
             {
-                return;
+                _voiceChatManager.ConnectedToRoom += OnConnectedToLiveKitRoom;
             }
 
-            string msg = micNames.Aggregate("Available Microphones:\n",
-                (current, micName) => current + "\t" + micName + "\n");
-            Logger.LogVerbose(msg);
-            const int defaultMic = 0;
-            Logger.LogDebug($"Selected Microphone: {micNames[defaultMic]}");
-            voiceChatManager.SetActiveMicrophone(micNames[defaultMic]);
+            OnPlayerJoined += Client_OnPlayerJoined;
+            // OnPlayerLeft += Client_OnPlayerLeft;
+
+            RegisterPlayer(LocalConnection);
+            Logger.Log(LogLevel.Debug, Tag, "local player:" + ConnectionManager.UserName);
 
             PostInit?.Invoke();
         }
-
-        private void OnClientUpdate(SyncHashSetOperation op, int item, bool asServer)
+        private static void OnConnectedToLiveKitRoom()
         {
-            if (asServer)
+            Logger.Log(LogLevel.Verbose, Tag, "Connected to LiveKit room");
+        }
+
+        private void Client_OnPlayerJoined(int clientId)
+        {
+            if (clientId != LocalConnection.ClientId)
             {
-                // ClientJoin & ClientLeft callbacks are already invoked from the 'AddClient' and 'RemoveClient' server RPC
                 return;
             }
+            Logger.Log(LogLevel.Verbose, Tag, $"Local player registered in lobby '{_lobbyId.Value}'");
+            Logger.Log(LogLevel.Verbose, Tag, "Connecting to LiveKit room ...");
+            _voiceChatManager.TryConnectToRoom(_lobbyId.Value, _players[LocalConnection.ClientId].PlayerName, ConnectionManager.GetInstance()!.UseSecureProtocol);
+        }
 
+        private void OnPlayersChange(SyncDictionaryOperation op, int playerId, PlayerInfo value, bool asServer)
+        {
             switch (op)
             {
-                case SyncHashSetOperation.Add:
-                    ClientJoin?.Invoke(item, PlayerNameTracker.GetPlayerName(item));
+                case SyncDictionaryOperation.Add:
+                    OnPlayerJoined?.Invoke(playerId);
+                    Logger.Log(LogLevel.Verbose, Tag, $"Client {playerId} joined lobby {_lobbyId.Value}");
                     break;
-                case SyncHashSetOperation.Remove:
-                    ClientLeft?.Invoke(item);
+                case SyncDictionaryOperation.Clear:
                     break;
-                case SyncHashSetOperation.Clear:
-                    // TODO
+                case SyncDictionaryOperation.Remove:
+                    Logger.Log(LogLevel.Verbose, Tag, $"Client {playerId} left lobby {_lobbyId.Value}");
+                    OnPlayerLeft?.Invoke(playerId);
                     break;
-                case SyncHashSetOperation.Complete:
+                case SyncDictionaryOperation.Set:
                     break;
-                case SyncHashSetOperation.Update:
+                case SyncDictionaryOperation.Complete:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(op), op, null);
             }
         }
 
+        /// <summary>
+        ///     Registers a player in the <see cref="_players" /> dict.
+        /// </summary>
+        /// <param name="conn"></param>
         [ServerRpc(RequireOwnership = false)]
-        private void AddClient(NetworkConnection conn = null)
+        private void RegisterPlayer(NetworkConnection conn = null)
         {
             if (conn == null)
             {
                 return;
             }
 
-            Server_AddClient(conn.ClientId, PlayerNameTracker.GetPlayerName(conn));
+            Server_AddPlayer(conn.ClientId);
         }
 
         [Server]
-        private void Server_AddClient(int clientId, string clientName)
+        private void Server_AddPlayer(int clientId)
         {
-            _clientIds.Add(clientId);
-            ClientJoin?.Invoke(clientId, clientName);
+            PlayerInfo playerInfo = LobbyManager.GetInstance()?.GetPlayerInfo(clientId);
+            if (playerInfo == null)
+            {
+                Logger.Log(LogLevel.Error, Tag, "Failed to get player info for client " + clientId);
+                return;
+            }
+            _players.Add(playerInfo.ID, playerInfo);
         }
 
         [ServerRpc(RequireOwnership = false)]
         internal void RemoveClient(int clientId, NetworkConnection conn = null)
         {
-            if (conn == null || (clientId != conn.ClientId && _adminId.Value != conn.ClientId))
+            // TODO Players can only leave by themselves. Add Kick functionality
+            if (conn == null || clientId != conn.ClientId)
             {
                 return;
             }
@@ -184,23 +199,12 @@ namespace AnyVR.LobbySystem
         [Server]
         internal void Server_RemoveClient(int clientId)
         {
-            _clientIds.Remove(clientId);
-            Logger.LogDebug($"Client {clientId} left lobby {_lobbyId.Value}");
-            ClientLeft?.Invoke(clientId);
+            _players.Remove(clientId);
         }
 
-        public (int, string)[] GetClients()
+        public Dictionary<int, PlayerInfo> GetPlayers()
         {
-            HashSet<int> clientIds = _clientIds.Collection;
-            (int, string)[] clients = new (int, string)[clientIds.Count];
-            int i = 0;
-            foreach (int clientId in clientIds)
-            {
-                clients[i] = (clientId, PlayerNameTracker.GetPlayerName(clientId));
-                i++;
-            }
-
-            return clients;
+            return _players.Collection;
         }
 
         public void SetMuteSelf(bool muteSelf)
@@ -211,18 +215,25 @@ namespace AnyVR.LobbySystem
         [CanBeNull]
         public static LobbyHandler GetInstance()
         {
-            return s_instance;
+            return _instance;
         }
 
         [Client]
         public void Leave()
         {
-            LobbyManager.s_instance.LeaveLobby();
+            LobbyManager.Instance.LeaveLobby();
         }
 
         public Guid GetLobbyId()
         {
             return _lobbyId.Value;
         }
+
+#region ClientOnly
+
+        [CanBeNull] private static LobbyHandler _instance;
+        private VoiceChatManager _voiceChatManager;
+
+#endregion
     }
 }

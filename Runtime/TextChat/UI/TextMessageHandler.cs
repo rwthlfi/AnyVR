@@ -37,7 +37,7 @@ namespace AnyVR.TextChat.UI
         public void SetTextMessage(TextMessage message)
         {
             bool fromServer = message.SenderId == -1;
-            string senderName = fromServer ? "Server" : PlayerNameTracker.GetPlayerName(message.SenderId);
+            string senderName = fromServer ? "Server" : LobbyHandler.GetInstance()?.GetPlayers()[message.SenderId].PlayerName;
 
             _textMesh.color = fromServer ? _serverTextColor : _playerTextColor;
             _textMesh.text = $"[{senderName}]\t{message.Message}";
