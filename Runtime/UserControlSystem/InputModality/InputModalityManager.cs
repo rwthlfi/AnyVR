@@ -37,12 +37,11 @@ namespace AnyVR.UserControlSystem.InputModality
         [SerializeField] private Transform _pcGazeInteractionOrigin;
         [SerializeField] private XRGazeInteractor _gazeInteractor;
 
-        
-        // TODO: Delete preprocessor directive?
 #if !UNITY_WEBGL
-        private void Start()
+        private async void Start()
         {
-            InitializeUserInput(PlatformInfo.IsXRPlatform());
+            bool isXRActive = await PlatformInfo.IsXRPlatformAsync();
+            InitializeUserInput(isXRActive);
         }
 #else
         private void Start()

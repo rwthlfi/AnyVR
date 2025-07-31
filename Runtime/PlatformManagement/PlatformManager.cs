@@ -15,44 +15,90 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using System;
+using System.Collections;
 using UnityEngine;
-using UnityEngine.Assertions;
+using UnityEngine.XR;
 using UnityEngine.XR.Management;
 
 namespace AnyVR.PlatformManagement
 {
-    internal sealed class PlatformManager : MonoBehaviour
+    public class PlatformManager : MonoBehaviour
     {
-        private const string Tag = nameof(PlatformManager);
-        
-        private static XRManagerSettings _xrManager;
+        private static PlatformManager s_instance;
 
-        private void Awake()
+        public static PlatformManager Instance
         {
-            Debug.Log("Initializing XR...");
-
-            // XRGeneralSettings.Instance is null in headless server builds
-            if (XRGeneralSettings.Instance != null)
+            get
             {
-                _xrManager = XRGeneralSettings.Instance.Manager;
+                if (s_instance == null)
+                {
+                    s_instance = FindAnyObjectByType<PlatformManager>();
+                    if (s_instance == null)
+                    {
+                        GameObject platformManagerObject = new("PlatformManager");
+                        s_instance = platformManagerObject.AddComponent<PlatformManager>();
+                    }
+                }
+                return s_instance;
             }
-            
-            _xrManager?.InitializeLoaderSync();
-            
-            IsXrStartupAttempted = true;
+        }
+
+        protected virtual void Awake()
+        {
+            bool isServer = Application.platform == RuntimePlatform.LinuxServer ||
+                Application.platform == RuntimePlatform.WindowsServer;
+            if (s_instance != null && s_instance != this || isServer)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            s_instance = this;
             DontDestroyOnLoad(gameObject);
-            
-            Debug.Log($"XR initialization {(IsXrActive? "succeeded" : "failed")}");
+        }
+
+        protected virtual void Start()
+        {
+            StartCoroutine(TryInitializeXR());
         }
 
         /// <summary>
-        /// True after XR initialization has been attempted, regardless of success.
+        ///     Invoked when XR has been initialized.
         /// </summary>
-        internal static bool IsXrStartupAttempted { get; private set; }
-        
-        /// <summary>
-        /// True if XR successfully initialized and an active loader is available.
-        /// </summary>
-        public static bool IsXrActive => _xrManager != null && _xrManager.activeLoader != null;
+        public event Action OnXRInitializationFinished;
+
+
+
+        private IEnumerator TryInitializeXR()
+        {
+            Debug.Log("[PlatformManager] Trying to start XR initialization...");
+            // Waits until XR starts to initialize.
+            while (!IsXRInitializing())
+            {
+                yield return null;
+            }
+
+            Debug.Log("[PlatformManager] XR initialization started.");
+            // Waits until XR is initialized.
+            yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
+
+            if (XRGeneralSettings.Instance.Manager.activeLoader == null)
+            {
+                Debug.Log("[PlatformManager] XR initialization failed.");
+                //PlatformInfo.s_xRInitializationTCS.SetResult(false);
+                OnXRInitializationFinished?.Invoke();
+                yield break;
+            }
+            Debug.Log("[PlatformManager] XR initialization finished.");
+            PlatformInfo.xrInitializationTcs.SetResult(XRSettings.isDeviceActive);
+            OnXRInitializationFinished?.Invoke();
+        }
+
+        private bool IsXRInitializing()
+        {
+            XRManagerSettings xrManager = XRGeneralSettings.Instance.Manager;
+            return xrManager != null;
+        }
     }
 }

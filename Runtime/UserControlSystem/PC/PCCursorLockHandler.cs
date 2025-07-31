@@ -72,9 +72,10 @@ namespace AnyVR.UserControlSystem.PC
         }
 
 #if !UNITY_WEBGL
-        private void Start()
+        private async void Start()
         {
-            if (PlatformInfo.IsXRPlatform())
+            bool isXRPlatform = await PlatformInfo.IsXRPlatformAsync();
+            if (isXRPlatform)
             {
                 enabled = false;
                 return;

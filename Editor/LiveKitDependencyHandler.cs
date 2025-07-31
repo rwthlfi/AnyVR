@@ -96,7 +96,7 @@ namespace AnyVR.Editor
 
                 List<string> standaloneInclude = new()
                 {
-                    "WindowsStandalone64", "LinuxStandalone64", "Android"
+                    "WindowsStandalone64", "LinuxStandalone64"
                 };
                 List<string> webInclude = new()
                 {
