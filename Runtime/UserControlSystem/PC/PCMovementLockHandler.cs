@@ -57,16 +57,13 @@ namespace AnyVR.UserControlSystem.PC
             _movementLockCounter = 0;
         }
 
-        private async void Start()
+        private void Start()
         {
-            bool isXRPlatform = await PlatformInfo.IsXRPlatformAsync();
-            if (isXRPlatform)
+            if (PlatformInfo.IsXRPlatform())
             {
                 enabled = false;
             }
         }
-
-
 
         private static void TogglePCMovement()
         {

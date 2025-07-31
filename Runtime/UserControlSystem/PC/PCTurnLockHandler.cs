@@ -50,10 +50,9 @@ namespace AnyVR.UserControlSystem.PC
             _turnLockCounter = 0;
         }
 
-        private async void Start()
+        private void Start()
         {
-            bool isXRPlatform = await PlatformInfo.IsXRPlatformAsync();
-            if (isXRPlatform)
+            if (PlatformInfo.IsXRPlatform())
             {
                 enabled = false;
             }
