@@ -15,19 +15,32 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using System;
+using System.Collections;
+using JetBrains.Annotations;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.XR.Management;
 
 namespace AnyVR.PlatformManagement
 {
-    internal sealed class PlatformManager : MonoBehaviour
+    public sealed class PlatformManager : MonoBehaviour
     {
         private const string Tag = nameof(PlatformManager);
         
-        private static XRManagerSettings _xrManager;
+        private XRManagerSettings _xrManager;
+
+        /// <summary>
+        /// Called after the xr initialization was attempted.
+        /// After this <see cref="PlatformManager.IsXrActive"/> is true on XR platforms.
+        /// </summary>
+        public event Action OnInitialized;
 
         private void Awake()
+        {
+            InitSingleton();
+        }
+
+        private IEnumerator Start()
         {
             Debug.Log("Initializing XR...");
 
@@ -37,10 +50,15 @@ namespace AnyVR.PlatformManagement
                 _xrManager = XRGeneralSettings.Instance.Manager;
             }
             
-            _xrManager?.InitializeLoaderSync();
+            yield return _xrManager?.InitializeLoader();
+
+            if (IsXrActive)
+            {
+                _xrManager?.StartSubsystems();
+            }
             
             IsXrStartupAttempted = true;
-            DontDestroyOnLoad(gameObject);
+            OnInitialized?.Invoke();
             
             Debug.Log($"XR initialization {(IsXrActive? "succeeded" : "failed")}");
         }
@@ -48,11 +66,29 @@ namespace AnyVR.PlatformManagement
         /// <summary>
         /// True after XR initialization has been attempted, regardless of success.
         /// </summary>
-        internal static bool IsXrStartupAttempted { get; private set; }
+        public bool IsXrStartupAttempted { get; private set; }
         
         /// <summary>
         /// True if XR successfully initialized and an active loader is available.
         /// </summary>
-        public static bool IsXrActive => _xrManager != null && _xrManager.activeLoader != null;
+        public bool IsXrActive => _xrManager != null && _xrManager.activeLoader != null;
+        
+#region Singleton
+
+        public static PlatformManager Instance {get; private set;}
+
+        private void InitSingleton()
+        {
+            if (Instance != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            DontDestroyOnLoad(gameObject);
+            Instance = this;
+        }
+
+#endregion
     }
 }

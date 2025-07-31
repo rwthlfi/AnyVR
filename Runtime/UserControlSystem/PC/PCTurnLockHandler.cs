@@ -52,13 +52,14 @@ namespace AnyVR.UserControlSystem.PC
 
         private void Start()
         {
-            if (PlatformInfo.IsXRPlatform())
+            PlatformManager.Instance.OnInitialized += () => 
             {
-                enabled = false;
-            }
+                if (PlatformInfo.IsXRPlatform())
+                {
+                    enabled = false;
+                }
+            };
         }
-
-
 
         private static void TogglePCTurning()
         {

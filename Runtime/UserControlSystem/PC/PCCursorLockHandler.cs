@@ -71,33 +71,25 @@ namespace AnyVR.UserControlSystem.PC
             }
         }
 
-#if !UNITY_WEBGL
         private void Start()
         {
-            if (PlatformInfo.IsXRPlatform())
+            PlatformManager.Instance.OnInitialized += () =>
             {
-                enabled = false;
-                return;
-            }
+                if (PlatformInfo.IsXRPlatform())
+                {
+                    enabled = false;
+                    return;
+                }
 
-            // Subscribes to the action events.
-            _cursorUnlockAction.action.performed += UnlockCursorInputActionCallback;
-            _cursorLockAction.action.performed += LockCursorInputActionCallback;
+                // Subscribes to the action events.
+                _cursorUnlockAction.action.performed += UnlockCursorInputActionCallback;
+                _cursorLockAction.action.performed += LockCursorInputActionCallback;
 
-            // Locks cursor initially.
-            IsCursorUnlocked = false;
+                // Locks cursor initially.
+                IsCursorUnlocked = false;
+            };
         }
-#else
-        private void Start()
-        {
-            // Subscribes to the action events.
-            _cursorUnlockAction.action.performed += UnlockCursorInputActionCallback;
-            _cursorLockAction.action.performed += LockCursorInputActionCallback;
-            // Locks cursor initially.
-            IsCursorUnlocked = false;
-        }
-#endif
-
+        
         private void OnDestroy()
         {
             // Unsubscribes from the action events to prevent memory leaks.

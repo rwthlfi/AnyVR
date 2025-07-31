@@ -17,6 +17,7 @@
 
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.XR;
 using UnityEngine.XR.Management;
 
@@ -27,20 +28,20 @@ namespace AnyVR.PlatformManagement
     /// </summary>
     public static class PlatformInfo
     {
-        /// <summary>
-        /// The platform the software is running on.
-        /// </summary>
-        public static Platform Platform => GetPlatform();
+        // /// <summary>
+        // /// The platform the software is running on.
+        // /// </summary>
+        // public static Platform Platform => GetPlatform();
+        //
+        // /// <summary>
+        // /// The platform family the software is running on.
+        // /// </summary>
+        // public static PlatformType PlatformType => GetPlatformType();
 
-        /// <summary>
-        /// The platform family the software is running on.
-        /// </summary>
-        public static PlatformType PlatformType => GetPlatformType();
-
-        /// <summary>
-        /// The XR hardware that is used.
-        /// </summary>
-        public static XRHardwareType XRHardwareType => GetXRHardwareType();
+        // /// <summary>
+        // /// The XR hardware that is used.
+        // /// </summary>
+        // public static XRHardwareType XRHardwareType => GetXRHardwareType();
 
         /// <summary>
         /// Reference to the HMD, if there is one. Is null otherwise.
@@ -59,10 +60,8 @@ namespace AnyVR.PlatformManagement
 
         private static void CheckInitializationStatus()
         {
-            if (!PlatformManager.IsXrStartupAttempted)
-            {
-                Debug.LogWarning("[PlatformInfo] PlatformInfo is not fully initialized yet. Do not call this method from the Awake() method.");
-            }
+            const string msg = "[PlatformInfo] PlatformInfo is not fully initialized yet. Wait until PlatformManager.IsXrStartupAttempted is true before calling this method.";
+            Assert.IsTrue(PlatformManager.Instance.IsXrStartupAttempted, msg);
         }
 
         private static Platform GetAndroidPlatform()
@@ -147,12 +146,6 @@ namespace AnyVR.PlatformManagement
             CheckInitializationStatus();
             return GetPlatformType() == PlatformType.XR;
         }
-
-        /// <summary>
-        /// Determines if the used platform is a server.
-        /// </summary>
-        /// <returns>Whether the used platform is a server.</returns>
-        public static bool IsServer() => GetPlatformType() == PlatformType.Server;
 
         private static InputDevice? LookupInputDevice(XRNode node)
         {

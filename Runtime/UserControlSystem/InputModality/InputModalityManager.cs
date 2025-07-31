@@ -21,6 +21,7 @@ using UnityEngine;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning;
+using UnityEngine.XR.Management;
 
 namespace AnyVR.UserControlSystem.InputModality
 {
@@ -36,21 +37,14 @@ namespace AnyVR.UserControlSystem.InputModality
         [SerializeField] private Transform _xrGazeInteractionOrigin;
         [SerializeField] private Transform _pcGazeInteractionOrigin;
         [SerializeField] private XRGazeInteractor _gazeInteractor;
-
         
-        // TODO: Delete preprocessor directive?
-#if !UNITY_WEBGL
         private void Start()
         {
-            InitializeUserInput(PlatformInfo.IsXRPlatform());
+            PlatformManager.Instance.OnInitialized += () =>
+            {
+                InitializeUserInput(PlatformInfo.IsXRPlatform());
+            };
         }
-#else
-        private void Start()
-        {
-            // For WebGL, we assume XR is not available and initialize accordingly.
-            InitializeUserInput(false);
-        }
-#endif
 
         /// <summary>
         ///     Initializes the user input based on the XR platform availability.
