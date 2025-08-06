@@ -96,6 +96,12 @@ namespace AnyVR.LobbySystem
         /// </summary>
         public event Action ClientLobbyLoadStart;
 
+        [Server]
+        internal bool TryGetQuickConnectCode(Guid lobbyId, out uint quickConnectCode)
+        {
+            return _quickConnectHandler.TryGetQuickConnectCode(lobbyId, out quickConnectCode);
+        }
+        
         public override void OnStartServer()
         {
             base.OnStartServer();
@@ -104,6 +110,7 @@ namespace AnyVR.LobbySystem
             _lobbyPasswordHashes = new Dictionary<Guid, byte[]>();
             _lobbyExpirationRoutines = new Dictionary<Guid, Coroutine>();
             _playerData = new Dictionary<int, PlayerInfo>();
+            _quickConnectHandler = new QuickConnectHandler();
             SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
             ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
         }
@@ -280,10 +287,16 @@ namespace AnyVR.LobbySystem
                 return;
             }
 
+            if (!TryGetQuickConnectCode(lobbyId, out uint quickConnectCode))
+            {
+                Logger.Log(LogLevel.Error, Tag, "Can't register LobbyHandler. Corresponding QuickConnectCode does not exist.");
+                return;
+            }
+
             // Spawn and register the LobbyHandler
             LobbyHandler lobbyHandler = Instantiate(_lobbyHandlerPrefab);
             Spawn(lobbyHandler.NetworkObject, null, loadArgs.LoadedScenes[0]);
-            lobbyHandler.Init(lobbyId);
+            lobbyHandler.Init(lobbyId, quickConnectCode);
             lobbyHandler.OnPlayerJoined += _ =>
             {
                 int currentPlayerCount = _lobbyHandlers[lobbyId].GetPlayers().Count;
@@ -359,7 +372,9 @@ namespace AnyVR.LobbySystem
                 _lobbyPasswordHashes.Add(lobbyMetaData.LobbyId, ComputeSha256(password));
             }
 
-            // Starts the lobby scene without clients. When loaded, the LoadEnd callback will be called and we spawn a LobbyHandler. After that clients are able to join.
+            _quickConnectHandler.RegisterLobby(lobbyMetaData.LobbyId);
+
+            // Starts the lobby scene without clients. When loaded, the LoadEnd callback will be called, and we spawn a LobbyHandler.
             Logger.Log(LogLevel.Verbose, Tag, "Loading lobby scene. Waiting for lobby handler");
             SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), lobbyMetaData.GetSceneLoadData());
 
@@ -471,6 +486,44 @@ namespace AnyVR.LobbySystem
             JoinLobby(lobbyId, password, ClientManager.Connection);
         }
 
+        [Client]
+        public void Client_QuickConnect(string quickConnectCode)
+        {
+            Logger.Log(LogLevel.Warning, Tag, $"Code: {quickConnectCode}");
+            if (uint.TryParse(quickConnectCode, out uint code))
+            {
+                Logger.Log(LogLevel.Warning, Tag, "Performing RPC");
+                QuickConnectRpc(code, ClientManager.Connection);
+            }
+            else
+            {
+                Logger.Log(LogLevel.Warning, Tag, "Quick connect code is invalid.");
+            }
+        }
+        
+        [Client]
+        public bool Client_QuickConnect(ushort quickConnectCode)
+        {
+            if (!_quickConnectHandler.TryGetLobbyId(quickConnectCode, out Guid lobbyId))
+            {
+                QuickConnectRpc(quickConnectCode, ClientManager.Connection);
+            }
+            return true;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void QuickConnectRpc(uint quickConnect, NetworkConnection conn)
+        {
+            Logger.Log(LogLevel.Warning, Tag, "Received quick connect RPC");
+            if (_quickConnectHandler.TryGetLobbyId(quickConnect, out Guid lobbyId))
+            {
+                Logger.Log(LogLevel.Verbose, Tag, $"{conn.ClientId} connecting to lobby '{lobbyId} via quickConnect");
+                // TODO: handle password protected lobbies
+                AddClientToLobby(lobbyId, string.Empty, conn);
+            }
+            Logger.Log(LogLevel.Warning, Tag, $"Error performing quickConnect with code {quickConnect}");
+        }
+        
         [ServerRpc(RequireOwnership = false)]
         private void JoinLobby(Guid lobbyId, string password, NetworkConnection conn)
         {
@@ -600,6 +653,7 @@ namespace AnyVR.LobbySystem
             _lobbyHandlers.Remove(lobbyId);
             _lobbies.Remove(lobbyId);
             _lobbyPasswordHashes.Remove(lobbyId);
+            _quickConnectHandler.UnregisterLobby(lobbyId);
 
             if (sud == null)
             {
@@ -837,6 +891,8 @@ namespace AnyVR.LobbySystem
         private Dictionary<Guid, Coroutine> _lobbyExpirationRoutines;
 
         private Dictionary<int, PlayerInfo> _playerData;
+
+        private QuickConnectHandler _quickConnectHandler;
 
         #endregion
     }

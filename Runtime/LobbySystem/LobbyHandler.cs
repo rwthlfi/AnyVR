@@ -8,6 +8,7 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using Logger = AnyVR.Logging.Logger;
 using USceneManger = UnityEngine.SceneManagement.SceneManager;
@@ -92,6 +93,8 @@ namespace AnyVR.LobbySystem
         internal void Init(Guid lobbyId, uint quickConnectCode)
         {
             _lobbyId.Value = lobbyId;
+            bool success = LobbyManager.Instance.TryGetQuickConnectCode(lobbyId, out uint code);
+            Assert.IsTrue(success);
             _quickConnectCode.Value = quickConnectCode;
         }
 
