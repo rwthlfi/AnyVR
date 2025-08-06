@@ -26,6 +26,10 @@ namespace AnyVR.LobbySystem
         private const string Tag = nameof(LobbyHandler);
 
         private readonly SyncVar<Guid> _lobbyId = new();
+        
+        private readonly SyncVar<uint> _quickConnectCode = new();
+        
+        public uint QuickConnectCode => _quickConnectCode.Value;
 
         /// <summary>
         ///     A dictionary that contains all player information of the players in this lobby.
@@ -85,9 +89,10 @@ namespace AnyVR.LobbySystem
         public static event Action PostInit; // TODO delete this
 
         [Server]
-        internal void Init(Guid lobbyId)
+        internal void Init(Guid lobbyId, uint quickConnectCode)
         {
             _lobbyId.Value = lobbyId;
+            _quickConnectCode.Value = quickConnectCode;
         }
 
         public override void OnStartNetwork()
@@ -133,6 +138,31 @@ namespace AnyVR.LobbySystem
             Logger.Log(LogLevel.Verbose, Tag, "Connecting to LiveKit room ...");
             _voiceChatManager.TryConnectToRoom(_lobbyId.Value, _players[LocalConnection.ClientId].PlayerName, ConnectionManager.GetInstance()!.UseSecureProtocol);
         }
+
+#if !UNITY_SERVER
+        private GUIStyle _style;
+        private void OnGUI()
+        {
+            _style ??= new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                normal =
+                {
+                    textColor = Color.yellow
+                },
+            };
+
+            const float x = 10f;
+            const float y = 10f;
+            const float width = 500f;
+            const float height = 20f;
+            Rect labelRect = new(x, y, width, height);
+
+            string debugMsg = $"QuickConnectCode: {_quickConnectCode.Value.ToString()}";
+            GUI.Label(labelRect, debugMsg, _style);
+        }
+#endif
 
         private void OnPlayersChange(SyncDictionaryOperation op, int playerId, PlayerInfo value, bool asServer)
         {
@@ -228,6 +258,7 @@ namespace AnyVR.LobbySystem
         {
             return _lobbyId.Value;
         }
+
 
 #region ClientOnly
 
