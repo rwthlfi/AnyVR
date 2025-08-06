@@ -50,17 +50,15 @@ namespace AnyVR.LobbySystem
         /// </summary>
         public PlayerCountEvent PlayerCountUpdate;
 
-        public static bool IsInitialized { get; private set; }
-
         /// <summary>
         ///     All available scenes for a lobby
         /// </summary>
         public LobbySceneMetaData[] LobbyScenes => _lobbyScenes.ToArray();
 
         /// <summary>
-        ///     This event is invoked after the (local) LobbyManager is spawned / initialized.
+        ///     This event is invoked after the (local) LobbyManager is spawned and initialized.
         /// </summary>
-        public static event Action<LobbyManager> OnInitialized;
+        public static event Action<LobbyManager> OnClientInitialized;
 
         private void Awake()
         {
@@ -71,8 +69,6 @@ namespace AnyVR.LobbySystem
         {
             OnLobbyClosed += lobbyId => { Logger.Log(LogLevel.Verbose, Tag, $"Lobby {lobbyId} closed"); };
             OnLobbyOpened += lobbyId => { Logger.Log(LogLevel.Verbose, Tag, $"Lobby {lobbyId} opened"); };
-            IsInitialized = true;
-            OnInitialized?.Invoke(this);
         }
 
         /// <summary>
@@ -135,6 +131,7 @@ namespace AnyVR.LobbySystem
             base.OnStartClient();
             SceneManager.OnLoadStart += Client_OnLoadStart;
             SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
+            OnClientInitialized?.Invoke(this);
         }
 
         [Client]
