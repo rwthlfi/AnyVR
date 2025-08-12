@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5309650559335722497}
   - component: {fileID: 6896138906473972763}
   m_Layer: 5
-  m_Name: LeaveServerBtn (1)
+  m_Name: LeaveServerBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -295,7 +295,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 75}
+  m_SizeDelta: {x: 1111, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6660460358545536535
 CanvasRenderer:
@@ -351,6 +351,7 @@ MonoBehaviour:
   _lobbySceneNameText: {fileID: 185846695816164399}
   _lobbyCreatorText: {fileID: 1957403733772484232}
   _lobbyCapacityText: {fileID: 2160442404301582803}
+  _joinBtn: {fileID: 6896138906473972763}
 --- !u!1 &1687518903021679667
 GameObject:
   m_ObjectHideFlags: 0

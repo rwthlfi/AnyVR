@@ -82,7 +82,8 @@ namespace AnyVR.Sample
                 return;
             
             LobbyUIEntry entry = Instantiate(_lobbyEntryPrefab, _lobbyEntryParent);
-            entry.SetLobby(lobby.Name, lobby.SceneName, lobby.CreatorId, lobby.LobbyCapacity);
+            entry.SetLobby(lobbyId, lobby.Name, lobby.SceneName, lobby.CreatorId, lobby.LobbyCapacity);
+            entry.OnJoinButtonPressed += id => _lobbyManager.Client_JoinLobby(id);
             _lobbyUIEntries.Add(lobbyId, entry);
         }
 

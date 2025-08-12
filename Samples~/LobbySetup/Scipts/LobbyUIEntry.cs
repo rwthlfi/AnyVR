@@ -1,5 +1,7 @@
+using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace AnyVR.Sample
 {
@@ -12,13 +14,22 @@ namespace AnyVR.Sample
         [SerializeField] private TextMeshProUGUI _lobbyCreatorText;
         
         [SerializeField] private TextMeshProUGUI _lobbyCapacityText;
+        
+        [SerializeField] private Button _joinBtn;
+        
+        public delegate void JoinEvent(Guid lobbyId);
+        
+        public event JoinEvent OnJoinButtonPressed;
 
-        public void SetLobby(string lobbyName, string lobbySceneName, int lobbyCreatorId, ushort lobbyLobbyCapacity)
+        public void SetLobby(Guid id, string lobbyName, string lobbySceneName, int lobbyCreatorId, ushort lobbyLobbyCapacity)
         {
             _lobbyNameText.text = lobbyName;
             _lobbySceneNameText.text = lobbySceneName;
             _lobbyCreatorText.text = lobbyCreatorId.ToString();
             _lobbyCapacityText.text = lobbyLobbyCapacity.ToString();
+            
+            _joinBtn.onClick.RemoveAllListeners();
+            _joinBtn.onClick.AddListener(() => OnJoinButtonPressed?.Invoke(id));
         }
     }
 }
