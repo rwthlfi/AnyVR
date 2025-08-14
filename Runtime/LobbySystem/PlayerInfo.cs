@@ -1,21 +1,33 @@
+using FishNet.Serializing;
+using UnityEngine;
+
 namespace AnyVR.LobbySystem
 {
     public class PlayerInfo
     {
-        public readonly int ID;
+        public int ID;
         public string PlayerName;
+        public bool IsAdmin;
+    }
 
-        // Required for FishNet custom serializer/deserializer
-        public PlayerInfo() { }
-        public PlayerInfo(string playerName, int id)
+    public static class PlayerInfoSerializer
+    {
+        public static void WritePlayerInfo(this Writer writer, PlayerInfo value)
         {
-            PlayerName = playerName;
-            ID = id;
+            Debug.Log("PlayerInfoSerializer::WritePlayerInfo");
+            writer.WriteInt32(value.ID);
+            writer.WriteString(value.PlayerName);
+            writer.WriteBoolean(value.IsAdmin);
         }
 
-        public void SetPlayerName(string playerName)
+        public static PlayerInfo ReadPlayerInfo(this Reader reader)
         {
-            PlayerName = playerName;
+            Debug.Log("Reading PlayerInfo");
+            PlayerInfo p = new();
+            p.ID = reader.ReadInt32();
+            p.PlayerName = reader.ReadString();
+            p.IsAdmin = reader.ReadBoolean();
+            return p;
         }
     }
 }

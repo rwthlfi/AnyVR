@@ -22,7 +22,7 @@ namespace AnyVR.LobbySystem
     [RequireComponent(typeof(TextChatManager))]
     public class LobbyHandler : NetworkBehaviour
     {
-        public delegate void ClientEvent(int clientId);
+        public delegate void ClientEvent(PlayerInfo clientId);
 
         private const string Tag = nameof(LobbyHandler);
 
@@ -97,6 +97,35 @@ namespace AnyVR.LobbySystem
             Assert.IsTrue(success);
             _quickConnectCode.Value = quickConnectCode;
         }
+        
+
+        [Server]
+        private void KickPlayer_Internal(PlayerInfo player)
+        {
+            if (ClientManager.Clients.TryGetValue(player.ID, out NetworkConnection client))
+            {
+                // TODO: Move TryRemoveClientFromLobby to LobbyHandler
+                LobbyManager.Instance.TryRemoveClientFromLobby(client);
+            }
+        }
+
+        [ServerRpc]
+        private void ServerRPC_KickPlayer(PlayerInfo player)
+        {
+            KickPlayer_Internal(player);
+        }
+
+        public void KickPlayer(PlayerInfo player)
+        {
+            if (IsServerStarted)
+            {
+                KickPlayer_Internal(player);
+            }
+            else
+            {
+                ServerRPC_KickPlayer(player);
+            }
+        }
 
         public override void OnStartNetwork()
         {
@@ -131,9 +160,9 @@ namespace AnyVR.LobbySystem
             Logger.Log(LogLevel.Verbose, Tag, "Connected to LiveKit room");
         }
 
-        private void Client_OnPlayerJoined(int clientId)
+        private void Client_OnPlayerJoined(PlayerInfo playerInfo)
         {
-            if (clientId != LocalConnection.ClientId)
+            if (playerInfo.ID != LocalConnection.ClientId)
             {
                 return;
             }
@@ -172,14 +201,15 @@ namespace AnyVR.LobbySystem
             switch (op)
             {
                 case SyncDictionaryOperation.Add:
-                    OnPlayerJoined?.Invoke(playerId);
+                    Debug.Log($"Player Added: Key: {playerId}, ID: {value.ID}, Name: {value.PlayerName}");
+                    OnPlayerJoined?.Invoke(value);
                     Logger.Log(LogLevel.Verbose, Tag, $"Client {playerId} joined lobby {_lobbyId.Value}");
                     break;
                 case SyncDictionaryOperation.Clear:
                     break;
                 case SyncDictionaryOperation.Remove:
                     Logger.Log(LogLevel.Verbose, Tag, $"Client {playerId} left lobby {_lobbyId.Value}");
-                    OnPlayerLeft?.Invoke(playerId);
+                    OnPlayerLeft?.Invoke(value);
                     break;
                 case SyncDictionaryOperation.Set:
                     break;
@@ -214,6 +244,7 @@ namespace AnyVR.LobbySystem
                 Logger.Log(LogLevel.Error, Tag, "Failed to get player info for client " + clientId);
                 return;
             }
+            Debug.Log($"Server_AddPlayer: {playerInfo.PlayerName}");
             _players.Add(playerInfo.ID, playerInfo);
         }
 
@@ -235,9 +266,15 @@ namespace AnyVR.LobbySystem
             _players.Remove(clientId);
         }
 
-        public Dictionary<int, PlayerInfo> GetPlayers()
+        public ICollection<PlayerInfo> GetPlayers()
         {
-            return _players.Collection;
+            return _players.Values;
+        }
+        
+        [CanBeNull]
+        public PlayerInfo GetPlayer(int clientId)
+        {
+            return _players.GetValueOrDefault(clientId);
         }
 
         public void SetMuteSelf(bool muteSelf)

@@ -124,7 +124,11 @@ namespace AnyVR.LobbySystem
                     _playerData.Remove(conn.ClientId);
                     break;
                 case RemoteConnectionState.Started:
-                    PlayerInfo playerInfo = new($"User_{conn.ClientId}", conn.ClientId);
+                    PlayerInfo playerInfo = new()
+                    {
+                        ID = conn.ClientId,
+                        PlayerName = $"TEST" //TODO
+                    };
                     _playerData.TryAdd(playerInfo.ID, playerInfo);
                     break;
                 default:
@@ -138,6 +142,7 @@ namespace AnyVR.LobbySystem
             base.OnStartClient();
             SceneManager.OnLoadStart += Client_OnLoadStart;
             SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
+            Client_SetPlayerName(ConnectionManager.UserName);
             OnClientInitialized?.Invoke(this);
         }
 
@@ -178,15 +183,16 @@ namespace AnyVR.LobbySystem
         }
 
         [Client]
-        public void Client_SetPlayerName(string playerName)
+        private void Client_SetPlayerName(string playerName)
         {
             SetPlayerName(playerName, ClientManager.Connection);
         }
 
         [ServerRpc]
-        private void SetPlayerName(string playerName, NetworkConnection conn)
+        private void SetPlayerName(string playerName, NetworkConnection conn = null)
         {
-            _playerData[conn.ClientId].SetPlayerName(playerName);
+            if (conn != null)
+                _playerData[conn.ClientId].PlayerName = playerName; //TODO
         }
 
         private static bool IsUnloadingLobby(UnloadQueueData queueData, bool asServer)
@@ -638,7 +644,7 @@ namespace AnyVR.LobbySystem
             }
 
             // Kick all players from the lobby
-            foreach (PlayerInfo player in handler.GetPlayers().Values)
+            foreach (PlayerInfo player in handler.GetPlayers())
             {
                 if (!ServerManager.Clients.TryGetValue(player.ID, out NetworkConnection clientConn))
                 {
@@ -678,7 +684,7 @@ namespace AnyVR.LobbySystem
         }
 
         [Server]
-        private bool TryRemoveClientFromLobby(NetworkConnection clientConnection)
+        internal bool TryRemoveClientFromLobby(NetworkConnection clientConnection)
         {
             if (clientConnection == null)
             {
