@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace AnyVR.LobbySystem
 {
-    public class PlayerInfo
+    public class PlayerState
     {
         public int ID;
         public string PlayerName;
@@ -12,7 +12,7 @@ namespace AnyVR.LobbySystem
 
     public static class PlayerInfoSerializer
     {
-        public static void WritePlayerInfo(this Writer writer, PlayerInfo value)
+        public static void WritePlayerInfo(this Writer writer, PlayerState value)
         {
             Debug.Log("PlayerInfoSerializer::WritePlayerInfo");
             writer.WriteInt32(value.ID);
@@ -20,10 +20,10 @@ namespace AnyVR.LobbySystem
             writer.WriteBoolean(value.IsAdmin);
         }
 
-        public static PlayerInfo ReadPlayerInfo(this Reader reader)
+        public static PlayerState ReadPlayerInfo(this Reader reader)
         {
             Debug.Log("Reading PlayerInfo");
-            PlayerInfo p = new();
+            PlayerState p = new();
             p.ID = reader.ReadInt32();
             p.PlayerName = reader.ReadString();
             p.IsAdmin = reader.ReadBoolean();

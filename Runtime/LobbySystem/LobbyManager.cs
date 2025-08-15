@@ -109,7 +109,7 @@ namespace AnyVR.LobbySystem
             _clientLobbyDict = new Dictionary<int, Guid>();
             _lobbyPasswordHashes = new Dictionary<Guid, byte[]>();
             _lobbyExpirationRoutines = new Dictionary<Guid, Coroutine>();
-            _playerData = new Dictionary<int, PlayerInfo>();
+            _playerData = new Dictionary<int, PlayerState>();
             _quickConnectHandler = new QuickConnectHandler();
             SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
             ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
@@ -124,12 +124,12 @@ namespace AnyVR.LobbySystem
                     _playerData.Remove(conn.ClientId);
                     break;
                 case RemoteConnectionState.Started:
-                    PlayerInfo playerInfo = new()
+                    PlayerState playerState = new()
                     {
                         ID = conn.ClientId,
-                        PlayerName = $"TEST" //TODO
+                        PlayerName = $"Client_{conn.ClientId}"
                     };
-                    _playerData.TryAdd(playerInfo.ID, playerInfo);
+                    _playerData.TryAdd(playerState.ID, playerState);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -188,11 +188,14 @@ namespace AnyVR.LobbySystem
             SetPlayerName(playerName, ClientManager.Connection);
         }
 
-        [ServerRpc]
+        [ServerRpc(RequireOwnership = false)]
         private void SetPlayerName(string playerName, NetworkConnection conn = null)
         {
             if (conn != null)
-                _playerData[conn.ClientId].PlayerName = playerName; //TODO
+            {
+                Debug.Log($"UPDATING PLAYER NAME: {playerName}");
+                _playerData[conn.ClientId].PlayerName = playerName;
+            }
         }
 
         private static bool IsUnloadingLobby(UnloadQueueData queueData, bool asServer)
@@ -644,7 +647,7 @@ namespace AnyVR.LobbySystem
             }
 
             // Kick all players from the lobby
-            foreach (PlayerInfo player in handler.GetPlayers())
+            foreach (PlayerState player in handler.GetPlayers())
             {
                 if (!ServerManager.Clients.TryGetValue(player.ID, out NetworkConnection clientConn))
                 {
@@ -818,7 +821,7 @@ namespace AnyVR.LobbySystem
 
         [CanBeNull]
         [Server]
-        public PlayerInfo GetPlayerInfo(int playerId)
+        public PlayerState GetPlayerInfo(int playerId)
         {
             return _playerData[playerId];
         }
@@ -896,7 +899,7 @@ namespace AnyVR.LobbySystem
 
         private Dictionary<Guid, Coroutine> _lobbyExpirationRoutines;
 
-        private Dictionary<int, PlayerInfo> _playerData;
+        private Dictionary<int, PlayerState> _playerData;
 
         private QuickConnectHandler _quickConnectHandler;
 

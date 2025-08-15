@@ -22,7 +22,7 @@ namespace AnyVR.LobbySystem
     [RequireComponent(typeof(TextChatManager))]
     public class LobbyHandler : NetworkBehaviour
     {
-        public delegate void ClientEvent(PlayerInfo clientId);
+        public delegate void ClientEvent(PlayerState clientId);
 
         private const string Tag = nameof(LobbyHandler);
 
@@ -36,7 +36,7 @@ namespace AnyVR.LobbySystem
         ///     A dictionary that contains all player information of the players in this lobby.
         ///     The keys are integers and correspond to the fishnet client ID of that player.
         /// </summary>
-        private readonly SyncDictionary<int, PlayerInfo> _players = new();
+        private readonly SyncDictionary<int, PlayerState> _players = new();
 
         public LobbyMetaData MetaData
         {
@@ -100,7 +100,7 @@ namespace AnyVR.LobbySystem
         
 
         [Server]
-        private void KickPlayer_Internal(PlayerInfo player)
+        private void KickPlayer_Internal(PlayerState player)
         {
             if (ClientManager.Clients.TryGetValue(player.ID, out NetworkConnection client))
             {
@@ -110,12 +110,12 @@ namespace AnyVR.LobbySystem
         }
 
         [ServerRpc]
-        private void ServerRPC_KickPlayer(PlayerInfo player)
+        private void ServerRPC_KickPlayer(PlayerState player)
         {
             KickPlayer_Internal(player);
         }
 
-        public void KickPlayer(PlayerInfo player)
+        public void KickPlayer(PlayerState player)
         {
             if (IsServerStarted)
             {
@@ -160,9 +160,9 @@ namespace AnyVR.LobbySystem
             Logger.Log(LogLevel.Verbose, Tag, "Connected to LiveKit room");
         }
 
-        private void Client_OnPlayerJoined(PlayerInfo playerInfo)
+        private void Client_OnPlayerJoined(PlayerState playerState)
         {
-            if (playerInfo.ID != LocalConnection.ClientId)
+            if (playerState.ID != LocalConnection.ClientId)
             {
                 return;
             }
@@ -196,7 +196,7 @@ namespace AnyVR.LobbySystem
         }
 #endif
 
-        private void OnPlayersChange(SyncDictionaryOperation op, int playerId, PlayerInfo value, bool asServer)
+        private void OnPlayersChange(SyncDictionaryOperation op, int playerId, PlayerState value, bool asServer)
         {
             switch (op)
             {
@@ -238,14 +238,14 @@ namespace AnyVR.LobbySystem
         [Server]
         private void Server_AddPlayer(int clientId)
         {
-            PlayerInfo playerInfo = LobbyManager.GetInstance()?.GetPlayerInfo(clientId);
-            if (playerInfo == null)
+            PlayerState playerState = LobbyManager.GetInstance()?.GetPlayerInfo(clientId);
+            if (playerState == null)
             {
                 Logger.Log(LogLevel.Error, Tag, "Failed to get player info for client " + clientId);
                 return;
             }
-            Debug.Log($"Server_AddPlayer: {playerInfo.PlayerName}");
-            _players.Add(playerInfo.ID, playerInfo);
+            Debug.Log($"Server_AddPlayer: {playerState.PlayerName}");
+            _players.Add(playerState.ID, playerState);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -266,13 +266,13 @@ namespace AnyVR.LobbySystem
             _players.Remove(clientId);
         }
 
-        public ICollection<PlayerInfo> GetPlayers()
+        public ICollection<PlayerState> GetPlayers()
         {
             return _players.Values;
         }
         
         [CanBeNull]
-        public PlayerInfo GetPlayer(int clientId)
+        public PlayerState GetPlayer(int clientId)
         {
             return _players.GetValueOrDefault(clientId);
         }
