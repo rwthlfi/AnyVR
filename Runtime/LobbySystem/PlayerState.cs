@@ -1,33 +1,59 @@
-using FishNet.Serializing;
-using UnityEngine;
+using System;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using JetBrains.Annotations;
 
 namespace AnyVR.LobbySystem
 {
-    public class PlayerState
+    public class PlayerState : NetworkBehaviour
     {
-        public int ID;
-        public string PlayerName;
-        public bool IsAdmin;
-    }
+        private readonly SyncVar<int> _id = new();
+        private readonly SyncVar<string> _playerName = new();
+        private readonly SyncVar<bool> _isConnectedToLobby = new();
+        private readonly SyncVar<bool> _isAdmin = new();
+        private readonly SyncVar<Guid> _lobbyId = new();
 
-    public static class PlayerInfoSerializer
-    {
-        public static void WritePlayerInfo(this Writer writer, PlayerState value)
+        public int GetID() => _id.Value;
+        public string GetName() => _playerName.Value;
+        public bool GetIsAdmin() => _isAdmin.Value;
+        public Guid GetLobby() => _lobbyId.Value;
+
+        public override void OnStartServer()
         {
-            Debug.Log("PlayerInfoSerializer::WritePlayerInfo");
-            writer.WriteInt32(value.ID);
-            writer.WriteString(value.PlayerName);
-            writer.WriteBoolean(value.IsAdmin);
+            base.OnStartServer();
+            _id.Value = OwnerId;
         }
 
-        public static PlayerState ReadPlayerInfo(this Reader reader)
+        public override void OnStartClient()
         {
-            Debug.Log("Reading PlayerInfo");
-            PlayerState p = new();
-            p.ID = reader.ReadInt32();
-            p.PlayerName = reader.ReadString();
-            p.IsAdmin = reader.ReadBoolean();
-            return p;
+            base.OnStartClient();
+            if (IsOwner)
+            {
+                SetName(ConnectionManager.UserName);
+            }
+        }
+
+        public void SetName(string playerName)
+        {
+            if (IsServerStarted)
+            {
+                SetName_Internal(playerName);
+            }
+            else
+            {
+                ServerRPC_SetName(playerName);
+            }
+        }
+
+        [ServerRpc(RequireOwnership = true)]
+        private void ServerRPC_SetName(string playerName)
+        {
+            SetName_Internal(playerName);
+        }
+
+        private void SetName_Internal(string playerName)
+        {
+            _playerName.Value = playerName;
         }
     }
 }

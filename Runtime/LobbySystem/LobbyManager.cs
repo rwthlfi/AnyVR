@@ -106,43 +106,17 @@ namespace AnyVR.LobbySystem
         {
             base.OnStartServer();
             _lobbyHandlers = new Dictionary<Guid, LobbyHandler>();
-            _clientLobbyDict = new Dictionary<int, Guid>();
             _lobbyPasswordHashes = new Dictionary<Guid, byte[]>();
             _lobbyExpirationRoutines = new Dictionary<Guid, Coroutine>();
-            _playerData = new Dictionary<int, PlayerState>();
             _quickConnectHandler = new QuickConnectHandler();
             SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
-            ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
         }
-
-        private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
-        {
-            switch (args.ConnectionState)
-            {
-                case RemoteConnectionState.Stopped:
-                    TryRemoveClientFromLobby(conn); // Kick player from their lobby
-                    _playerData.Remove(conn.ClientId);
-                    break;
-                case RemoteConnectionState.Started:
-                    PlayerState playerState = new()
-                    {
-                        ID = conn.ClientId,
-                        PlayerName = $"Client_{conn.ClientId}"
-                    };
-                    _playerData.TryAdd(playerState.ID, playerState);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
 
         public override void OnStartClient()
         {
             base.OnStartClient();
             SceneManager.OnLoadStart += Client_OnLoadStart;
             SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
-            Client_SetPlayerName(ConnectionManager.UserName);
             OnClientInitialized?.Invoke(this);
         }
 
@@ -179,22 +153,6 @@ namespace AnyVR.LobbySystem
                 {
                     USceneManager.SetActiveScene(USceneManager.GetSceneByPath(_offlineScene));
                 };
-            }
-        }
-
-        [Client]
-        private void Client_SetPlayerName(string playerName)
-        {
-            SetPlayerName(playerName, ClientManager.Connection);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void SetPlayerName(string playerName, NetworkConnection conn = null)
-        {
-            if (conn != null)
-            {
-                Debug.Log($"UPDATING PLAYER NAME: {playerName}");
-                _playerData[conn.ClientId].PlayerName = playerName;
             }
         }
 
@@ -306,14 +264,14 @@ namespace AnyVR.LobbySystem
             LobbyHandler lobbyHandler = Instantiate(_lobbyHandlerPrefab);
             Spawn(lobbyHandler.NetworkObject, null, loadArgs.LoadedScenes[0]);
             lobbyHandler.Init(lobbyId, quickConnectCode);
-            lobbyHandler.OnPlayerJoined += _ =>
+            lobbyHandler.OnPlayerJoin += _ =>
             {
-                int currentPlayerCount = _lobbyHandlers[lobbyId].GetPlayers().Count;
+                int currentPlayerCount = _lobbyHandlers[lobbyId].PlayerStates.Count();
                 OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
             };
-            lobbyHandler.OnPlayerLeft += _ =>
+            lobbyHandler.OnPlayerLeave += _ =>
             {
-                int currentPlayerCount = _lobbyHandlers[lobbyId].GetPlayers().Count;
+                int currentPlayerCount = _lobbyHandlers[lobbyId].PlayerStates.Count();
                 OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
             };
 
@@ -356,7 +314,7 @@ namespace AnyVR.LobbySystem
 
             if (string.IsNullOrEmpty(lobbyName))
             {
-                lobbyName = $"{_playerData[conn.ClientId].PlayerName}'s {sceneName}";
+                lobbyName = $"{sceneName}"; //TODO
             }
             maxClients = (ushort)Mathf.Max(1, maxClients);
             LobbyMetaData meta = new LobbyMetaData.Builder()
@@ -535,7 +493,7 @@ namespace AnyVR.LobbySystem
         
         [ServerRpc(RequireOwnership = false)]
         private void JoinLobby(Guid lobbyId, string password, NetworkConnection conn)
-        {
+        { 
             AddClientToLobby(lobbyId, password, conn);
         }
 
@@ -564,13 +522,7 @@ namespace AnyVR.LobbySystem
                 return;
             }
 
-            int currentPlayerCount = _clientLobbyDict.Count(pair => pair.Value == lobbyId);
-            if (currentPlayerCount >= lobby.LobbyCapacity)
-            {
-                Logger.Log(LogLevel.Warning, Tag,
-                    $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The lobby is already full.");
-                return;
-            }
+            //TODO: capacity
 
             if (lobby.IsPasswordProtected)
             {
@@ -594,13 +546,6 @@ namespace AnyVR.LobbySystem
                         $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Password hashes do not match.");
                     return;
                 }
-            }
-
-            if (!_clientLobbyDict.TryAdd(conn.ClientId, lobbyId))
-            {
-                Logger.Log(LogLevel.Warning, Tag,
-                    $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'.");
-                return;
             }
 
             Logger.Log(LogLevel.Verbose, Tag,
@@ -647,11 +592,11 @@ namespace AnyVR.LobbySystem
             }
 
             // Kick all players from the lobby
-            foreach (PlayerState player in handler.GetPlayers())
+            foreach (PlayerState player in handler.PlayerStates)
             {
-                if (!ServerManager.Clients.TryGetValue(player.ID, out NetworkConnection clientConn))
+                if (!ServerManager.Clients.TryGetValue(player.GetID(), out NetworkConnection clientConn))
                 {
-                    Logger.Log(LogLevel.Warning, Tag, $"Could not get NetworkConnection from client {player.ID}");
+                    Logger.Log(LogLevel.Warning, Tag, $"Could not get NetworkConnection from client {player.GetID()}");
                     continue;
                 }
 
@@ -687,44 +632,32 @@ namespace AnyVR.LobbySystem
         }
 
         [Server]
-        internal bool TryRemoveClientFromLobby(NetworkConnection clientConnection)
+        internal bool TryRemoveClientFromLobby(NetworkConnection conn)
         {
-            if (clientConnection == null)
+            if (conn == null)
             {
                 return false;
             }
 
-            if (!TryGetLobbyIdOfClient(clientConnection.ClientId, out Guid lobbyId))
+            LobbyHandler lobbyHandler = _lobbyHandlers.First(pair  => pair.Value.GetPlayerState(conn.ClientId) != null).Value;
+            
+            if (lobbyHandler == null)
             {
                 // Player is not a participant of any lobby
                 return false;
             }
 
-            if (!_lobbyHandlers.TryGetValue(lobbyId, out LobbyHandler handler))
-            {
-                Logger.Log(LogLevel.Error, Tag, $"LobbyHandler of lobby '{lobbyId}' could not be found");
-                return false;
-            }
-
-            handler.Server_RemoveClient(clientConnection.ClientId);
-            _clientLobbyDict.Remove(clientConnection.ClientId);
-
-            SceneUnloadData sud = CreateUnloadData(lobbyId);
+            SceneUnloadData sud = CreateUnloadData(lobbyHandler.MetaData.LobbyId);
             if (sud == null)
             {
                 Logger.Log(LogLevel.Error, Tag, "Can't unload connection scene. SceneHandle is null");
             }
             else
             {
-                SceneManager.UnloadConnectionScenes(clientConnection, sud);
+                SceneManager.UnloadConnectionScenes(conn, sud);
             }
 
-            OnLobbyLeftRpc(clientConnection);
-
-            if (!handler.GetPlayers().Any())
-            {
-                StartCoroutine(CloseInactiveLobby(lobbyId, 10));
-            }
+            OnLobbyLeftRpc(conn);
 
             return true;
         }
@@ -787,7 +720,7 @@ namespace AnyVR.LobbySystem
             while (elapsed < duration)
             {
                 Logger.Log(LogLevel.Verbose, Tag, $"Closing lobby {lobbyId} in {duration - elapsed} seconds due to inactivity.");
-                if (handler.GetPlayers().Count > 0)
+                if (handler.PlayerStates.Any())
                 {
                     Logger.Log(LogLevel.Verbose, Tag, $"Cancel inactive lobby closing. Lobby {lobbyId} is no longer inactive.");
                     yield break;
@@ -802,12 +735,6 @@ namespace AnyVR.LobbySystem
         }
 
         [Server]
-        public bool TryGetLobbyIdOfClient(int clientId, out Guid lobbyId)
-        {
-            return _clientLobbyDict.TryGetValue(clientId, out lobbyId);
-        }
-
-        [Server]
         public bool TryGetLobbyHandlerById(Guid lobbyId, out LobbyHandler res)
         {
             return _lobbyHandlers.TryGetValue(lobbyId, out res);
@@ -817,13 +744,6 @@ namespace AnyVR.LobbySystem
         public void HandleClientDisconnect(NetworkConnection conn)
         {
             TryRemoveClientFromLobby(conn);
-        }
-
-        [CanBeNull]
-        [Server]
-        public PlayerState GetPlayerInfo(int playerId)
-        {
-            return _playerData[playerId];
         }
 
         [CanBeNull]
@@ -889,17 +809,9 @@ namespace AnyVR.LobbySystem
         /// </summary>
         private Dictionary<Guid, LobbyHandler> _lobbyHandlers;
 
-        /// <summary>
-        ///     A dictionary mapping clients to their corresponding lobby
-        ///     Only initialized on the server.
-        /// </summary>
-        private Dictionary<int, Guid> _clientLobbyDict;
-
         private Dictionary<Guid, byte[]> _lobbyPasswordHashes;
 
         private Dictionary<Guid, Coroutine> _lobbyExpirationRoutines;
-
-        private Dictionary<int, PlayerState> _playerData;
 
         private QuickConnectHandler _quickConnectHandler;
 

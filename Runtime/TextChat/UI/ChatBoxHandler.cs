@@ -31,11 +31,6 @@ namespace AnyVR.TextChat.UI
 
         private TextChatManager _textChat;
 
-        private void Awake()
-        {
-            LobbyHandler.PostInit += Init;
-        }
-
         private void Init()
         {
             _textChat = LobbyHandler.GetInstance()?.TextChat;

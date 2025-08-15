@@ -35,7 +35,7 @@ namespace AnyVR.Sample
         [SerializeField] private LobbySceneMetaData _lobbySceneMetaData;
 
         private LobbyManager _lobbyManager;
-        
+
         private Dictionary<Guid, LobbyUIEntry> _lobbyUIEntries;
 
         private RectTransform[] _panels;
@@ -80,7 +80,7 @@ namespace AnyVR.Sample
 
             if (!_lobbyManager.TryGetLobby(lobbyId, out LobbyMetaData lobby))
                 return;
-            
+
             LobbyUIEntry entry = Instantiate(_lobbyEntryPrefab, _lobbyEntryParent);
             entry.SetLobby(lobbyId, lobby.Name, lobby.SceneName, lobby.CreatorId, lobby.LobbyCapacity);
             entry.OnJoinButtonPressed += id => _lobbyManager.Client_JoinLobby(id);

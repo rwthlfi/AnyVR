@@ -806,16 +806,20 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5021902473138039828, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: _globalScene
-      value: Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity
+      value: Assets/LobbySetup/Scenes/GlobalScene.unity
       objectReference: {fileID: 0}
     - target: {fileID: 5021902473138039828, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: _welcomeScene
       value: Assets/LobbySetup/Scenes/OfflineScene.unity
       objectReference: {fileID: 0}
     - target: {fileID: 5808065475186452488, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
+      propertyPath: _logging
+      value: 
+      objectReference: {fileID: 11400000, guid: 7f0ee3bb74bdd8cc298660cbf92d1c8f, type: 2}
+    - target: {fileID: 5808065475186452488, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: _spawnablePrefabs
       value: 
-      objectReference: {fileID: 11400000, guid: 87635f9ffdf5efdaaaffe11b9d7cf17f, type: 2}
+      objectReference: {fileID: 11400000, guid: c4dddc0eb86df83588bb6e63d5d958a2, type: 2}
     - target: {fileID: 6287520840629278902, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: _startOnHeadless
       value: 1
