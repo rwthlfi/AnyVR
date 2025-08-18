@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
 using AnyVR.Logging;
 using AnyVR.TextChat;
 using AnyVR.Voicechat;
@@ -8,7 +9,6 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using Logger = AnyVR.Logging.Logger;
 using USceneManger = UnityEngine.SceneManagement.SceneManager;
@@ -27,9 +27,11 @@ namespace AnyVR.LobbySystem
         private const string Tag = nameof(LobbyHandler);
 
         private readonly SyncVar<Guid> _lobbyId = new();
-        
+
         private readonly SyncVar<uint> _quickConnectCode = new();
-        
+
+        private Coroutine _expirationCoroutine;
+
         public uint QuickConnectCode => _quickConnectCode.Value;
 
         public LobbyMetaData MetaData
@@ -42,16 +44,12 @@ namespace AnyVR.LobbySystem
                     return null;
                 }
 
-                return !lobbyManager.TryGetLobby(_lobbyId.Value, out LobbyMetaData lmd) ? null : lmd;
+                return !lobbyManager.TryGetLobbyMeta(_lobbyId.Value, out LobbyMetaData lmd) ? null : lmd;
             }
         }
 
-        public TextChatManager TextChat { get; private set; }
-
         private void Awake()
         {
-            TextChat = GetComponent<TextChatManager>();
-
 #if !UNITY_SERVER
             if (_instance != null)
             {
@@ -67,18 +65,21 @@ namespace AnyVR.LobbySystem
         internal void Init(Guid lobbyId, uint quickConnectCode)
         {
             _lobbyId.Value = lobbyId;
-            bool success = LobbyManager.Instance.TryGetQuickConnectCode(lobbyId, out uint code);
-            Assert.IsTrue(success);
             _quickConnectCode.Value = quickConnectCode;
+
+            if (MetaData.ExpireDate.HasValue)
+            {
+                StartCoroutine(ExpireLobby(MetaData.ExpireDate.Value));
+            }
         }
-        
+
         [Server]
         private void KickPlayer_Internal(PlayerState player)
         {
             if (ClientManager.Clients.TryGetValue(player.GetID(), out NetworkConnection client))
             {
                 // TODO: Move TryRemoveClientFromLobby to LobbyHandler
-                LobbyManager.Instance.TryRemoveClientFromLobby(client);
+                LobbyManager.Instance.Server_TryRemoveClientFromLobby(client);
             }
         }
 
@@ -100,9 +101,9 @@ namespace AnyVR.LobbySystem
             }
         }
 
-        public override void OnSpawnServer(NetworkConnection conn)
+        [ServerRpc(RequireOwnership = false)]
+        private void ServerRPC_SpawnPlayerState(NetworkConnection conn)
         {
-            base.OnSpawnServer(conn);
             AddPlayerState(conn);
         }
 
@@ -119,28 +120,66 @@ namespace AnyVR.LobbySystem
             // Reapply environmental settings
             Scene lobbyScene = USceneManger.GetSceneByPath(MetaData.ScenePath);
             USceneManger.SetActiveScene(lobbyScene);
-
-            _voiceChatManager = VoiceChatManager.GetInstance();
-            if (_voiceChatManager != null)
-            {
-                _voiceChatManager.ConnectedToRoom += OnConnectedToLiveKitRoom;
-            }
-            Logger.Log(LogLevel.Debug, Tag, "local player:" + ConnectionManager.UserName);
-        }
-        private static void OnConnectedToLiveKitRoom()
-        {
-            Logger.Log(LogLevel.Verbose, Tag, "Connected to LiveKit room");
+            ServerRPC_SpawnPlayerState(LocalConnection);
         }
 
-        private void Client_OnPlayerJoined(PlayerState playerState)
+        [Server]
+        private IEnumerator ExpireLobby(DateTime expirationDate)
         {
-            if (playerState.GetID() != LocalConnection.ClientId)
+            float timeUntilExpiration = (float)(expirationDate - DateTime.UtcNow).TotalSeconds;
+
+            Logger.Log(LogLevel.Verbose, Tag, $"Expire lobby {_lobbyId.Value} in {timeUntilExpiration} seconds");
+            if (timeUntilExpiration > 0)
             {
-                return;
+                yield return new WaitForSeconds(timeUntilExpiration);
             }
-            Logger.Log(LogLevel.Verbose, Tag, $"Local player registered in lobby '{_lobbyId.Value}'");
-            Logger.Log(LogLevel.Verbose, Tag, "Connecting to LiveKit room ...");
-            _voiceChatManager.TryConnectToRoom(_lobbyId.Value, GetPlayerState(LocalConnection.ClientId).GetName(), ConnectionManager.GetInstance()!.UseSecureProtocol);
+
+            Logger.Log(LogLevel.Verbose, Tag, $"Lobby {_lobbyId.Value} expired");
+            LobbyManager.Instance.Server_CloseLobby(_lobbyId.Value);
+        }
+
+        /// <summary>
+        ///     Checks if the lobby remains empty for a duration. Then closes the lobby if it remained empty.
+        /// </summary>
+        /// <param name="duration">Duration in seconds until expiration</param>
+        [Server]
+        private IEnumerator CloseInactiveLobby(ushort duration)
+        {
+            float elapsed = 0;
+            const float interval = 1;
+
+            while (elapsed < duration)
+            {
+                Logger.Log(LogLevel.Verbose, Tag, $"Closing lobby {_lobbyId.Value} in {duration - elapsed} seconds due to inactivity.");
+                if (PlayerStates.Any())
+                {
+                    Logger.Log(LogLevel.Verbose, Tag, $"Cancel inactive lobby closing. Lobby {_lobbyId.Value} is no longer inactive.");
+                    yield break;
+                }
+
+                elapsed += interval;
+                yield return new WaitForSeconds(interval);
+            }
+
+            Logger.Log(LogLevel.Warning, Tag, $"Closing lobby {_lobbyId.Value} due to inactivity.");
+            LobbyManager.Instance.Server_CloseLobby(_lobbyId.Value);
+        }
+
+        [CanBeNull]
+        public static LobbyHandler GetInstance()
+        {
+            return _instance;
+        }
+
+        [Client]
+        public void Leave()
+        {
+            LobbyManager.Instance.ServerRPC_LeaveLobby();
+        }
+
+        public Guid GetLobbyId()
+        {
+            return _lobbyId.Value;
         }
 
 #if !UNITY_SERVER
@@ -154,7 +193,7 @@ namespace AnyVR.LobbySystem
                 normal =
                 {
                     textColor = Color.yellow
-                },
+                }
             };
 
             const float x = 10f;
@@ -165,30 +204,18 @@ namespace AnyVR.LobbySystem
 
             string debugMsg = $"QuickConnectCode: {_quickConnectCode.Value.ToString()}";
             GUI.Label(labelRect, debugMsg, _style);
+
+            const float buttonWidth = 200f;
+            const float buttonHeight = 30f;
+            const float padding = 10f;
+            Rect buttonRect = new(Screen.width - buttonWidth - padding, Screen.height - buttonHeight - padding, buttonWidth, buttonHeight);
+
+            if (GUI.Button(buttonRect, "Leave", GUI.skin.button))
+            {
+                Leave();
+            }
         }
 #endif
-
-        public void SetMuteSelf(bool muteSelf)
-        {
-            VoiceChatManager.GetInstance()?.SetMicrophoneEnabled(!muteSelf);
-        }
-
-        [CanBeNull]
-        public static LobbyHandler GetInstance()
-        {
-            return _instance;
-        }
-
-        [Client]
-        public void Leave()
-        {
-            LobbyManager.Instance.LeaveLobby();
-        }
-
-        public Guid GetLobbyId()
-        {
-            return _lobbyId.Value;
-        }
 
 
 #region ClientOnly
