@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AnyVR.LobbySystem;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
 
 namespace AnyVR.Sample
@@ -31,10 +32,9 @@ namespace AnyVR.Sample
         [SerializeField] private Button _leaveServerBtn;
 
         [Header("AnyVR")]
-        [SerializeField] private ConnectionManager _connectionManager;
         [SerializeField] private LobbySceneMetaData _lobbySceneMetaData;
-
-        private LobbyManager _lobbyManager;
+        
+        private ConnectionManager _connectionManager;
 
         private Dictionary<Guid, LobbyUIEntry> _lobbyUIEntries;
 
@@ -42,6 +42,9 @@ namespace AnyVR.Sample
 
         private void Start()
         {
+            _connectionManager = ConnectionManager.GetInstance();
+            Assert.IsNotNull(_connectionManager);
+            
 #if UNITY_SERVER
             _connectionManager.StartServer();
 #else
@@ -49,42 +52,59 @@ namespace AnyVR.Sample
             {
                 _connectionPanel, _serverPanel
             };
+            
             _connectionManager.OnClientConnectionState += OnClientConnectionStateChanged;
             _connectBtn.onClick.AddListener(ConnectToServer);
             _leaveServerBtn.onClick.AddListener(LeaveServer);
             OnClientConnectionStateChanged(_connectionManager.State);
 
-            LobbyManager.OnClientInitialized += manager =>
+            LobbyManager.OnClientInitialized += lobbyManager =>
             {
-                _lobbyManager = manager;
-                _lobbyManager.OnLobbyOpened += AddLobbyEntry;
-                _lobbyManager.OnLobbyClosed += RemoveLobbyEntry;
+                lobbyManager.OnLobbyOpened += AddLobbyEntry;
+                lobbyManager.OnLobbyClosed += RemoveLobbyEntry;
             };
 
             _createLobbyBtn.onClick.AddListener(CreateLobby);
             _lobbyUIEntries = new Dictionary<Guid, LobbyUIEntry>();
+            
+            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            if (lobbyManager == null)
+                return;
+            
+            foreach (LobbyMetaData lmd in lobbyManager.Lobbies)
+            {
+                AddLobbyEntry(lmd);
+            }
 #endif
         }
 
         private void OnDestroy()
         {
             _connectionManager.OnClientConnectionState -= OnClientConnectionStateChanged;
+            
+            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            if (lobbyManager == null)
+                return;
+            
+            lobbyManager.OnLobbyOpened -= AddLobbyEntry;
+            lobbyManager.OnLobbyClosed -= RemoveLobbyEntry;
         }
 
-        private void AddLobbyEntry(Guid lobbyId)
+        private void AddLobbyEntry(LobbyMetaData lmd)
         {
-            if (_lobbyUIEntries.ContainsKey(lobbyId))
+            if (_lobbyUIEntries.ContainsKey(lmd.LobbyId))
             {
                 return;
             }
 
-            if (!_lobbyManager.TryGetLobby(lobbyId, out LobbyMetaData lobby))
-                return;
-
             LobbyUIEntry entry = Instantiate(_lobbyEntryPrefab, _lobbyEntryParent);
-            entry.SetLobby(lobbyId, lobby.Name, lobby.SceneName, lobby.CreatorId, lobby.LobbyCapacity);
-            entry.OnJoinButtonPressed += id => _lobbyManager.Client_JoinLobby(id);
-            _lobbyUIEntries.Add(lobbyId, entry);
+            entry.SetLobby(lmd.LobbyId, lmd.Name, lmd.SceneName, lmd.CreatorId, lmd.LobbyCapacity);
+            
+            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            Assert.IsNotNull(lobbyManager);
+            
+            entry.OnJoinButtonPressed += id => lobbyManager.JoinLobby(id);
+            _lobbyUIEntries.Add(lmd.LobbyId, entry);
         }
 
         private void RemoveLobbyEntry(Guid lobbyId)
@@ -104,7 +124,11 @@ namespace AnyVR.Sample
             {
                 return;
             }
-            _lobbyManager.Client_CreateLobby(lobbyName, password, _lobbySceneMetaData, _lobbySceneMetaData.MaxUsers);
+            
+            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            Assert.IsNotNull(lobbyManager);
+            
+            lobbyManager.CreateLobby(lobbyName, password, _lobbySceneMetaData, _lobbySceneMetaData.MaxUsers);
         }
         private void LeaveServer()
         {

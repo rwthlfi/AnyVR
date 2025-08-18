@@ -869,17 +869,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
---- !u!114 &402959205 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5021902473138039828, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
-  m_PrefabInstance: {fileID: 402959204}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e838fcb1542f77b4aace907895a68966, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &567285533
 GameObject:
   m_ObjectHideFlags: 0
@@ -2080,7 +2069,6 @@ MonoBehaviour:
   _lobbyEntryPrefab: {fileID: -561295200277612529, guid: cb061df96b79f241b97c0886f2f2a793, type: 3}
   _lobbyEntryParent: {fileID: 808763594}
   _leaveServerBtn: {fileID: 567285535}
-  _connectionManager: {fileID: 402959205}
   _lobbySceneMetaData: {fileID: 11400000, guid: 2c08e8844fa3005fa912625d44f7f9f3, type: 2}
 --- !u!1 &1226270260
 GameObject:
