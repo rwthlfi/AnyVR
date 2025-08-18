@@ -1,6 +1,5 @@
 using FishNet.Connection;
 using FishNet.Transporting;
-using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
@@ -10,21 +9,22 @@ namespace AnyVR.LobbySystem
         public override void OnStartServer()
         {
             base.OnStartServer();
-            
+
             Assert.IsNotNull(_playerStatePrefab);
             Assert.IsNotNull(_playerStatePrefab.GetComponent<PlayerState>());
-            
+
             SceneManager.OnClientLoadedStartScenes += OnClientLoadedStartScenes;
             ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
         }
         private void OnClientLoadedStartScenes(NetworkConnection conn, bool asServer)
         {
-            AddPlayerState(conn);
+            AddPlayerState(conn, true);
         }
 
         private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
         {
-            if(args.ConnectionState == RemoteConnectionState.Stopped){
+            if (args.ConnectionState == RemoteConnectionState.Stopped)
+            {
                 RemovePlayerState(conn);
             }
         }
