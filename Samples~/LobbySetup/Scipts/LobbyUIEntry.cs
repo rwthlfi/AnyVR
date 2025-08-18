@@ -1,4 +1,5 @@
 using System;
+using AnyVR.LobbySystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,7 +27,11 @@ namespace AnyVR.Sample
             _lobbyNameText.text = lobbyName;
             _lobbySceneNameText.text = lobbySceneName;
             _lobbyCreatorText.text = lobbyCreatorId.ToString();
-            _lobbyCapacityText.text = lobbyLobbyCapacity.ToString();
+
+            GameState gameState = FindAnyObjectByType<GameState>();
+            PlayerState playerState = gameState.GetPlayerState(lobbyCreatorId);
+
+            _lobbyCapacityText.text = playerState != null ? playerState.GetName() : $"Client_{lobbyCreatorId.ToString()}";
 
             _joinBtn.onClick.RemoveAllListeners();
             _joinBtn.onClick.AddListener(() => OnJoinButtonPressed?.Invoke(id));
