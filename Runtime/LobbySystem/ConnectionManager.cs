@@ -212,7 +212,7 @@ namespace AnyVR.LobbySystem
 
             // The OnServerConnectionState will be called for each transport (Tugboat & Bayou). 
             // But we only want to load the global scene once
-            if (_networkManager.ServerManager.OneServerStarted())
+            if (_networkManager.ServerManager.IsOnlyOneServerStarted())
             {
                 return;
             }
@@ -342,7 +342,7 @@ namespace AnyVR.LobbySystem
             }
             return res;
         }
-        
+
         public void SetTokenServerIp(string tokenServerAddress)
         {
             _tokenServerAddress = tokenServerAddress;

@@ -6,10 +6,10 @@ namespace AnyVR.LobbySystem
     internal class QuickConnectHandler
     {
         private const int MaxCode = 99999;
-        private readonly Random _random;
 
         private readonly Dictionary<Guid, uint> _idToQuickConnect;
         private readonly Dictionary<uint, Guid> _quickConnectToId;
+        private readonly Random _random;
 
         internal QuickConnectHandler()
         {
@@ -42,12 +42,12 @@ namespace AnyVR.LobbySystem
         {
             return _idToQuickConnect.TryGetValue(lobbyId, out code);
         }
-        
+
         internal bool TryGetLobbyId(uint code, out Guid lobbyId)
         {
             return _quickConnectToId.TryGetValue(code, out lobbyId);
         }
-        
+
         private uint NextUniqueCode()
         {
             const uint maxRetries = 100;

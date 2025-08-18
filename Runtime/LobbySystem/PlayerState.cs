@@ -1,22 +1,34 @@
 using System;
+using AnyVR.Voicechat;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using JetBrains.Annotations;
 
 namespace AnyVR.LobbySystem
 {
     public class PlayerState : NetworkBehaviour
     {
         private readonly SyncVar<int> _id = new();
-        private readonly SyncVar<string> _playerName = new();
-        private readonly SyncVar<bool> _isConnectedToLobby = new();
         private readonly SyncVar<bool> _isAdmin = new();
+        private readonly SyncVar<bool> _isConnectedToLobby = new();
         private readonly SyncVar<Guid> _lobbyId = new();
+        private readonly SyncVar<string> _playerName = new();
 
-        public int GetID() => _id.Value;
-        public string GetName() => _playerName.Value;
-        public bool GetIsAdmin() => _isAdmin.Value;
-        public Guid GetLobby() => _lobbyId.Value;
+        public int GetID()
+        {
+            return _id.Value;
+        }
+        public string GetName()
+        {
+            return _playerName.Value;
+        }
+        public bool GetIsAdmin()
+        {
+            return _isAdmin.Value;
+        }
+        public Guid GetLobby()
+        {
+            return _lobbyId.Value;
+        }
 
         public override void OnStartServer()
         {
@@ -27,10 +39,11 @@ namespace AnyVR.LobbySystem
         public override void OnStartClient()
         {
             base.OnStartClient();
-            if (IsOwner)
-            {
-                SetName(ConnectionManager.UserName);
-            }
+            if (!IsOwner)
+                return;
+
+            SetName(ConnectionManager.UserName);
+            VoiceChatManager.GetInstance()?.TryConnectToRoom(_lobbyId.Value, GetName(), ConnectionManager.GetInstance()!.UseSecureProtocol);
         }
 
         public void SetName(string playerName)

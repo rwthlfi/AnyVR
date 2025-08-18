@@ -33,7 +33,8 @@ namespace AnyVR.TextChat.UI
 
         private void Init()
         {
-            _textChat = LobbyHandler.GetInstance()?.TextChat;
+            // _textChat = LobbyHandler.GetInstance()?.TextChat;
+            _textChat = null;
             if (_textChat == null)
             {
                 Debug.LogWarning("Text Chat Manager not found!");
