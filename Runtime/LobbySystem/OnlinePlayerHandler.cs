@@ -16,6 +16,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using AnyVR.Logging;
+using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
 using UnityEngine.Animations;
