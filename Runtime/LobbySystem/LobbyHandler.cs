@@ -34,6 +34,7 @@ namespace AnyVR.LobbySystem
 
         public uint QuickConnectCode => _quickConnectCode.Value;
 
+        //TODO: This returns null in Start
         public LobbyMetaData MetaData
         {
             get
@@ -101,12 +102,12 @@ namespace AnyVR.LobbySystem
             }
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void ServerRPC_SpawnPlayerState(NetworkConnection conn)
+        public override void OnSpawnServer(NetworkConnection conn)
         {
+            base.OnSpawnServer(conn);
             AddPlayerState(conn);
         }
-
+        
         public override void OnDespawnServer(NetworkConnection conn)
         {
             base.OnDespawnServer(conn);
@@ -120,7 +121,6 @@ namespace AnyVR.LobbySystem
             // Reapply environmental settings
             Scene lobbyScene = USceneManger.GetSceneByPath(MetaData.ScenePath);
             USceneManger.SetActiveScene(lobbyScene);
-            ServerRPC_SpawnPlayerState(LocalConnection);
         }
 
         [Server]
