@@ -3,7 +3,7 @@ using System.Linq;
 using AnyVR.LobbySystem;
 using UnityEngine;
 
-namespace AnyVR.Sample.LobbySetup
+namespace AnyVR.Sample
 {
     public class UISessionPanel : MonoBehaviour
     {
@@ -77,6 +77,9 @@ namespace AnyVR.Sample.LobbySetup
         private void OnGUI()
         {
             if (_lobbyHandler == null)
+                return;
+            
+            if (_lobbyHandler.MetaData == null)
                 return;
 
             if (!gameObject.activeSelf)

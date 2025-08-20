@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace AnyVR.Sample.LobbySetup
+namespace AnyVR.Sample
 {
     public class UIUserListEntry : MonoBehaviour
     {
