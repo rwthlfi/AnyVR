@@ -15,26 +15,32 @@ namespace AnyVR.Sample.LobbySetup
         
         [SerializeField] private RectTransform _entryParent;
 
-        private void OnEnable()
+        private void Start()
         {
             _lobbyHandler = LobbyHandler.GetInstance();
             if (_lobbyHandler == null)
             {
                 Debug.LogWarning("LobbyHandler not found. Disabling UISessionPanel.");
-                gameObject.SetActive(false);
                 return;
             }
             
             _lobbyHandler.OnPlayerJoin += AddPlayerEntry;
             _lobbyHandler.OnPlayerLeave += RemovePlayerEntry;
-
+        }
+        
+        private void OnEnable()
+        {
+            if (_lobbyHandler == null)
+                return;
+                
             RemoveAllEntries();
 
-            foreach (PlayerState player in _lobbyHandler.PlayerStates)
+            foreach (LobbyPlayerState player in _lobbyHandler.GetPlayerStates<LobbyPlayerState>())
             {
                 AddPlayerEntry(player);
             }
         }
+        
         private void RemoveAllEntries()
         {
             foreach (UIUserListEntry entry in _players.Values)
@@ -50,8 +56,10 @@ namespace AnyVR.Sample.LobbySetup
                 return;
             
             UIUserListEntry entry = Instantiate(_entryPrefab, _entryParent);
-            entry.SetPlayerInfo(playerState);
+            entry.SetPlayerInfo((LobbyPlayerState) playerState);
+            
             entry.OnKickButtonPressed += _lobbyHandler.KickPlayer;
+            entry.OnPromoteToAdminButtonPressed += player => player.PromoteToAdmin();
             
             _players.Add(playerState.GetID(), entry);
         }
@@ -90,7 +98,10 @@ namespace AnyVR.Sample.LobbySetup
             const float height = 20f;
             Rect labelRect = new(x, y, width, height);
 
-            string debugMsg = $"Capacity: {_lobbyHandler.PlayerStates.Count()} / {_lobbyHandler.MetaData.LobbyCapacity}";
+            float playerCount = _lobbyHandler.GetPlayerStates().Count();
+            float capacity = _lobbyHandler.MetaData.LobbyCapacity;
+            
+            string debugMsg = $"Capacity: {playerCount} / {capacity}";
             GUI.Label(labelRect, debugMsg, _style);
         }
 #endif

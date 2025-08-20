@@ -10,28 +10,31 @@ namespace AnyVR.LobbySystem
 {
     public class GameState : NetworkBehaviour
     {
-        public delegate void PlayerJoinEvent(PlayerState playerState);
-
-        public delegate void PlayerLeaveEvent(PlayerState playerState);
+        public delegate void PlayerConnectionEvent(PlayerState playerState);
 
         [SerializeField] protected NetworkObject _playerStatePrefab;
 
         private readonly SyncDictionary<int, NetworkObject> _playerStates = new();
 
-        public IEnumerable<PlayerState> PlayerStates
+        public IEnumerable<T> GetPlayerStates<T>() where T : PlayerState
         {
-            get
+            if (!_playerStates.IsInitialized)
+                yield break;
+
+            foreach (NetworkObject netObj in _playerStates.Values)
             {
-                foreach (NetworkObject netObj in _playerStates.Values)
-                {
-                    if (netObj != null && netObj.TryGetComponent(out PlayerState ps))
-                        yield return ps;
-                }
+                if (netObj != null && netObj.TryGetComponent(out T ps))
+                    yield return ps;
             }
         }
+        
+        public IEnumerable<PlayerState> GetPlayerStates()
+        { 
+            return GetPlayerStates<PlayerState>();
+        }
 
-        public event PlayerJoinEvent OnPlayerJoin;
-        public event PlayerLeaveEvent OnPlayerLeave;
+        public event PlayerConnectionEvent OnPlayerJoin;
+        public event PlayerConnectionEvent OnPlayerLeave;
 
         public override void OnStartClient()
         {
@@ -61,12 +64,13 @@ namespace AnyVR.LobbySystem
         }
 
         [Server]
-        protected virtual void AddPlayerState(NetworkConnection conn, bool global = false)
+        protected virtual PlayerState AddPlayerState(NetworkConnection conn, bool global = false)
         {
             PlayerState ps = Instantiate(_playerStatePrefab).GetComponent<PlayerState>();
             ps.NetworkObject.SetIsGlobal(global);
             Spawn(ps.gameObject, conn, gameObject.scene);
             _playerStates.Add(ps.GetID(), ps.NetworkObject);
+            return ps;
         }
 
         [Server]
@@ -83,7 +87,7 @@ namespace AnyVR.LobbySystem
             return GetPlayerState<PlayerState>(clientId);
         }
 
-        public PlayerState GetPlayerState<T>(int clientId) where T : PlayerState
+        public T GetPlayerState<T>(int clientId) where T : PlayerState
         {
             if (_playerStates.TryGetValue(clientId, out NetworkObject netObj) && netObj != null)
                 return netObj.GetComponent<T>();

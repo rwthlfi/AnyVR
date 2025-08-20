@@ -12,12 +12,12 @@ namespace AnyVR.Sample.LobbySetup
         [SerializeField] private Button _promoteButton;
         [SerializeField] private Button _kickButton;
         
-        public delegate void PlayerEvent(PlayerState player);
+        public delegate void PlayerEvent(LobbyPlayerState player);
         
         public event PlayerEvent OnPromoteToAdminButtonPressed;
         public event PlayerEvent OnKickButtonPressed;
 
-        public void SetPlayerInfo(PlayerState playerState)
+        public void SetPlayerInfo(LobbyPlayerState playerState)
         {
             _userNameText.text = playerState.GetName();
             _adminIcon.enabled = playerState.GetIsAdmin();

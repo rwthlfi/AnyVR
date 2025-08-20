@@ -273,12 +273,12 @@ namespace AnyVR.LobbySystem
             lobbyHandler.Init(lobbyId, quickConnectCode);
             lobbyHandler.OnPlayerJoin += _ =>
             {
-                int currentPlayerCount = _lobbyHandlers[lobbyId].PlayerStates.Count();
+                int currentPlayerCount = _lobbyHandlers[lobbyId].GetPlayerStates().Count();
                 OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
             };
             lobbyHandler.OnPlayerLeave += _ =>
             {
-                int currentPlayerCount = _lobbyHandlers[lobbyId].PlayerStates.Count();
+                int currentPlayerCount = _lobbyHandlers[lobbyId].GetPlayerStates().Count();
                 OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
             };
 
@@ -520,7 +520,7 @@ namespace AnyVR.LobbySystem
             }
 
             // Kick all players from the lobby
-            foreach (PlayerState player in handler.PlayerStates)
+            foreach (PlayerState player in handler.GetPlayerStates())
             {
                 if (!ServerManager.Clients.TryGetValue(player.GetID(), out NetworkConnection clientConn))
                 {

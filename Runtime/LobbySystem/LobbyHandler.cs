@@ -151,7 +151,7 @@ namespace AnyVR.LobbySystem
             while (elapsed < duration)
             {
                 Logger.Log(LogLevel.Verbose, Tag, $"Closing lobby {_lobbyId.Value} in {duration - elapsed} seconds due to inactivity.");
-                if (PlayerStates.Any())
+                if (GetPlayerStates().Any())
                 {
                     Logger.Log(LogLevel.Verbose, Tag, $"Cancel inactive lobby closing. Lobby {_lobbyId.Value} is no longer inactive.");
                     yield break;
