@@ -69,12 +69,15 @@ namespace AnyVR.LobbySystem
         {
             PlayerState ps = Instantiate(_playerStatePrefab).GetComponent<PlayerState>();
             ps.NetworkObject.SetIsGlobal(global);
+            ps.PostServerInitialized += Handler;
             Spawn(ps.gameObject, conn, gameObject.scene);
-            _playerStates.Add(ps.GetID(), ps.NetworkObject); 
-            // TODO:
-            // Add ps to _playerStates after the network initialization of the ps.
-            // Currently, when _playerStates.OnChange is called after adding a ps, the sync vars in the ps are not yet replicated.
             return ps;
+            
+            void Handler()
+            {
+                _playerStates.Add(ps.GetID(), ps.NetworkObject);
+                ps.PostServerInitialized -= Handler;
+            }
         }
 
         [Server]

@@ -1,3 +1,4 @@
+using System;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 
@@ -8,6 +9,8 @@ namespace AnyVR.LobbySystem
         private readonly SyncVar<int> _id = new();
         private readonly SyncVar<string> _playerName = new();
 
+        internal Action PostServerInitialized;
+        
         public int GetID()
         {
             return _id.Value;
@@ -21,6 +24,7 @@ namespace AnyVR.LobbySystem
         {
             base.OnStartServer();
             _id.Value = OwnerId;
+            PostServerInitialized?.Invoke();
         }
 
         public override void OnStartClient()
