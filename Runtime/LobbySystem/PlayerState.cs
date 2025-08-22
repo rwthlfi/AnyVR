@@ -1,4 +1,3 @@
-using System;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 

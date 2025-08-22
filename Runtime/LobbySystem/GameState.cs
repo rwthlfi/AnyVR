@@ -10,7 +10,8 @@ namespace AnyVR.LobbySystem
 {
     public class GameState : NetworkBehaviour
     {
-        public delegate void PlayerConnectionEvent(PlayerState playerState);
+        public delegate void PlayerJoinEvent(PlayerState playerState);
+        public delegate void PlayerLeaveEvent(int playerId);
 
         [SerializeField] protected NetworkObject _playerStatePrefab;
 
@@ -33,8 +34,8 @@ namespace AnyVR.LobbySystem
             return GetPlayerStates<PlayerState>();
         }
 
-        public event PlayerConnectionEvent OnPlayerJoin;
-        public event PlayerConnectionEvent OnPlayerLeave;
+        public event PlayerJoinEvent OnPlayerJoin;
+        public event PlayerLeaveEvent OnPlayerLeave;
 
         public override void OnStartClient()
         {
@@ -50,7 +51,7 @@ namespace AnyVR.LobbySystem
                     OnPlayerJoin?.Invoke(GetPlayerState(playerId));
                     break;
                 case SyncDictionaryOperation.Remove:
-                    OnPlayerLeave?.Invoke(GetPlayerState(playerId));
+                    OnPlayerLeave?.Invoke(playerId);
                     break;
                 case SyncDictionaryOperation.Clear:
                     break;
@@ -69,7 +70,10 @@ namespace AnyVR.LobbySystem
             PlayerState ps = Instantiate(_playerStatePrefab).GetComponent<PlayerState>();
             ps.NetworkObject.SetIsGlobal(global);
             Spawn(ps.gameObject, conn, gameObject.scene);
-            _playerStates.Add(ps.GetID(), ps.NetworkObject);
+            _playerStates.Add(ps.GetID(), ps.NetworkObject); 
+            // TODO:
+            // Add ps to _playerStates after the network initialization of the ps.
+            // Currently, when _playerStates.OnChange is called after adding a ps, the sync vars in the ps are not yet replicated.
             return ps;
         }
 

@@ -22,6 +22,10 @@ namespace AnyVR.LobbySystem
         private readonly SyncVar<Guid> _lobbyId = new(Guid.Empty);
 
         private NetworkObject _onlinePlayer;
+        
+        public LobbyHandler LobbyHandler { get; private set; }
+
+        public bool IsLocalPlayer => IsController;
 
         public override void OnStartServer()
         {
@@ -34,11 +38,12 @@ namespace AnyVR.LobbySystem
                 gameObject.scene.GetRootGameObjects()
                     .Select(root => root.GetComponent<LobbyHandler>())
                     .FirstOrDefault(comp => comp != null);
-
+            
             Assert.IsNotNull(lobbyHandler);
+            LobbyHandler = lobbyHandler;
 
-            _lobbyId.Value = lobbyHandler.GetLobbyId();
-            _isAdmin.Value = lobbyHandler.MetaData.CreatorId == OwnerId;
+            _lobbyId.Value = LobbyHandler.GetLobbyId();
+            _isAdmin.Value = LobbyHandler.MetaData.CreatorId == OwnerId;
 
             NetworkObject nob = Instantiate(_playerPrefab);
             _onlinePlayer = nob;
@@ -69,32 +74,58 @@ namespace AnyVR.LobbySystem
             }
             else if (!_isAdmin.Value)
             {
-                ServerRPC_PromoteToAdmin(ClientManager.Connection);
+                ServerRPC_PromoteToAdmin(LocalConnection);
             }
         }
 
-        [ServerRpc]
+        [ServerRpc(RequireOwnership = false)]
         private void ServerRPC_PromoteToAdmin(NetworkConnection conn)
         {
             if (_isAdmin.Value)
                 return;
-
-            LobbyHandler lobbyHandler = LobbyHandler.GetInstance();
-            if (lobbyHandler == null)
-                return;
-
-            LobbyPlayerState caller = lobbyHandler.GetPlayerState<LobbyPlayerState>(conn.ClientId);
-            if (!caller.GetIsAdmin())
-                return;
-
-            PromoteToAdmin_Internal();
+            
+            if(Server_IsCallerAdmin(conn))
+                PromoteToAdmin_Internal();
         }
 
         [Server]
         private void PromoteToAdmin_Internal()
         {
             _isAdmin.Value = true;
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} promoted to admin.");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({GetName()}) promoted to admin.");
+        }
+        
+        public void KickPlayer()
+        {
+            if (IsServerStarted)
+            {
+                KickPlayer_Internal();
+            }
+            else
+            {
+                ServerRPC_KickPlayer(LocalConnection);
+            }
+        }
+
+        [Server]
+        private void KickPlayer_Internal()
+        {
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({GetName()}) kicked.");
+            LobbyManager.Instance.Server_TryRemoveClientFromLobby(Owner);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void ServerRPC_KickPlayer(NetworkConnection conn)
+        {
+            if(Server_IsCallerAdmin(conn))
+                KickPlayer_Internal();
+        }
+
+        [Server]
+        private bool Server_IsCallerAdmin(NetworkConnection callerConn)
+        {
+            LobbyPlayerState caller = LobbyHandler.GetPlayerState<LobbyPlayerState>(callerConn.ClientId);
+            return caller.GetIsAdmin();
         }
 
         public bool GetIsAdmin()

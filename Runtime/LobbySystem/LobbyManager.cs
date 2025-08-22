@@ -306,7 +306,7 @@ namespace AnyVR.LobbySystem
         [Client]
         public void CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMetaData, ushort maxClients, DateTime? expirationDate = null)
         {
-            ServerRPC_CreateLobby(lobbyName, password, sceneMetaData.ScenePath, maxClients, sceneMetaData.Name, expirationDate, ClientManager.Connection);
+            ServerRPC_CreateLobby(lobbyName, password, sceneMetaData.ScenePath, maxClients, sceneMetaData.Name, expirationDate, LocalConnection);
         }
 
         /// <summary>
@@ -387,7 +387,7 @@ namespace AnyVR.LobbySystem
         public void JoinLobby(Guid lobbyId, string password = null)
         {
             Logger.Log(LogLevel.Verbose, Tag, "Requesting to join lobby");
-            JoinLobby(lobbyId, password, ClientManager.Connection);
+            JoinLobby(lobbyId, password, LocalConnection);
         }
 
         [Client]
@@ -397,7 +397,7 @@ namespace AnyVR.LobbySystem
             if (uint.TryParse(quickConnectCode, out uint code))
             {
                 Logger.Log(LogLevel.Warning, Tag, "Performing RPC");
-                QuickConnectRpc(code, ClientManager.Connection);
+                QuickConnectRpc(code, LocalConnection);
             }
             else
             {
@@ -410,7 +410,7 @@ namespace AnyVR.LobbySystem
         {
             if (!_quickConnectHandler.TryGetLobbyId(quickConnectCode, out Guid lobbyId))
             {
-                QuickConnectRpc(quickConnectCode, ClientManager.Connection);
+                QuickConnectRpc(quickConnectCode, LocalConnection);
             }
             return true;
         }
@@ -558,6 +558,7 @@ namespace AnyVR.LobbySystem
             }
         }
 
+        // TODO: Move TryRemoveClientFromLobby to LobbyHandler ? 
         [Server]
         internal bool Server_TryRemoveClientFromLobby(NetworkConnection conn)
         {

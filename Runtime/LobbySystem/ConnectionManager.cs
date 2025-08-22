@@ -436,8 +436,6 @@ namespace AnyVR.LobbySystem
             return _instance;
         }
 
-        public int LocalClientId => _networkManager.ClientManager.Connection.ClientId;
-
 #endregion
 
 #region Singleton

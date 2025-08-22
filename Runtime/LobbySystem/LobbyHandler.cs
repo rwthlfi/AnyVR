@@ -74,34 +74,6 @@ namespace AnyVR.LobbySystem
             }
         }
 
-        [Server]
-        private void KickPlayer_Internal(PlayerState player)
-        {
-            if (ClientManager.Clients.TryGetValue(player.GetID(), out NetworkConnection client))
-            {
-                // TODO: Move TryRemoveClientFromLobby to LobbyHandler
-                LobbyManager.Instance.Server_TryRemoveClientFromLobby(client);
-            }
-        }
-
-        [ServerRpc]
-        private void ServerRPC_KickPlayer(PlayerState player)
-        {
-            KickPlayer_Internal(player);
-        }
-
-        public void KickPlayer(PlayerState player)
-        {
-            if (IsServerStarted)
-            {
-                KickPlayer_Internal(player);
-            }
-            else
-            {
-                ServerRPC_KickPlayer(player);
-            }
-        }
-
         public override void OnSpawnServer(NetworkConnection conn)
         {
             base.OnSpawnServer(conn);
