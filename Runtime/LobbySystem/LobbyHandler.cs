@@ -154,6 +154,17 @@ namespace AnyVR.LobbySystem
             return _lobbyId.Value;
         }
 
+        /// <summary>
+        /// Get the creator of the lobby.
+        /// Might return null if the creator disconnected.
+        /// </summary>
+        /// <returns></returns>
+        [CanBeNull]
+        public PlayerState GetLobbyOwner()
+        {
+            return GetPlayerState(MetaData.CreatorId);
+        }
+
 #if !UNITY_SERVER
         private GUIStyle _style;
         private void OnGUI()
