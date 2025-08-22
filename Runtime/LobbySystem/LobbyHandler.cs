@@ -79,7 +79,7 @@ namespace AnyVR.LobbySystem
             base.OnSpawnServer(conn);
             AddPlayerState(conn);
         }
-        
+
         public override void OnDespawnServer(NetworkConnection conn)
         {
             base.OnDespawnServer(conn);
@@ -155,8 +155,8 @@ namespace AnyVR.LobbySystem
         }
 
         /// <summary>
-        /// Get the creator of the lobby.
-        /// Might return null if the creator disconnected.
+        ///     Get the creator of the lobby.
+        ///     Might return null if the creator disconnected.
         /// </summary>
         /// <returns></returns>
         [CanBeNull]

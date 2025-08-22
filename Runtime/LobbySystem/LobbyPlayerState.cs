@@ -22,7 +22,7 @@ namespace AnyVR.LobbySystem
         private readonly SyncVar<Guid> _lobbyId = new(Guid.Empty);
 
         private NetworkObject _onlinePlayer;
-        
+
         public LobbyHandler LobbyHandler { get; private set; }
 
         public bool IsLocalPlayer => IsController;
@@ -34,11 +34,11 @@ namespace AnyVR.LobbySystem
             if (_playerPrefab == null)
                 return;
 
-            LobbyHandler lobbyHandler = 
+            LobbyHandler lobbyHandler =
                 gameObject.scene.GetRootGameObjects()
                     .Select(root => root.GetComponent<LobbyHandler>())
                     .FirstOrDefault(comp => comp != null);
-            
+
             Assert.IsNotNull(lobbyHandler);
             LobbyHandler = lobbyHandler;
 
@@ -83,8 +83,8 @@ namespace AnyVR.LobbySystem
         {
             if (_isAdmin.Value)
                 return;
-            
-            if(Server_IsCallerAdmin(conn))
+
+            if (Server_IsCallerAdmin(conn))
                 PromoteToAdmin_Internal();
         }
 
@@ -94,7 +94,7 @@ namespace AnyVR.LobbySystem
             _isAdmin.Value = true;
             Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({GetName()}) promoted to admin.");
         }
-        
+
         public void KickPlayer()
         {
             if (IsServerStarted)
@@ -117,7 +117,7 @@ namespace AnyVR.LobbySystem
         [ServerRpc(RequireOwnership = false)]
         private void ServerRPC_KickPlayer(NetworkConnection conn)
         {
-            if(Server_IsCallerAdmin(conn))
+            if (Server_IsCallerAdmin(conn))
                 KickPlayer_Internal();
         }
 
@@ -132,7 +132,7 @@ namespace AnyVR.LobbySystem
         {
             return _isAdmin.Value;
         }
-        
+
         public Guid GetLobby()
         {
             return _lobbyId.Value;

@@ -10,7 +10,7 @@ namespace AnyVR.LobbySystem
         private readonly SyncVar<string> _playerName = new();
 
         internal Action PostServerInitialized;
-        
+
         public int GetID()
         {
             return _id.Value;

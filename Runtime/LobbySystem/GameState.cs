@@ -11,6 +11,7 @@ namespace AnyVR.LobbySystem
     public class GameState : NetworkBehaviour
     {
         public delegate void PlayerJoinEvent(PlayerState playerState);
+
         public delegate void PlayerLeaveEvent(int playerId);
 
         [SerializeField] protected NetworkObject _playerStatePrefab;
@@ -28,9 +29,9 @@ namespace AnyVR.LobbySystem
                     yield return ps;
             }
         }
-        
+
         public IEnumerable<PlayerState> GetPlayerStates()
-        { 
+        {
             return GetPlayerStates<PlayerState>();
         }
 
@@ -72,7 +73,7 @@ namespace AnyVR.LobbySystem
             ps.PostServerInitialized += Handler;
             Spawn(ps.gameObject, conn, gameObject.scene);
             return ps;
-            
+
             void Handler()
             {
                 _playerStates.Add(ps.GetID(), ps.NetworkObject);
