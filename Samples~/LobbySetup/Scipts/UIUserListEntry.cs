@@ -21,6 +21,10 @@ namespace AnyVR.Sample
         {
             _userNameText.text = playerState.GetName();
             _adminIcon.enabled = playerState.GetIsAdmin();
+
+            bool isLocalPlayer = playerState.IsLocalPlayer;
+            _promoteButton.interactable = !isLocalPlayer;
+            _kickButton.interactable = !isLocalPlayer;
             
             _promoteButton.onClick.AddListener(() => OnPromoteToAdminButtonPressed?.Invoke(playerState));
             _kickButton.onClick.AddListener(() => OnKickButtonPressed?.Invoke(playerState));
