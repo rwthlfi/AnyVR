@@ -131,42 +131,5 @@ namespace AnyVR.Sample
             if(_pingCoroutine != null)
                 StopCoroutine(_pingCoroutine);
         }
-
-#if !UNITY_SERVER
-        private GUIStyle _style;
-        private void OnGUI()
-        {
-            if (_lobbyHandler == null)
-                return;
-            
-            if (_lobbyHandler.MetaData == null)
-                return;
-
-            if (!gameObject.activeSelf)
-                return;
-            
-            _style ??= new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 12,
-                fontStyle = FontStyle.Bold,
-                normal =
-                {
-                    textColor = Color.yellow
-                },
-            };
-
-            const float x = 10f;
-            const float y = 25f;
-            const float width = 500f;
-            const float height = 20f;
-            Rect labelRect = new(x, y, width, height);
-
-            float playerCount = _lobbyHandler.GetPlayerStates().Count();
-            float capacity = _lobbyHandler.MetaData.LobbyCapacity;
-            
-            string debugMsg = $"Capacity: {playerCount} / {capacity}";
-            GUI.Label(labelRect, debugMsg, _style);
-        }
-#endif
     }
 }
