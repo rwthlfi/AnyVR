@@ -26,7 +26,6 @@ namespace AnyVR.LobbySystem
     {
         private const string Tag = nameof(ConnectionManager);
 
-        [SerializeField] [Scene] private string _globalScene;
         [SerializeField] [Scene] private string _welcomeScene;
 
         private NetworkManager _networkManager;
@@ -35,6 +34,8 @@ namespace AnyVR.LobbySystem
         public static bool IsInitialized { get; private set; }
 
         public bool UseSecureProtocol { get; set; } = true;
+        
+        private const string GlobalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
 
         private void Awake()
         {
@@ -54,13 +55,15 @@ namespace AnyVR.LobbySystem
             _networkManager.ClientManager.OnClientTimeOut += ClientManager_OnClientTimeout;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
             _networkManager.SceneManager.OnLoadStart += SceneManager_OnLoadStart;
-
+            
             // The WelcomeScene gets only unloaded for clients
             LobbySceneLoadStart += asServer =>
             {
+                Debug.LogFormat("0_OnLoadStart: {0}", asServer);
                 if (!asServer)
                 {
-                    SceneManager.UnloadSceneAsync(WelcomeScene);
+                    Debug.LogFormat("1_OnLoadStart: {0}", asServer);
+                    SceneManager.UnloadSceneAsync(_welcomeScene);
                 }
             };
             IsInitialized = true;
@@ -283,12 +286,13 @@ namespace AnyVR.LobbySystem
             {
                 return;
             }
-
+            
             switch (param.Value)
             {
                 case SceneLoadParam.Global:
                     break;
                 case SceneLoadParam.Lobby:
+                    Debug.LogFormat("SceneManager_OnLoadStart: {0}", args.QueueData.SceneLoadData.SceneLookupDatas[0].Name);
                     LobbySceneLoadStart?.Invoke(State.HasFlag(ConnectionState.Server));
                     break;
                 default:
@@ -349,29 +353,6 @@ namespace AnyVR.LobbySystem
         }
 
 #region Public Fields
-
-        /// <summary>
-        ///     The global scene
-        ///     <list type="bullet">
-        ///         <item> is always loaded on the server.</item>
-        ///         <item> is loaded when the client connects to a server.</item>
-        ///         <item> is unloaded when the client disconnects from a server.</item>
-        ///         <item> should contain the LobbyManager instance.</item>
-        ///     </list>
-        /// </summary>
-        [Scene] public string GlobalScene => _globalScene;
-
-        /// <summary>
-        ///     The welcome scene
-        ///     <list type="bullet">
-        ///         <item> is always loaded on the server.</item>
-        ///         <item> is loaded when the client connects to a server.</item>
-        ///         <item> is unloaded when the client joins a lobby.</item>
-        ///         <item> is loaded when the client leaves a lobby.</item>
-        ///     </list>
-        /// </summary>
-        [Scene] public string WelcomeScene => _welcomeScene;
-
 
         public ConnectionState State
         {

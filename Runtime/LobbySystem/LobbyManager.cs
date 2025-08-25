@@ -9,7 +9,6 @@ using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using GameKit.Dependencies.Utilities.Types;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -39,10 +38,11 @@ namespace AnyVR.LobbySystem
 
         public IEnumerable<LobbyMetaData> Lobbies => _lobbyMeta.Values;
 
+        private LobbyConfiguration _lobbyConfiguration;
         /// <summary>
         ///     All available scenes for a lobby
         /// </summary>
-        public LobbySceneMetaData[] LobbyScenes => _lobbyScenes.ToArray();
+        public LobbySceneMetaData[] LobbyScenes => _lobbyConfiguration.LobbyScenes;
 
         private void Awake()
         {
@@ -99,6 +99,11 @@ namespace AnyVR.LobbySystem
             OnClientInitialized?.Invoke(this);
         }
 
+        public void SetLobbyConfiguration(LobbyConfiguration lobbyConfiguration)
+        {
+            _lobbyConfiguration = lobbyConfiguration;
+        }
+
         private void OnLobbyMetaChange(SyncDictionaryOperation op, Guid key, LobbyMetaData value, bool asServer)
         {
             switch (op)
@@ -142,12 +147,12 @@ namespace AnyVR.LobbySystem
                 return;
             }
 
-            AsyncOperation op = USceneManager.LoadSceneAsync(_offlineScene, LoadSceneMode.Additive);
+            AsyncOperation op = USceneManager.LoadSceneAsync(_lobbyConfiguration.OfflineScene, LoadSceneMode.Additive);
             if (op != null)
             {
                 op.completed += _ =>
                 {
-                    USceneManager.SetActiveScene(USceneManager.GetSceneByPath(_offlineScene));
+                    USceneManager.SetActiveScene(USceneManager.GetSceneByPath(_lobbyConfiguration.OfflineScene));
                 };
             }
         }
@@ -387,7 +392,7 @@ namespace AnyVR.LobbySystem
         public void JoinLobby(Guid lobbyId, string password = null)
         {
             Logger.Log(LogLevel.Verbose, Tag, "Requesting to join lobby");
-            JoinLobby(lobbyId, password, LocalConnection);
+            ServerRPC_JoinLobby(lobbyId, password, LocalConnection);
         }
 
         [Client]
@@ -423,15 +428,15 @@ namespace AnyVR.LobbySystem
             {
                 Logger.Log(LogLevel.Verbose, Tag, $"{conn.ClientId} connecting to lobby '{lobbyId} via quickConnect");
                 // TODO: handle password protected lobbies
-                Server_AddClientToLobby(lobbyId, string.Empty, conn);
+                JoinLobby_Internal(lobbyId, string.Empty, conn);
             }
             Logger.Log(LogLevel.Warning, Tag, $"Error performing quickConnect with code {quickConnect}");
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void JoinLobby(Guid lobbyId, string password, NetworkConnection conn)
+        private void ServerRPC_JoinLobby(Guid lobbyId, string password, NetworkConnection conn)
         {
-            Server_AddClientToLobby(lobbyId, password, conn);
+            JoinLobby_Internal(lobbyId, password, conn);
         }
 
         private static byte[] ComputeSha256(string s)
@@ -441,7 +446,7 @@ namespace AnyVR.LobbySystem
         }
 
         [Server]
-        private void Server_AddClientToLobby(Guid lobbyId, string password, NetworkConnection conn)
+        private void JoinLobby_Internal(Guid lobbyId, string password, NetworkConnection conn)
         {
             Assert.IsNotNull(conn);
 
@@ -666,15 +671,6 @@ namespace AnyVR.LobbySystem
 
             Instance = this;
         }
-
-        #endregion
-
-        #region SerializedFields
-
-        [Tooltip("The Scene to load when the local client leaves their current lobby")] [SerializeField] [Scene]
-        private string _offlineScene;
-
-        [SerializeField] private List<LobbySceneMetaData> _lobbyScenes;
 
         #endregion
 
