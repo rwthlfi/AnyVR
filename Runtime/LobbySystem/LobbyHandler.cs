@@ -86,15 +86,6 @@ namespace AnyVR.LobbySystem
             RemovePlayerState(conn);
         }
 
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-
-            // Reapply environmental settings
-            Scene lobbyScene = USceneManger.GetSceneByPath(MetaData.ScenePath);
-            USceneManger.SetActiveScene(lobbyScene);
-        }
-
         [Server]
         private IEnumerator ExpireLobby(DateTime expirationDate)
         {
@@ -164,43 +155,6 @@ namespace AnyVR.LobbySystem
         {
             return GetPlayerState(MetaData.CreatorId);
         }
-
-#if !UNITY_SERVER
-        private GUIStyle _style;
-        private void OnGUI()
-        {
-            _style ??= new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 12,
-                fontStyle = FontStyle.Bold,
-                normal =
-                {
-                    textColor = Color.yellow
-                }
-            };
-
-            const float x = 10f;
-            const float y = 10f;
-            const float width = 500f;
-            const float height = 20f;
-            Rect labelRect = new(x, y, width, height);
-
-            string debugMsg = $"QuickConnectCode: {_quickConnectCode.Value.ToString()}";
-            GUI.Label(labelRect, debugMsg, _style);
-
-            const float buttonWidth = 200f;
-            const float buttonHeight = 30f;
-            const float padding = 10f;
-            Rect buttonRect = new(Screen.width - buttonWidth - padding, Screen.height - buttonHeight - padding, buttonWidth, buttonHeight);
-
-            if (GUI.Button(buttonRect, "Leave", GUI.skin.button))
-            {
-                Leave();
-            }
-        }
-#endif
-
-
 #region ClientOnly
 
         [CanBeNull] private static LobbyHandler _instance;
