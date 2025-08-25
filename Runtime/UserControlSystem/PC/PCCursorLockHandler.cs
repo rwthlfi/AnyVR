@@ -73,21 +73,12 @@ namespace AnyVR.UserControlSystem.PC
 
         private void Start()
         {
-            PlatformManager.Instance.OnInitialized += () =>
-            {
-                if (PlatformInfo.IsXRPlatform())
-                {
-                    enabled = false;
-                    return;
-                }
+            // Subscribes to the action events.
+            _cursorUnlockAction.action.performed += UnlockCursorInputActionCallback;
+            _cursorLockAction.action.performed += LockCursorInputActionCallback;
 
-                // Subscribes to the action events.
-                _cursorUnlockAction.action.performed += UnlockCursorInputActionCallback;
-                _cursorLockAction.action.performed += LockCursorInputActionCallback;
-
-                // Locks cursor initially.
-                IsCursorUnlocked = false;
-            };
+            // Locks cursor initially.
+            IsCursorUnlocked = false;
         }
         
         private void OnDestroy()
