@@ -313,6 +313,10 @@ namespace AnyVR.LobbySystem
                     OnGlobalSceneLoaded?.Invoke(args.QueueData.AsServer);
                     break;
                 case SceneLoadParam.Lobby:
+                    if (!args.QueueData.AsServer)
+                    {
+                        SceneManager.SetActiveScene(args.LoadedScenes[0]);
+                    }
                     Logger.Log(LogLevel.Verbose, Tag, "Lobby scene loaded.");
                     break;
                 default:
