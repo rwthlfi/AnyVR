@@ -59,10 +59,8 @@ namespace AnyVR.LobbySystem
             // The WelcomeScene gets only unloaded for clients
             LobbySceneLoadStart += asServer =>
             {
-                Debug.LogFormat("0_OnLoadStart: {0}", asServer);
                 if (!asServer)
                 {
-                    Debug.LogFormat("1_OnLoadStart: {0}", asServer);
                     SceneManager.UnloadSceneAsync(_welcomeScene);
                 }
             };
@@ -292,7 +290,6 @@ namespace AnyVR.LobbySystem
                 case SceneLoadParam.Global:
                     break;
                 case SceneLoadParam.Lobby:
-                    Debug.LogFormat("SceneManager_OnLoadStart: {0}", args.QueueData.SceneLoadData.SceneLookupDatas[0].Name);
                     LobbySceneLoadStart?.Invoke(State.HasFlag(ConnectionState.Server));
                     break;
                 default:
