@@ -9,9 +9,7 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Logger = AnyVR.Logging.Logger;
-using USceneManger = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVR.LobbySystem
 {
@@ -33,7 +31,7 @@ namespace AnyVR.LobbySystem
         private Coroutine _expirationCoroutine;
 
         public uint QuickConnectCode => _quickConnectCode.Value;
-
+        
         //TODO: This returns null in Start
         public LobbyMetaData MetaData
         {
@@ -78,6 +76,12 @@ namespace AnyVR.LobbySystem
         {
             base.OnSpawnServer(conn);
             AddPlayerState(conn);
+
+            OnPlayerLeave += _ =>
+            {
+                Debug.Log("Closing Inactive LobbyHandler");
+                StartCoroutine(CloseInactiveLobby());
+            };
         }
 
         public override void OnDespawnServer(NetworkConnection conn)
@@ -100,14 +104,19 @@ namespace AnyVR.LobbySystem
             Logger.Log(LogLevel.Verbose, Tag, $"Lobby {_lobbyId.Value} expired");
             LobbyManager.Instance.Server_CloseLobby(_lobbyId.Value);
         }
-
+        
         /// <summary>
         ///     Checks if the lobby remains empty for a duration. Then closes the lobby if it remained empty.
         /// </summary>
         /// <param name="duration">Duration in seconds until expiration</param>
         [Server]
-        private IEnumerator CloseInactiveLobby(ushort duration)
+        private IEnumerator CloseInactiveLobby(ushort duration = 10)
         {
+            if (GetPlayerStates().Any())
+            {
+                yield break;
+            }
+            
             float elapsed = 0;
             const float interval = 1;
 
@@ -127,7 +136,7 @@ namespace AnyVR.LobbySystem
             Logger.Log(LogLevel.Warning, Tag, $"Closing lobby {_lobbyId.Value} due to inactivity.");
             LobbyManager.Instance.Server_CloseLobby(_lobbyId.Value);
         }
-
+        
         [CanBeNull]
         public static LobbyHandler GetInstance()
         {

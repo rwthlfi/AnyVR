@@ -1,6 +1,7 @@
 using System;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using UnityEngine;
 
 namespace AnyVR.LobbySystem
 {

@@ -14,7 +14,7 @@ namespace AnyVR.LobbySystem
 
         public delegate void PlayerLeaveEvent(int playerId);
 
-        [SerializeField] protected NetworkObject _playerStatePrefab;
+        [SerializeField] protected PlayerState _playerStatePrefab;
 
         private readonly SyncDictionary<int, NetworkObject> _playerStates = new();
 
@@ -38,9 +38,9 @@ namespace AnyVR.LobbySystem
         public event PlayerJoinEvent OnPlayerJoin;
         public event PlayerLeaveEvent OnPlayerLeave;
 
-        public override void OnStartClient()
+        public override void OnStartNetwork()
         {
-            base.OnStartClient();
+            base.OnStartNetwork();
             _playerStates.OnChange += PlayerStatesOnOnChange;
         }
 
