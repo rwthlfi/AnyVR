@@ -2,12 +2,12 @@ using System;
 using System.Runtime.CompilerServices;
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 [assembly: InternalsVisibleTo("AnyVR.Tests.Runtime")]
 
 namespace AnyVR.LobbySystem
 {
+    [CreateAssetMenu(fileName = "LobbySceneMetaData", menuName = "AnyVR/Lobby Scene MetaData")]
     public class LobbySceneMetaData : ScriptableObject
     {
         [SerializeField]

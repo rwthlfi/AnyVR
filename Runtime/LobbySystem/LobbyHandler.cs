@@ -1,5 +1,6 @@
 using System;
-using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
 using AnyVR.Logging;
 using AnyVR.TextChat;
 using AnyVR.Voicechat;
@@ -8,9 +9,7 @@ using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Logger = AnyVR.Logging.Logger;
-using USceneManger = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVR.LobbySystem
 {
@@ -19,20 +18,21 @@ namespace AnyVR.LobbySystem
     ///     container for the lobby's functionalities.
     /// </summary>
     [RequireComponent(typeof(TextChatManager))]
-    public class LobbyHandler : NetworkBehaviour
+    public class LobbyHandler : GameState
     {
-        public delegate void ClientEvent(int clientId);
+        public delegate void ClientEvent(PlayerState clientId);
 
         private const string Tag = nameof(LobbyHandler);
 
         private readonly SyncVar<Guid> _lobbyId = new();
 
-        /// <summary>
-        ///     A dictionary that contains all player information of the players in this lobby.
-        ///     The keys are integers and correspond to the fishnet client ID of that player.
-        /// </summary>
-        private readonly SyncDictionary<int, PlayerInfo> _players = new();
+        private readonly SyncVar<uint> _quickConnectCode = new();
 
+        private Coroutine _expirationCoroutine;
+
+        public uint QuickConnectCode => _quickConnectCode.Value;
+        
+        //TODO: This returns null in Start
         public LobbyMetaData MetaData
         {
             get
@@ -43,18 +43,12 @@ namespace AnyVR.LobbySystem
                     return null;
                 }
 
-                return !lobbyManager.TryGetLobby(_lobbyId.Value, out LobbyMetaData lmd) ? null : lmd;
+                return !lobbyManager.TryGetLobbyMeta(_lobbyId.Value, out LobbyMetaData lmd) ? null : lmd;
             }
         }
 
-        public TextChatManager TextChat { get; private set; }
-
-        public ushort CurrentClientCount => (ushort)_players.Count;
-
         private void Awake()
         {
-            TextChat = GetComponent<TextChatManager>();
-
 #if !UNITY_SERVER
             if (_instance != null)
             {
@@ -66,152 +60,83 @@ namespace AnyVR.LobbySystem
 #endif
         }
 
-        private void OnDestroy()
-        {
-            _players.OnChange -= OnPlayersChange;
-        }
-
-        /// <summary>
-        ///     Invoked when a remote client joined the lobby of the local client.
-        /// </summary>
-        public event ClientEvent OnPlayerJoined;
-
-        /// <summary>
-        ///     Invoked when a remote client left the lobby of thk local client.
-        /// </summary>
-        public event ClientEvent OnPlayerLeft;
-
-        // Only invoked on client after ClientStart
-        public static event Action PostInit; // TODO delete this
-
         [Server]
-        internal void Init(Guid lobbyId)
+        internal void Init(Guid lobbyId, uint quickConnectCode)
         {
             _lobbyId.Value = lobbyId;
-        }
+            _quickConnectCode.Value = quickConnectCode;
 
-        public override void OnStartNetwork()
-        {
-            base.OnStartNetwork();
-            _players.OnChange += OnPlayersChange;
-        }
-
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-
-            // Reapply environmental settings
-            Scene lobbyScene = USceneManger.GetSceneByPath(MetaData.ScenePath);
-            USceneManger.SetActiveScene(lobbyScene);
-
-            _voiceChatManager = VoiceChatManager.GetInstance();
-            if (_voiceChatManager != null)
+            if (MetaData.ExpireDate.HasValue)
             {
-                _voiceChatManager.ConnectedToRoom += OnConnectedToLiveKitRoom;
-            }
-
-            OnPlayerJoined += Client_OnPlayerJoined;
-            // OnPlayerLeft += Client_OnPlayerLeft;
-
-            RegisterPlayer(LocalConnection);
-            Logger.Log(LogLevel.Debug, Tag, "local player:" + ConnectionManager.UserName);
-
-            PostInit?.Invoke();
-        }
-        private static void OnConnectedToLiveKitRoom()
-        {
-            Logger.Log(LogLevel.Verbose, Tag, "Connected to LiveKit room");
-        }
-
-        private void Client_OnPlayerJoined(int clientId)
-        {
-            if (clientId != LocalConnection.ClientId)
-            {
-                return;
-            }
-            Logger.Log(LogLevel.Verbose, Tag, $"Local player registered in lobby '{_lobbyId.Value}'");
-            Logger.Log(LogLevel.Verbose, Tag, "Connecting to LiveKit room ...");
-            _voiceChatManager.TryConnectToRoom(_lobbyId.Value, _players[LocalConnection.ClientId].PlayerName, ConnectionManager.GetInstance()!.UseSecureProtocol);
-        }
-
-        private void OnPlayersChange(SyncDictionaryOperation op, int playerId, PlayerInfo value, bool asServer)
-        {
-            switch (op)
-            {
-                case SyncDictionaryOperation.Add:
-                    OnPlayerJoined?.Invoke(playerId);
-                    Logger.Log(LogLevel.Verbose, Tag, $"Client {playerId} joined lobby {_lobbyId.Value}");
-                    break;
-                case SyncDictionaryOperation.Clear:
-                    break;
-                case SyncDictionaryOperation.Remove:
-                    Logger.Log(LogLevel.Verbose, Tag, $"Client {playerId} left lobby {_lobbyId.Value}");
-                    OnPlayerLeft?.Invoke(playerId);
-                    break;
-                case SyncDictionaryOperation.Set:
-                    break;
-                case SyncDictionaryOperation.Complete:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(op), op, null);
+                StartCoroutine(ExpireLobby(MetaData.ExpireDate.Value));
             }
         }
 
+        public override void OnSpawnServer(NetworkConnection conn)
+        {
+            base.OnSpawnServer(conn);
+            AddPlayerState(conn);
+
+            OnPlayerLeave += _ =>
+            {
+                Debug.Log("Closing Inactive LobbyHandler");
+                StartCoroutine(CloseInactiveLobby());
+            };
+        }
+
+        public override void OnDespawnServer(NetworkConnection conn)
+        {
+            base.OnDespawnServer(conn);
+            RemovePlayerState(conn);
+        }
+
+        [Server]
+        private IEnumerator ExpireLobby(DateTime expirationDate)
+        {
+            float timeUntilExpiration = (float)(expirationDate - DateTime.UtcNow).TotalSeconds;
+
+            Logger.Log(LogLevel.Verbose, Tag, $"Expire lobby {_lobbyId.Value} in {timeUntilExpiration} seconds");
+            if (timeUntilExpiration > 0)
+            {
+                yield return new WaitForSeconds(timeUntilExpiration);
+            }
+
+            Logger.Log(LogLevel.Verbose, Tag, $"Lobby {_lobbyId.Value} expired");
+            LobbyManager.Instance.Server_CloseLobby(_lobbyId.Value);
+        }
+        
         /// <summary>
-        ///     Registers a player in the <see cref="_players" /> dict.
+        ///     Checks if the lobby remains empty for a duration. Then closes the lobby if it remained empty.
         /// </summary>
-        /// <param name="conn"></param>
-        [ServerRpc(RequireOwnership = false)]
-        private void RegisterPlayer(NetworkConnection conn = null)
-        {
-            if (conn == null)
-            {
-                return;
-            }
-
-            Server_AddPlayer(conn.ClientId);
-        }
-
+        /// <param name="duration">Duration in seconds until expiration</param>
         [Server]
-        private void Server_AddPlayer(int clientId)
+        private IEnumerator CloseInactiveLobby(ushort duration = 10)
         {
-            PlayerInfo playerInfo = LobbyManager.GetInstance()?.GetPlayerInfo(clientId);
-            if (playerInfo == null)
+            if (GetPlayerStates().Any())
             {
-                Logger.Log(LogLevel.Error, Tag, "Failed to get player info for client " + clientId);
-                return;
+                yield break;
             }
-            _players.Add(playerInfo.ID, playerInfo);
-        }
+            
+            float elapsed = 0;
+            const float interval = 1;
 
-        [ServerRpc(RequireOwnership = false)]
-        internal void RemoveClient(int clientId, NetworkConnection conn = null)
-        {
-            // TODO Players can only leave by themselves. Add Kick functionality
-            if (conn == null || clientId != conn.ClientId)
+            while (elapsed < duration)
             {
-                return;
+                Logger.Log(LogLevel.Verbose, Tag, $"Closing lobby {_lobbyId.Value} in {duration - elapsed} seconds due to inactivity.");
+                if (GetPlayerStates().Any())
+                {
+                    Logger.Log(LogLevel.Verbose, Tag, $"Cancel inactive lobby closing. Lobby {_lobbyId.Value} is no longer inactive.");
+                    yield break;
+                }
+
+                elapsed += interval;
+                yield return new WaitForSeconds(interval);
             }
 
-            Server_RemoveClient(clientId);
+            Logger.Log(LogLevel.Warning, Tag, $"Closing lobby {_lobbyId.Value} due to inactivity.");
+            LobbyManager.Instance.Server_CloseLobby(_lobbyId.Value);
         }
-
-        [Server]
-        internal void Server_RemoveClient(int clientId)
-        {
-            _players.Remove(clientId);
-        }
-
-        public Dictionary<int, PlayerInfo> GetPlayers()
-        {
-            return _players.Collection;
-        }
-
-        public void SetMuteSelf(bool muteSelf)
-        {
-            VoiceChatManager.GetInstance()?.SetMicrophoneEnabled(!muteSelf);
-        }
-
+        
         [CanBeNull]
         public static LobbyHandler GetInstance()
         {
@@ -221,7 +146,7 @@ namespace AnyVR.LobbySystem
         [Client]
         public void Leave()
         {
-            LobbyManager.Instance.LeaveLobby();
+            LobbyManager.Instance.ServerRPC_LeaveLobby();
         }
 
         public Guid GetLobbyId()
@@ -229,6 +154,16 @@ namespace AnyVR.LobbySystem
             return _lobbyId.Value;
         }
 
+        /// <summary>
+        ///     Get the creator of the lobby.
+        ///     Might return null if the creator disconnected.
+        /// </summary>
+        /// <returns></returns>
+        [CanBeNull]
+        public PlayerState GetLobbyOwner()
+        {
+            return GetPlayerState(MetaData.CreatorId);
+        }
 #region ClientOnly
 
         [CanBeNull] private static LobbyHandler _instance;

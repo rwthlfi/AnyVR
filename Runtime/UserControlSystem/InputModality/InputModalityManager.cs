@@ -38,6 +38,7 @@ namespace AnyVR.UserControlSystem.InputModality
         [SerializeField] private Transform _pcGazeInteractionOrigin;
         [SerializeField] private XRGazeInteractor _gazeInteractor;
         
+#if !UNITY_SERVER
         private void Start()
         {
             PlatformManager.Instance.OnInitialized += () =>
@@ -45,6 +46,7 @@ namespace AnyVR.UserControlSystem.InputModality
                 InitializeUserInput(PlatformInfo.IsXRPlatform());
             };
         }
+#endif
 
         /// <summary>
         ///     Initializes the user input based on the XR platform availability.
