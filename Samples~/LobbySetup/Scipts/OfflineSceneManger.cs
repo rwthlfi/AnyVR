@@ -27,6 +27,10 @@ namespace AnyVR.Sample
         [Header("UI/Server Panel/JoinLobby")]
         [SerializeField] private LobbyUIEntry _lobbyEntryPrefab;
         [SerializeField] private RectTransform _lobbyEntryParent;
+        
+        [Header("UI/Server Panel/QuickConnect")]
+        [SerializeField] private TMP_InputField _quickConnectInputField;
+        [SerializeField] private Button _quickConnectBtn;
 
         [Header("UI/Server Panel")]
         [SerializeField] private Button _leaveServerBtn;
@@ -67,6 +71,41 @@ namespace AnyVR.Sample
             _createLobbyBtn.onClick.AddListener(CreateLobby);
             _lobbyUIEntries = new Dictionary<Guid, LobbyUIEntry>();
             
+            _quickConnectBtn.onClick.AddListener(HandleQuickConnect);
+            
+            UpdateLobbyUIEntries();
+#endif
+        }
+
+        private void HandleQuickConnect()
+        {
+            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            if (lobbyManager == null)
+            {
+                return;
+            }
+
+            _ = lobbyManager.QuickConnect(_quickConnectInputField.text);
+        }
+        
+        private static void JoinLobby(Guid id)
+        {
+            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            if (lobbyManager == null)
+            {
+                return;
+            }
+
+            _ = lobbyManager.JoinLobby(id);
+        }
+
+        private void UpdateLobbyUIEntries()
+        {
+            foreach (Guid lmd in _lobbyUIEntries.Keys)
+            {
+                RemoveLobbyEntry(lmd);
+            }
+            
             LobbyManager lobbyManager = LobbyManager.GetInstance();
             if (lobbyManager == null)
                 return;
@@ -75,7 +114,6 @@ namespace AnyVR.Sample
             {
                 AddLobbyEntry(lmd);
             }
-#endif
         }
 
         private void OnDestroy()
@@ -102,8 +140,8 @@ namespace AnyVR.Sample
             
             LobbyManager lobbyManager = LobbyManager.GetInstance();
             Assert.IsNotNull(lobbyManager);
-            
-            entry.OnJoinButtonPressed += id => lobbyManager.JoinLobby(id);
+
+            entry.OnJoinButtonPressed += JoinLobby;
             _lobbyUIEntries.Add(lmd.LobbyId, entry);
         }
 

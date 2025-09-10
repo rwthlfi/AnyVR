@@ -1,10 +1,8 @@
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace AnyVR.LobbySystem
 {
-    
     [CreateAssetMenu(fileName = "LobbyConfiguration", menuName = "AnyVR/LobbyConfiguration")]
     public class LobbyConfiguration : ScriptableObject
     {

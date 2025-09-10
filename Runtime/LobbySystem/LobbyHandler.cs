@@ -31,7 +31,7 @@ namespace AnyVR.LobbySystem
         private Coroutine _expirationCoroutine;
 
         public uint QuickConnectCode => _quickConnectCode.Value;
-        
+
         //TODO: This returns null in Start
         public LobbyMetaData MetaData
         {
@@ -104,7 +104,7 @@ namespace AnyVR.LobbySystem
             Logger.Log(LogLevel.Verbose, Tag, $"Lobby {_lobbyId.Value} expired");
             LobbyManager.Instance.Server_CloseLobby(_lobbyId.Value);
         }
-        
+
         /// <summary>
         ///     Checks if the lobby remains empty for a duration. Then closes the lobby if it remained empty.
         /// </summary>
@@ -116,7 +116,7 @@ namespace AnyVR.LobbySystem
             {
                 yield break;
             }
-            
+
             float elapsed = 0;
             const float interval = 1;
 
@@ -136,7 +136,7 @@ namespace AnyVR.LobbySystem
             Logger.Log(LogLevel.Warning, Tag, $"Closing lobby {_lobbyId.Value} due to inactivity.");
             LobbyManager.Instance.Server_CloseLobby(_lobbyId.Value);
         }
-        
+
         [CanBeNull]
         public static LobbyHandler GetInstance()
         {
@@ -164,6 +164,7 @@ namespace AnyVR.LobbySystem
         {
             return GetPlayerState(MetaData.CreatorId);
         }
+
 #region ClientOnly
 
         [CanBeNull] private static LobbyHandler _instance;

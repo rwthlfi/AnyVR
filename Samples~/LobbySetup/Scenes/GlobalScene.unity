@@ -171,6 +171,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: GlobalSceneManager
       objectReference: {fileID: 0}
+    - target: {fileID: 6133850801313696456, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
+      propertyPath: _playerStatePrefab
+      value: 
+      objectReference: {fileID: 555325396295775035, guid: 8abde327d0837ae898daebf3ee88b3b1, type: 3}
     - target: {fileID: 6574523170611092761, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
       propertyPath: WasActiveDuringEdit
       value: 1

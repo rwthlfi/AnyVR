@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using AnyVR.Logging;
 using FishNet.Connection;
 using FishNet.Managing.Scened;
@@ -13,6 +15,7 @@ using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
+using Debug = UnityEngine.Debug;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 using Logger = AnyVR.Logging.Logger;
 
@@ -22,6 +25,30 @@ namespace AnyVR.LobbySystem
     {
         public delegate void PlayerCountEvent(Guid lobbyId, int playerCount);
 
+        public enum JoinLobbyStatus
+        {
+            Success,
+            AlreadyConnected,
+            LobbyDoesNotExist,
+            LobbyIsFull,
+            PasswordMismatch,
+            AlreadyJoining,
+            /// <summary>
+            ///     Likely indicates a server malfunction.
+            ///     When the user requests to join a lobby they are already connected to the server.
+            ///     For connection timeouts refer to <see cref="ConnectionManager.OnClientTimeout" />.
+            /// </summary>
+            Timeout,
+            /// <summary>
+            ///     If provided quick connect code is invalid.
+            /// </summary>
+            InvalidFormat,
+            /// <summary>
+            ///     If provided quick connect code is out of range.
+            /// </summary>
+            OutOfRange
+        }
+
         private const string Tag = nameof(LobbyManager);
 
         /// <summary>
@@ -30,6 +57,10 @@ namespace AnyVR.LobbySystem
         /// </summary>
         private readonly SyncDictionary<Guid, LobbyMetaData> _lobbyMeta = new();
 
+        private LobbyConfiguration _lobbyConfiguration;
+
+        private TaskCompletionSource<JoinLobbyResult> _lobbyJoinTcs;
+
         /// <summary>
         ///     Invoked when the player-count of a lobby changes.
         ///     The local user does not have to be connected to the lobby.
@@ -37,8 +68,6 @@ namespace AnyVR.LobbySystem
         public PlayerCountEvent PlayerCountUpdate;
 
         public IEnumerable<LobbyMetaData> Lobbies => _lobbyMeta.Values;
-
-        private LobbyConfiguration _lobbyConfiguration;
         /// <summary>
         ///     All available scenes for a lobby
         /// </summary>
@@ -389,39 +418,88 @@ namespace AnyVR.LobbySystem
         }
 
         [Client]
-        public void JoinLobby(Guid lobbyId, string password = null)
+        private async Task<JoinLobbyResult> Client_JoinLobbyInternal(Action rpcCall, TimeSpan? timeout = null)
         {
-            Logger.Log(LogLevel.Verbose, Tag, "Requesting to join lobby");
-            ServerRPC_JoinLobby(lobbyId, password, LocalConnection);
+            if (_lobbyJoinTcs != null && !_lobbyJoinTcs.Task.IsCompleted)
+            {
+                return new JoinLobbyResult(JoinLobbyStatus.AlreadyJoining);
+            }
+
+            _lobbyJoinTcs = new TaskCompletionSource<JoinLobbyResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            rpcCall?.Invoke();
+
+            Task delay = Task.Delay(timeout ?? TimeSpan.FromSeconds(10));
+            Task completed = await Task.WhenAny(_lobbyJoinTcs.Task, delay);
+
+            if (ReferenceEquals(completed, delay))
+            {
+                _lobbyJoinTcs = null;
+                return new JoinLobbyResult(JoinLobbyStatus.Timeout);
+            }
+
+            JoinLobbyResult result = await _lobbyJoinTcs.Task;
+            _lobbyJoinTcs = null;
+
+            if (result.Status.Equals(JoinLobbyStatus.Success))
+            {
+                Assert.IsTrue(result.LobbyId.HasValue);
+            }
+
+            LogJoinResult(result);
+
+            return result;
+        }
+
+        [Conditional("ANY_VR_LOG")]
+        private static void LogJoinResult(JoinLobbyResult result)
+        {
+            string message = result.Status switch
+            {
+                JoinLobbyStatus.Success => $"Successfully joined lobby {result.LobbyId.GetValueOrDefault()}.",
+                JoinLobbyStatus.AlreadyConnected => "You are already connected.",
+                JoinLobbyStatus.LobbyDoesNotExist => "The lobby does not exist.",
+                JoinLobbyStatus.LobbyIsFull => "The lobby is full.",
+                JoinLobbyStatus.PasswordMismatch => "Incorrect lobby password.",
+                JoinLobbyStatus.AlreadyJoining => "Already attempting to join a lobby.",
+                JoinLobbyStatus.Timeout => "Server did not handle join request (timeout).",
+                JoinLobbyStatus.InvalidFormat => "Quick connect code has an invalid format.",
+                JoinLobbyStatus.OutOfRange => "Quick connect code is out of range.",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            Logger.Log(LogLevel.Verbose, Tag, message);
         }
 
         [Client]
-        public void QuickConnect(string quickConnectCode)
+        public Task<JoinLobbyResult> JoinLobby(Guid lobbyId, string password = null, TimeSpan? timeout = null)
         {
-            Logger.Log(LogLevel.Warning, Tag, $"Code: {quickConnectCode}");
-            if (uint.TryParse(quickConnectCode, out uint code))
-            {
-                Logger.Log(LogLevel.Warning, Tag, "Performing RPC");
-                QuickConnectRpc(code, LocalConnection);
-            }
-            else
-            {
-                Logger.Log(LogLevel.Warning, Tag, "Quick connect code is invalid.");
-            }
+            Logger.Log(LogLevel.Verbose, Tag, $"Requesting to join lobby {lobbyId}.");
+            return Client_JoinLobbyInternal(() => ServerRPC_JoinLobby(lobbyId, password, LocalConnection), timeout);
         }
 
         [Client]
-        public bool QuickConnect(ushort quickConnectCode)
+        public Task<JoinLobbyResult> QuickConnect(string quickConnectCode, TimeSpan? timeout = null)
         {
-            if (!_quickConnectHandler.TryGetLobbyId(quickConnectCode, out Guid lobbyId))
+            quickConnectCode = quickConnectCode.Trim();
+
+            if (!uint.TryParse(quickConnectCode, out uint code))
             {
-                QuickConnectRpc(quickConnectCode, LocalConnection);
+                Logger.Log(LogLevel.Warning, Tag, $"QuickConnect failed: invalid code '{quickConnectCode}'");
+                return Task.FromResult(new JoinLobbyResult(JoinLobbyStatus.InvalidFormat));
             }
-            return true;
+
+            if (code >= 99999)
+            {
+                Logger.Log(LogLevel.Warning, Tag, $"QuickConnect failed: code out of range '{code}'");
+                return Task.FromResult(new JoinLobbyResult(JoinLobbyStatus.OutOfRange));
+            }
+
+            return Client_JoinLobbyInternal(() => ServerRPC_QuickConnect(code, LocalConnection), timeout);
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void QuickConnectRpc(uint quickConnect, NetworkConnection conn)
+        private void ServerRPC_QuickConnect(uint quickConnect, NetworkConnection conn)
         {
             Logger.Log(LogLevel.Warning, Tag, "Received quick connect RPC");
             if (_quickConnectHandler.TryGetLobbyId(quickConnect, out Guid lobbyId))
@@ -430,6 +508,7 @@ namespace AnyVR.LobbySystem
                 // TODO: handle password protected lobbies
                 JoinLobby_Internal(lobbyId, string.Empty, conn);
             }
+            TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.LobbyDoesNotExist);
             Logger.Log(LogLevel.Warning, Tag, $"Error performing quickConnect with code {quickConnect}");
         }
 
@@ -453,57 +532,51 @@ namespace AnyVR.LobbySystem
             if (!_lobbyMeta.TryGetValue(lobbyId, out LobbyMetaData lobby))
             {
                 Logger.Log(LogLevel.Warning, Tag,
-                    $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Lobby was not found.");
+                    $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Lobby was not found.");
+                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.LobbyDoesNotExist);
                 return;
             }
 
-            if (!_lobbyHandlers.TryGetValue(lobbyId, out LobbyHandler _))
-            {
-                Logger.Log(LogLevel.Warning, Tag,
-                    $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. The corresponding lobby handler does not exist.");
-                return;
-            }
+            Assert.IsTrue(_lobbyHandlers.ContainsKey(lobbyId));
+            Assert.IsTrue(_lobbyHandlers[lobbyId] != null);
 
-            //TODO: capacity
+            // TODO: capacity check
+            // If capacity is full:
+            // TargetRPC_OnJoinLobbyResult(conn, new JoinLobbyResult(JoinLobbyStatus.LobbyFull));
+            // return;
 
             if (lobby.IsPasswordProtected)
             {
-                if (!_lobbyPasswordHashes.TryGetValue(lobbyId, out byte[] passwordHash))
-                {
-                    Logger.Log(LogLevel.Error, Tag,
-                        $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Lobby '{lobbyId}' is password protected but the password hash is not available.");
-                    return;
-                }
+                Assert.IsTrue(_lobbyPasswordHashes.ContainsKey(lobbyId));
+                Assert.IsTrue(_lobbyPasswordHashes[lobbyId] != null);
 
-                if (passwordHash == null)
-                {
-                    Logger.Log(LogLevel.Error, Tag,
-                        $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Password hash is null");
-                    return;
-                }
-
-                if (!ComputeSha256(password).SequenceEqual(passwordHash))
+                if (!ComputeSha256(password).SequenceEqual(_lobbyPasswordHashes[lobbyId]))
                 {
                     Logger.Log(LogLevel.Verbose, Tag,
-                        $"Client '{conn.ClientId}' could not be added to the lobby with lobbyId '{lobbyId}'. Password hashes do not match.");
+                        $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Password mismatch.");
+                    TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.PasswordMismatch);
                     return;
                 }
             }
 
-            Logger.Log(LogLevel.Verbose, Tag,
-                $"Client '{conn.ClientId}' joined lobby '{lobbyId}'");
-            TargetRPC_OnLobbyJoined(conn, lobby);
+            Logger.Log(LogLevel.Verbose, Tag, $"Client '{conn.ClientId}' joined lobby '{lobbyId}'.");
+
+            TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.Success, lobbyId);
+
+            // Only load scenes if successful
             SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
         }
 
-        /// <summary>
-        ///     Callback for when the local client joins a lobby.
-        /// </summary>
         [TargetRpc]
-        private void TargetRPC_OnLobbyJoined(NetworkConnection _, LobbyMetaData lmd)
+        private void TargetRPC_OnJoinLobbyResult(NetworkConnection _, JoinLobbyStatus status, Guid? lobbyId = null)
         {
-            Logger.Log(LogLevel.Verbose, Tag, $"Lobby joined '{lmd.LobbyId}'");
-            OnLobbyJoined?.Invoke(lmd.LobbyId);
+            _lobbyJoinTcs?.TrySetResult(new JoinLobbyResult(status, lobbyId));
+
+            if (status != JoinLobbyStatus.Success)
+                return;
+
+            Assert.IsTrue(lobbyId.HasValue);
+            OnLobbyJoined?.Invoke(lobbyId.Value);
         }
 
         /// <summary>
@@ -655,6 +728,19 @@ namespace AnyVR.LobbySystem
         public bool TryGetLobbyMeta(Guid lobbyId, out LobbyMetaData lmd)
         {
             return _lobbyMeta.TryGetValue(lobbyId, out lmd);
+        }
+
+        [Serializable]
+        public struct JoinLobbyResult
+        {
+            public JoinLobbyStatus Status { get; }
+            public Guid? LobbyId { get; }
+
+            public JoinLobbyResult(JoinLobbyStatus status, Guid? lobbyId = null)
+            {
+                Status = status;
+                LobbyId = lobbyId;
+            }
         }
 
         #region Singleton

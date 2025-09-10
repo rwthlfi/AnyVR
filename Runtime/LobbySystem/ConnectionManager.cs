@@ -26,6 +26,8 @@ namespace AnyVR.LobbySystem
     {
         private const string Tag = nameof(ConnectionManager);
 
+        private const string GlobalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
+
         [SerializeField] [Scene] private string _welcomeScene;
 
         private NetworkManager _networkManager;
@@ -34,8 +36,6 @@ namespace AnyVR.LobbySystem
         public static bool IsInitialized { get; private set; }
 
         public bool UseSecureProtocol { get; set; } = true;
-        
-        private const string GlobalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
 
         private void Awake()
         {
@@ -55,7 +55,7 @@ namespace AnyVR.LobbySystem
             _networkManager.ClientManager.OnClientTimeOut += ClientManager_OnClientTimeout;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
             _networkManager.SceneManager.OnLoadStart += SceneManager_OnLoadStart;
-            
+
             // The WelcomeScene gets only unloaded for clients
             LobbySceneLoadStart += asServer =>
             {
@@ -284,7 +284,7 @@ namespace AnyVR.LobbySystem
             {
                 return;
             }
-            
+
             switch (param.Value)
             {
                 case SceneLoadParam.Global:
