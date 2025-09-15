@@ -16,6 +16,7 @@ namespace AnyVR.LobbySystem
             SceneManager.OnClientLoadedStartScenes += OnClientLoadedStartScenes;
             ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
         }
+
         private void OnClientLoadedStartScenes(NetworkConnection conn, bool asServer)
         {
             AddPlayerState(conn, true);
@@ -28,5 +29,21 @@ namespace AnyVR.LobbySystem
                 RemovePlayerState(conn);
             }
         }
+
+#region Singleton
+
+        public static GlobalGameState Instance { get; private set; }
+
+        private void InitSingleton()
+        {
+            if (Instance != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+        }
+
+#endregion
     }
 }

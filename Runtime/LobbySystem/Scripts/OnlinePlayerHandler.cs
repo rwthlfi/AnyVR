@@ -15,6 +15,7 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using System;
 using AnyVR.Logging;
 using FishNet.Object;
 using UnityEngine;
@@ -24,6 +25,8 @@ using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
+    // TODO delete
+    [Obsolete]
     public class OnlinePlayerHandler : NetworkBehaviour
     {
         private const string Tag = nameof(OnlinePlayerHandler);

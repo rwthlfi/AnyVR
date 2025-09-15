@@ -79,7 +79,7 @@ namespace AnyVR.Sample
 
         private void HandleQuickConnect()
         {
-            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            LobbyManager lobbyManager = LobbyManager.Instance;
             if (lobbyManager == null)
             {
                 return;
@@ -90,7 +90,7 @@ namespace AnyVR.Sample
         
         private static void JoinLobby(Guid id)
         {
-            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            LobbyManager lobbyManager = LobbyManager.Instance;
             if (lobbyManager == null)
             {
                 return;
@@ -106,13 +106,13 @@ namespace AnyVR.Sample
                 RemoveLobbyEntry(lmd);
             }
             
-            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            LobbyManager lobbyManager = LobbyManager.Instance;
             if (lobbyManager == null)
                 return;
             
-            foreach (LobbyMetaData lmd in lobbyManager.Lobbies)
+            foreach (ILobbyInfo lobbyInfo in lobbyManager.Lobbies)
             {
-                AddLobbyEntry(lmd);
+                AddLobbyEntry(lobbyInfo);
             }
         }
 
@@ -120,7 +120,7 @@ namespace AnyVR.Sample
         {
             _connectionManager.OnClientConnectionState -= OnClientConnectionStateChanged;
             
-            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            LobbyManager lobbyManager = LobbyManager.Instance;
             if (lobbyManager == null)
                 return;
             
@@ -128,21 +128,20 @@ namespace AnyVR.Sample
             lobbyManager.OnLobbyClosed -= RemoveLobbyEntry;
         }
 
-        private void AddLobbyEntry(LobbyMetaData lmd)
+        private void AddLobbyEntry(ILobbyInfo lobbyInfo)
         {
-            if (_lobbyUIEntries.ContainsKey(lmd.LobbyId))
+            if (_lobbyUIEntries.ContainsKey(lobbyInfo.LobbyId))
             {
                 return;
             }
 
             LobbyUIEntry entry = Instantiate(_lobbyEntryPrefab, _lobbyEntryParent);
-            entry.SetLobby(lmd.LobbyId, lmd.Name, lmd.SceneName, lmd.CreatorId, lmd.LobbyCapacity);
-            
-            LobbyManager lobbyManager = LobbyManager.GetInstance();
-            Assert.IsNotNull(lobbyManager);
+            entry.SetLobby(lobbyInfo.LobbyId, lobbyInfo.Name.Value, lobbyInfo.Scene.Name, lobbyInfo.CreatorId, lobbyInfo.LobbyCapacity);
+
+            Assert.IsNotNull(LobbyManager.Instance);
 
             entry.OnJoinButtonPressed += JoinLobby;
-            _lobbyUIEntries.Add(lmd.LobbyId, entry);
+            _lobbyUIEntries.Add(lobbyInfo.LobbyId, entry);
         }
 
         private void RemoveLobbyEntry(Guid lobbyId)
@@ -163,7 +162,7 @@ namespace AnyVR.Sample
                 return;
             }
             
-            LobbyManager lobbyManager = LobbyManager.GetInstance();
+            LobbyManager lobbyManager = LobbyManager.Instance;
             Assert.IsNotNull(lobbyManager);
             
             lobbyManager.CreateLobby(lobbyName, password, _lobbySceneMetaData, _lobbySceneMetaData.MaxUsers);
@@ -193,20 +192,7 @@ namespace AnyVR.Sample
         private async void ConnectToServer()
         {
             _connectionManager.UseSecureProtocol = false;
-            _connectionManager.SetTokenServerIp(_serverAddressInputField.text);
-            ServerAddressResponse res = await _connectionManager.RequestServerIp();
-
-            if (!res.Success)
-            {
-                Debug.LogError(res.Error);
-                return;
-            }
-
-            bool success = _connectionManager.ConnectToServer(res, _usernameInputField.text, out string error);
-            if (success)
-                return;
-
-            Debug.LogError("Did not receive server address: " + error);
+            ConnectionResult result = await _connectionManager.ConnectToServer(new Uri(_serverAddressInputField.text), _usernameInputField.text);
         }
 
         private void SetActivePanel(RectTransform activePanel)

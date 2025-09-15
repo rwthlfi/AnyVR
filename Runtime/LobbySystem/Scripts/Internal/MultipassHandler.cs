@@ -6,10 +6,11 @@ using FishNet.Transporting.Tugboat;
 using FishNet.Transporting.Multipass;
 using UnityEngine;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
+    // TODO move somewhere else? 
     [RequireComponent(typeof(Multipass))]
-    public class MultipassHandler : MonoBehaviour
+    internal class MultipassHandler : MonoBehaviour
     {
         private void Start()
         {

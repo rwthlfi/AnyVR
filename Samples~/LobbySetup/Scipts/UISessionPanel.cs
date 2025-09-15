@@ -80,15 +80,15 @@ namespace AnyVR.Sample
             }
             
             float playerCount = _lobbyHandler.GetPlayerStates().Count();
-            float capacity = _lobbyHandler.MetaData.LobbyCapacity;
+            float capacity = _lobbyHandler.LobbyInfo.LobbyCapacity;
             
             _capacityLabel.text = $"({playerCount} / {capacity})";
         }
         
         private void UpdateSessionInfo()
         {
-            _lobbyNameLabel.text = _lobbyHandler.MetaData.Name;
-            _locationLabel.text = _lobbyHandler.MetaData.SceneName;
+            _lobbyNameLabel.text = _lobbyHandler.LobbyInfo.Name.Value;
+            _locationLabel.text = _lobbyHandler.LobbyInfo.Scene.Name;
             _quickConnectLabel.text = _lobbyHandler.QuickConnectCode.ToString();
 
             PlayerState owner = _lobbyHandler.GetLobbyOwner();

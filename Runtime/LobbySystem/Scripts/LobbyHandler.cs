@@ -1,14 +1,18 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using AnyVR.TextChat;
 using AnyVR.Voicechat;
 using FishNet.Connection;
+using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
 using UnityEngine;
+using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
@@ -18,7 +22,7 @@ namespace AnyVR.LobbySystem
     ///     container for the lobby's functionalities.
     /// </summary>
     [RequireComponent(typeof(TextChatManager))]
-    public class LobbyHandler : GameState
+    public class LobbyHandler : GameState // TODO Rename to LobbyState?
     {
         public delegate void ClientEvent(PlayerState clientId);
 
@@ -32,18 +36,23 @@ namespace AnyVR.LobbySystem
 
         public uint QuickConnectCode => _quickConnectCode.Value;
 
-        //TODO: This returns null in Start
-        public LobbyMetaData MetaData
+        public ILobbyInfo LobbyInfo
         {
             get
             {
-                LobbyManager lobbyManager = LobbyManager.GetInstance();
-                if (lobbyManager == null)
-                {
-                    return null;
-                }
+                Assert.IsNotNull(LobbyManager.Instance);
+                return !LobbyManager.Instance.TryGetLobby(_lobbyId.Value, out ILobbyInfo info) ? null : info;
+            }
+        }
 
-                return !lobbyManager.TryGetLobbyMeta(_lobbyId.Value, out LobbyMetaData lmd) ? null : lmd;
+        internal LobbyMetaData MetaData
+        {
+            get
+            {
+                Assert.IsNotNull(LobbyManager.Instance);
+                LobbyMetaData lmd = LobbyManager.Instance.Internal.Lobbies.GetValueOrDefault(_lobbyId.Value);
+                Assert.IsNotNull(lmd);
+                return lmd;
             }
         }
 
@@ -66,9 +75,10 @@ namespace AnyVR.LobbySystem
             _lobbyId.Value = lobbyId;
             _quickConnectCode.Value = quickConnectCode;
 
-            if (MetaData.ExpireDate.HasValue)
+            DateTime? expiration = LobbyInfo.ExpirationDate.Value;
+            if (expiration.HasValue)
             {
-                StartCoroutine(ExpireLobby(MetaData.ExpireDate.Value));
+                StartCoroutine(ExpireLobby(expiration.Value));
             }
         }
 
@@ -102,7 +112,7 @@ namespace AnyVR.LobbySystem
             }
 
             Logger.Log(LogLevel.Verbose, Tag, $"Lobby {_lobbyId.Value} expired");
-            LobbyManager.Instance.Server_CloseLobby(_lobbyId.Value);
+            LobbyManager.Instance.Internal.Server_CloseLobby(_lobbyId.Value);
         }
 
         /// <summary>
@@ -134,19 +144,41 @@ namespace AnyVR.LobbySystem
             }
 
             Logger.Log(LogLevel.Warning, Tag, $"Closing lobby {_lobbyId.Value} due to inactivity.");
-            LobbyManager.Instance.Server_CloseLobby(_lobbyId.Value);
+            LobbyManager.Instance.Internal.Server_CloseLobby(_lobbyId.Value);
+        }
+
+        [Client]
+        public void Leave()
+        {
+            ServerRPC_LeaveLobby(ClientManager.Connection);
+        }
+
+        [Server]
+        internal void Server_RemovePlayer(NetworkConnection conn)
+        {
+            SceneUnloadData sud = LobbySceneService.CreateUnloadData(MetaData);
+            if (sud == null)
+            {
+                Logger.Log(LogLevel.Error, Tag, "Can't unload connection scene. SceneHandle is null");
+            }
+            else
+            {
+                SceneManager.UnloadConnectionScenes(conn, sud);
+            }
+
+            // TargetRPC_OnLobbyLeft(conn);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void ServerRPC_LeaveLobby(NetworkConnection conn = null)
+        {
+            Server_RemovePlayer(conn);
         }
 
         [CanBeNull]
         public static LobbyHandler GetInstance()
         {
             return _instance;
-        }
-
-        [Client]
-        public void Leave()
-        {
-            LobbyManager.Instance.ServerRPC_LeaveLobby();
         }
 
         public Guid GetLobbyId()

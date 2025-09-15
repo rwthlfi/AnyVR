@@ -15,12 +15,15 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using System;
 using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace AnyVR.LobbySystem
 {
+    // TODO delete
+    [Obsolete]
     public class PlayerInteractionHandler : MonoBehaviour
     {
         [FormerlySerializedAs("head")]

@@ -15,8 +15,8 @@ namespace AnyVR.Voicechat
         private const string TokenUrl = "{0}://{1}/requestToken?room_name={2}&user_name={3}";
 
         private VoiceChatClient _client;
-        private string _liveKitServerAddr;
-        private string _tokenServerAddr;
+        private Uri _liveKitServerUri;
+        private Uri _tokenServerUri;
 
         private Dictionary<string, Participant> RemoteParticipants => _client.RemoteParticipants;
         private Participant LocalParticipant => _client.LocalParticipant;
@@ -144,7 +144,7 @@ namespace AnyVR.Voicechat
             }
 
             Logger.Log(LogLevel.Verbose, Tag, "Requesting LiveKit Token ...");
-            string url = string.Format(TokenUrl, useSecureProt ? "https" : "http", _tokenServerAddr, roomId, userName);
+            string url = string.Format(TokenUrl, useSecureProt ? "https" : "http", _tokenServerUri, roomId, userName);
             TokenResponse response = await WebRequestHandler.GetAsync<TokenResponse>(url);
 
             if (!response.Success)
@@ -159,7 +159,7 @@ namespace AnyVR.Voicechat
 
             try
             {
-                string address = $"{(useSecureProt ? "wss" : "ws")}://{_liveKitServerAddr}";
+                string address = $"{(useSecureProt ? "wss" : "ws")}://{_liveKitServerUri}";
                 _client.Connect(address, response.token);
             }
             catch (Exception e)
@@ -187,13 +187,13 @@ namespace AnyVR.Voicechat
             _client?.SetClientMute(sid, b);
         }
 
-        public void SetTokenServerAddress(string address)
+        public void SetTokenServerAddress(Uri address)
         {
-            _tokenServerAddr = address;
+            _tokenServerUri = address;
         }
-        public void SetLiveKitServerAddress(string address)
+        public void SetLiveKitServerAddress(Uri address)
         {
-            _liveKitServerAddr = address;
+            _tokenServerUri = address;
         }
 
         private bool TryGetParticipantBySid(string sid, out Participant participant)

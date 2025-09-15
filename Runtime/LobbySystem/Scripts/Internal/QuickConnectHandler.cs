@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
+    //TODO: move to LobbyRegistry
     internal class QuickConnectHandler
     {
         private const int MaxCode = 99999;

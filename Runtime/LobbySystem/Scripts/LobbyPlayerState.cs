@@ -111,7 +111,8 @@ namespace AnyVR.LobbySystem
         private void KickPlayer_Internal()
         {
             Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({GetName()}) kicked.");
-            LobbyManager.Instance.Server_TryRemoveClientFromLobby(Owner);
+            //LobbyManager.Instance.Server_TryRemoveClientFromLobby(Owner);
+            //TODO
         }
 
         [ServerRpc(RequireOwnership = false)]

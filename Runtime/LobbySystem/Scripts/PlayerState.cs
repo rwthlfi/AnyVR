@@ -15,6 +15,7 @@ namespace AnyVR.LobbySystem
         {
             return _id.Value;
         }
+
         public string GetName()
         {
             return _playerName.Value;

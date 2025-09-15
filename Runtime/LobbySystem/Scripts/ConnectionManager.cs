@@ -2,10 +2,10 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using AnyVR.Voicechat;
 using AnyVR.WebRequests;
-using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Managing.Timing;
@@ -31,8 +31,9 @@ namespace AnyVR.LobbySystem
         [SerializeField] [Scene] private string _welcomeScene;
 
         private NetworkManager _networkManager;
+
         private TimeManager _tm;
-        private string _tokenServerAddress;
+
         public static bool IsInitialized { get; private set; }
 
         public bool UseSecureProtocol { get; set; } = true;
@@ -50,9 +51,7 @@ namespace AnyVR.LobbySystem
             Assert.IsTrue(_networkManager.Initialized);
 
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
-            _networkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
-            _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
-            _networkManager.ClientManager.OnClientTimeOut += ClientManager_OnClientTimeout;
+            _networkManager.ClientManager.OnClientTimeOut += OnClientTimeout;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
             _networkManager.SceneManager.OnLoadStart += SceneManager_OnLoadStart;
 
@@ -61,51 +60,10 @@ namespace AnyVR.LobbySystem
             {
                 if (!asServer)
                 {
-                    SceneManager.UnloadSceneAsync(_welcomeScene);
+                    SceneManager.UnloadSceneAsync(_welcomeScene); // TODO move to LobbySceneService
                 }
             };
             IsInitialized = true;
-        }
-
-        private void OnDestroy()
-        {
-            if (_networkManager == null)
-            {
-                return;
-            }
-
-            if (!_networkManager.Initialized)
-            {
-                return;
-            }
-
-            _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
-            _networkManager.ServerManager.OnRemoteConnectionState -= ServerManager_OnRemoteConnectionState;
-            _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
-            _networkManager.ClientManager.OnClientTimeOut -= ClientManager_OnClientTimeout;
-            _networkManager.SceneManager.OnLoadEnd -= SceneManager_OnLoadEnd;
-            _networkManager.SceneManager.OnLoadStart -= SceneManager_OnLoadStart;
-        }
-
-        private void ClientManager_OnClientTimeout()
-        {
-            OnClientTimeout?.Invoke();
-        }
-
-        private static void ServerManager_OnRemoteConnectionState(NetworkConnection conn,
-            RemoteConnectionStateArgs args)
-        {
-            switch (args.ConnectionState)
-            {
-                case RemoteConnectionState.Stopped:
-                    Logger.Log(LogLevel.Verbose, Tag, $"Remote connection {conn} stopped.");
-                    break;
-                case RemoteConnectionState.Started:
-                    Logger.Log(LogLevel.Verbose, Tag, $"Remote connection {conn} started.");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
         }
 
         public void StartServer()
@@ -133,34 +91,67 @@ namespace AnyVR.LobbySystem
             VoiceChatManager.GetInstance()?.Disconnect();
         }
 
-        public bool ConnectToServer(ServerAddressResponse addressResponse, string userName, out string errorMessage)
+        private async Task<ServerAddressResponse> RequestServerIp(Uri tokenServerUri, int timeoutSeconds = 10)
+        {
+            const string tokenURL = "{0}://{1}/requestServerIp";
+            string url = string.Format(tokenURL, UseSecureProtocol ? "https" : "http", tokenServerUri);
+
+            Logger.Log(LogLevel.Verbose, Tag, $"Requesting server ip from '{url}'");
+            ServerAddressResponse res = await WebRequestHandler.GetAsync<ServerAddressResponse>(url, timeoutSeconds);
+
+            if (!res.Success)
+            {
+                return res;
+            }
+            
+            if (!TryParseAddress(res.fishnet_server_address, out (string host, ushort port) fishnetAddress))
+            {
+                res.Success = false;
+                res.Error = $"Could not connect to server. Failed to parse FishNet server address ('{res.fishnet_server_address}').";
+                return res;
+            }
+            res.FishnetHost = fishnetAddress.host;
+            res.FishnetPort = fishnetAddress.port;
+
+            if (!TryParseAddress(res.livekit_server_address, out (string host, ushort port) liveKitAddress))
+            {
+                res.Success = false;
+                res.Error = $"Could not connect to server. Failed to parse LiveKit server address ('{res.livekit_server_address}').";
+                return res;
+            }
+            res.LiveKitHost = liveKitAddress.host;
+            res.LiveKitPort = liveKitAddress.port;
+
+            return res;
+        }
+
+        public async Task<ConnectionResult> ConnectToServer(Uri tokenServerUri, string userName)
         {
             Assert.IsNotNull(_networkManager);
 
             if (State.HasFlag(ConnectionState.Client))
             {
-                errorMessage = "Could not connect to server. Already connected as a client";
-                return false;
+                Logger.Log(LogLevel.Warning, Tag, "Could not connect to server. Already connected as a client");
+                return ConnectionResult.AlreadyConnected;
             }
 
-            if (!TryParseAddress(addressResponse.fishnet_server_address, out (string host, ushort port) fishnetAddress))
+            ServerAddressResponse response = await RequestServerIp(tokenServerUri);
+            if (response.Success)
             {
-                errorMessage = $"Could not connect to server. Failed to parse FishNet server address ('{addressResponse.fishnet_server_address}').";
-                return false;
+                Logger.Log(LogLevel.Verbose, Tag, $"Received server ip: {{FishNet: {response.fishnet_server_address}, LiveKit: {response.livekit_server_address}}}");
             }
-
-            if (!TryParseAddress(addressResponse.livekit_server_address, out (string host, ushort port) _))
+            else
             {
-                errorMessage = $"Could not connect to server. Failed to parse LiveKit server address ('{addressResponse.livekit_server_address}').";
-                return false;
+                Logger.Log(LogLevel.Warning, Tag, response.Error);
+                return ConnectionResult.ServerIpRequestFailed;
             }
 
-            Logger.Log(LogLevel.Verbose, Tag, $"Connecting to server (host: {fishnetAddress.host}, port: {fishnetAddress.port}) ...");
+
             UserName = userName;
             if (_networkManager.TransportManager.Transport is Multipass m)
             {
-                m.SetClientAddress(fishnetAddress.host);
-                m.SetPort(fishnetAddress.port);
+                m.SetClientAddress(response.FishnetHost);
+                m.SetPort(response.FishnetPort);
                 m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol);
             }
             else
@@ -170,16 +161,19 @@ namespace AnyVR.LobbySystem
 
             _networkManager.ClientManager.StartConnection();
 
-            VoiceChatManager.GetInstance()?.SetLiveKitServerAddress(addressResponse.livekit_server_address);
-            VoiceChatManager.GetInstance()?.SetTokenServerAddress(_tokenServerAddress);
+            VoiceChatManager.GetInstance()?.SetLiveKitServerAddress(new Uri(response.livekit_server_address));
+            VoiceChatManager.GetInstance()?.SetTokenServerAddress(tokenServerUri);
 
-            errorMessage = null;
-            return true;
+            return ConnectionResult.Connecting;
         }
 
         private static bool TryParseAddress(string address, out (string, ushort) res)
         {
             res = (null, 0);
+            if (address == null)
+            {
+                return false;
+            }
 
             const string pattern = @"^(?:\[(.+)\]|(.+)):(\d+)$";
             Match m = Regex.Match(address, pattern);
@@ -196,12 +190,6 @@ namespace AnyVR.LobbySystem
             string ip = m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value;
             res = (ip, port);
             return true;
-        }
-
-
-        private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs state)
-        {
-            OnClientConnectionState?.Invoke(State);
         }
 
         private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs state)
@@ -324,35 +312,6 @@ namespace AnyVR.LobbySystem
             }
         }
 
-        public void StopServer()
-        {
-            _networkManager.ServerManager.StopConnection(false);
-        }
-
-        public async Task<ServerAddressResponse> RequestServerIp(int timeoutSeconds = 10)
-        {
-            const string tokenURL = "{0}://{1}/requestServerIp";
-            string url = string.Format(tokenURL, UseSecureProtocol ? "https" : "http", _tokenServerAddress);
-
-            Logger.Log(LogLevel.Verbose, Tag, $"Requesting server ip from '{url}'");
-            ServerAddressResponse res = await WebRequestHandler.GetAsync<ServerAddressResponse>(url, timeoutSeconds);
-
-            if (res.Success)
-            {
-                Logger.Log(LogLevel.Verbose, Tag, $"Received server ip: {{FishNet: {res.fishnet_server_address}, LiveKit: {res.livekit_server_address}}}");
-            }
-            else
-            {
-                Logger.Log(LogLevel.Warning, Tag, res.Error);
-            }
-            return res;
-        }
-
-        public void SetTokenServerIp(string tokenServerAddress)
-        {
-            _tokenServerAddress = tokenServerAddress;
-        }
-
 #region Public Fields
 
         public ConnectionState State
@@ -400,15 +359,15 @@ namespace AnyVR.LobbySystem
 
         public delegate void ConnectionStateEvent(ConnectionState state);
 
-        public ConnectionStateEvent OnClientConnectionState;
+        public event ConnectionStateEvent OnClientConnectionState;
 
         public delegate void GlobalSceneLoadedEvent(bool asServer);
 
-        public GlobalSceneLoadedEvent OnGlobalSceneLoaded;
+        public event GlobalSceneLoadedEvent OnGlobalSceneLoaded;
 
         public delegate void LobbySceneLoadedEvent(bool asServer);
 
-        public LobbySceneLoadedEvent LobbySceneLoadStart;
+        public event LobbySceneLoadedEvent LobbySceneLoadStart;
 
         public event Action OnClientTimeout;
 
@@ -437,5 +396,12 @@ namespace AnyVR.LobbySystem
         }
 
 #endregion
+    }
+
+    public enum ConnectionResult
+    {
+        Connecting,
+        AlreadyConnected,
+        ServerIpRequestFailed
     }
 }

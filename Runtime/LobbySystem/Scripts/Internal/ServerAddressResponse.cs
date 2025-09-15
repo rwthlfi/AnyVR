@@ -1,7 +1,7 @@
 using System;
 using WebRequests;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     [Serializable]
     public class ServerAddressResponse : Response
@@ -10,6 +10,11 @@ namespace AnyVR.LobbySystem
         public string fishnet_server_address;
         // ReSharper disable once InconsistentNaming
         public string livekit_server_address;
+
+        [NonSerialized] internal string FishnetHost;
+        [NonSerialized] internal ushort FishnetPort;
+        [NonSerialized] internal string LiveKitHost;
+        [NonSerialized] internal ushort LiveKitPort;
 
         public ServerAddressResponse() { Success = false; }
 

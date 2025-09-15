@@ -2,40 +2,38 @@
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using FishNet.Managing.Scened;
+using FishNet.Object.Synchronizing;
 using UnityEngine.SceneManagement;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
-    public class LobbyMetaData
+    internal class LobbyMetaData : ILobbyInfo
     {
+        private readonly ObservedVar<DateTime?> _expirationDate;
+        private readonly ObservedVar<bool> _isPasswordProtected;
+        private readonly ObservedVar<string> _name;
+        private readonly ObservedVar<ushort> _numPlayers;
+
         private readonly SceneLoadData _sceneLoadData;
-        public readonly int CreatorId;
-        public readonly DateTime? ExpireDate;
-        public readonly bool IsPasswordProtected;
-        public readonly ushort LobbyCapacity;
 
-        /// <summary>
-        ///     Unique identifier
-        /// </summary>
-        public readonly Guid LobbyId;
-
-        public readonly string Name;
         public readonly string SceneName;
         public readonly string ScenePath;
 
         public LobbyMetaData() { }
-
+        
         private LobbyMetaData(Guid lobbyId, string name, int creatorId, string scenePath, string sceneName, ushort lobbyCapacity,
-            bool isPasswordProtected, DateTime? expireDate)
+            bool isPasswordProtected)
         {
-            Name = name;
+            LobbyId = lobbyId;
+            _name = new ObservedVar<string>(name);
+            _isPasswordProtected = new ObservedVar<bool>(isPasswordProtected);
+            _expirationDate = new ObservedVar<DateTime?>();
+
             ScenePath = scenePath;
             SceneName = sceneName;
             CreatorId = creatorId;
+
             LobbyCapacity = lobbyCapacity;
-            LobbyId = lobbyId;
-            IsPasswordProtected = isPasswordProtected;
-            ExpireDate = expireDate;
             SceneHandle = null;
             _sceneLoadData = new SceneLoadData(scenePath)
             {
@@ -59,6 +57,26 @@ namespace AnyVR.LobbySystem
         }
 
         public int? SceneHandle { get; private set; }
+        public Guid LobbyId { get; }
+        public IReadOnlyObservedVar<string> Name => _name;
+
+        public IReadOnlyObservedVar<bool> IsPasswordProtected => _isPasswordProtected;
+
+        public IReadOnlyObservedVar<ushort> NumPlayers => _numPlayers;
+
+        public IReadOnlyObservedVar<DateTime?> ExpirationDate => _expirationDate;
+
+        public PlayerState Creator => GlobalGameState.Instance.GetPlayerState(CreatorId);
+        public int CreatorId { get; }
+
+        public ushort LobbyCapacity { get; }
+
+        public LobbySceneMetaData Scene { get; }
+
+        private void SetExpiration(DateTime? expireDate)
+        {
+            _expirationDate.Value = expireDate;
+        }
 
         /// <summary>
         ///     Returns the SceneLoadData of the lobby as handle if possible.
@@ -126,22 +144,6 @@ namespace AnyVR.LobbySystem
                 $"LobbyMetaData (Id={LobbyId}, Name={Name}, Scene={ScenePath}, Creator={CreatorId}, MaxClients={LobbyCapacity}, IsPasswordProtected={IsPasswordProtected})";
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj is not LobbyMetaData other)
-            {
-                return false;
-            }
-
-            return GetHashCode() == other.GetHashCode();
-        }
-
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(LobbyId, Name, CreatorId, ScenePath, LobbyCapacity);
-        }
-
         public class Builder
         {
             private int _creatorId;
@@ -164,9 +166,9 @@ namespace AnyVR.LobbySystem
                 _sceneName = name;
                 return this;
             }
-            public Builder WithCreator(int id)
+            public Builder WithCreator(int creatorClientId)
             {
-                _creatorId = id;
+                _creatorId = creatorClientId;
                 return this;
             }
             public Builder WithCapacity(ushort cap)
@@ -187,7 +189,12 @@ namespace AnyVR.LobbySystem
 
             public LobbyMetaData Build()
             {
-                return new LobbyMetaData(Guid.NewGuid(), _name, _creatorId, _scenePath, _sceneName, _lobbyCapacity, _isPasswordProtected, _expireDate);
+                LobbyMetaData lmd = new(Guid.NewGuid(), _name, _creatorId, _scenePath, _sceneName, _lobbyCapacity, _isPasswordProtected);
+                if (_expireDate.HasValue)
+                {
+                    lmd.SetExpiration(_expireDate);
+                }
+                return lmd;
             }
         }
     }
