@@ -41,10 +41,15 @@ namespace AnyVR.UserControlSystem.InputModality
 #if !UNITY_SERVER
         private void Start()
         {
-            PlatformManager.Instance.OnInitialized += () =>
+            PlatformManager.Instance.OnInitialized += Handler;
+            return;
+
+            void Handler()
             {
                 InitializeUserInput(PlatformInfo.IsXRPlatform());
-            };
+                PlatformManager.Instance.OnInitialized -= Handler;
+            }
+
         }
 #endif
 
