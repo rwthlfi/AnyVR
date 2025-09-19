@@ -24,7 +24,7 @@ using UnityEngine.XR.Management;
 namespace AnyVR.PlatformManagement
 {
     /// <summary>
-    /// Static class to provide miscellaneous information about the platform the software is running on.
+    ///     Static class to provide miscellaneous information about the platform the software is running on.
     /// </summary>
     public static class PlatformInfo
     {
@@ -44,17 +44,17 @@ namespace AnyVR.PlatformManagement
         // public static XRHardwareType XRHardwareType => GetXRHardwareType();
 
         /// <summary>
-        /// Reference to the HMD, if there is one. Is null otherwise.
+        ///     Reference to the HMD, if there is one. Is null otherwise.
         /// </summary>
         public static InputDevice? Headset => LookupInputDevice(XRNode.Head);
 
         /// <summary>
-        /// Reference to the left XR controller, if there is one. Is null otherwise.
+        ///     Reference to the left XR controller, if there is one. Is null otherwise.
         /// </summary>
         public static InputDevice? LeftController => LookupInputDevice(XRNode.LeftHand);
 
         /// <summary>
-        /// Reference to the right XR controller, if there is one. Is null otherwise.
+        ///     Reference to the right XR controller, if there is one. Is null otherwise.
         /// </summary>
         public static InputDevice? RightController => LookupInputDevice(XRNode.RightHand);
 
@@ -69,7 +69,7 @@ namespace AnyVR.PlatformManagement
             CheckInitializationStatus();
             if (!XRSettings.isDeviceActive)
                 return Platform.Android;
-            
+
             if (XRGeneralSettings.Instance.Manager.activeLoader.name.ToLower().Contains("meta"))
             {
                 return Platform.MetaQuest;
@@ -84,7 +84,7 @@ namespace AnyVR.PlatformManagement
         private static Platform GetGenericPlatform()
         {
             CheckInitializationStatus();
-            
+
             if (XRSettings.isDeviceActive)
             {
                 return Platform.GenericXR;
@@ -93,7 +93,7 @@ namespace AnyVR.PlatformManagement
             {
                 return Platform.GenericMobile;
             }
-            
+
             return Platform.GenericDesktop;
         }
 
@@ -101,10 +101,10 @@ namespace AnyVR.PlatformManagement
         {
             CheckInitializationStatus();
             RuntimePlatform platform = Application.platform;
-            
+
             return platform switch
             {
-                RuntimePlatform.WindowsEditor =>  XRSettings.isDeviceActive ? Platform.WindowsXREditor : Platform.WindowsEditor,
+                RuntimePlatform.WindowsEditor => XRSettings.isDeviceActive ? Platform.WindowsXREditor : Platform.WindowsEditor,
                 RuntimePlatform.WindowsPlayer => XRSettings.isDeviceActive ? Platform.WindowsXR : Platform.Windows,
                 RuntimePlatform.Android => GetAndroidPlatform(), // Checks if device is a smartphone or a standalone XR device.
                 RuntimePlatform.LinuxPlayer => Platform.Linux,
@@ -118,7 +118,7 @@ namespace AnyVR.PlatformManagement
         public static PlatformType GetPlatformType()
         {
             CheckInitializationStatus();
-            
+
             Platform platform = GetPlatform();
             switch (platform)
             {
@@ -138,7 +138,7 @@ namespace AnyVR.PlatformManagement
         }
 
         /// <summary>
-        /// Determines if the used platform is an XR platform.
+        ///     Determines if the used platform is an XR platform.
         /// </summary>
         /// <returns>Whether the used platform is an XR platform.</returns>
         public static bool IsXRPlatform()
@@ -183,7 +183,7 @@ namespace AnyVR.PlatformManagement
 
             if (inputDevice == null)
                 return IsHandTrackingEnabled() ? XRHardwareType.Handtracked : XRHardwareType.Unknown;
-            
+
             string deviceName = inputDevice?.name;
             if (!string.IsNullOrEmpty(deviceName))
             {
@@ -202,7 +202,7 @@ namespace AnyVR.PlatformManagement
             return XRHardwareType.Quest;
 
         }
-        
+
         /// <summary>
         ///     Returns whether the used XR hardware has handtracking enabled.
         /// </summary>
@@ -215,24 +215,24 @@ namespace AnyVR.PlatformManagement
         }
 
         /// <summary>
-        /// Returns a readable description of the system the software is ran on. Yields information
-        /// about the device (name and model), also its OS and what kind of platform family it belongs
-        /// to.
+        ///     Returns a readable description of the system the software is ran on. Yields information
+        ///     about the device (name and model), also its OS and what kind of platform family it belongs
+        ///     to.
         /// </summary>
         /// <returns>The device description as a string.</returns>
         public static string GetDeviceDescription()
         {
             CheckInitializationStatus();
             return "[PlatformInfo]\n" +
-                   $"Device {SystemInfo.deviceName} ({SystemInfo.deviceModel}):\n" +
-                   $"Platform: {GetPlatform()} ({GetPlatformType()}{(IsXRPlatform() ? $" ({GetXRHardwareType()})" : "")})\n" +
-                   $"OS: {SystemInfo.operatingSystem}, ({SystemInfo.operatingSystemFamily} family)" +
-                   (IsXRPlatform() ? $"\nCharacteristics: {Headset?.characteristics}" : "");
+                $"Device {SystemInfo.deviceName} ({SystemInfo.deviceModel}):\n" +
+                $"Platform: {GetPlatform()} ({GetPlatformType()}{(IsXRPlatform() ? $" ({GetXRHardwareType()})" : "")})\n" +
+                $"OS: {SystemInfo.operatingSystem}, ({SystemInfo.operatingSystemFamily} family)" +
+                (IsXRPlatform() ? $"\nCharacteristics: {Headset?.characteristics}" : "");
         }
     }
 
     /// <summary>
-    /// Enumeration of all supported platforms.
+    ///     Enumeration of all supported platforms.
     /// </summary>
     public enum Platform
     {
@@ -263,7 +263,7 @@ namespace AnyVR.PlatformManagement
     }
 
     /// <summary>
-    /// Enumeration of all supported platform families.
+    ///     Enumeration of all supported platform families.
     /// </summary>
     public enum PlatformType
     {
@@ -275,7 +275,7 @@ namespace AnyVR.PlatformManagement
     }
 
     /// <summary>
-    /// Enumeration for the type of XR hardware that is used.
+    ///     Enumeration for the type of XR hardware that is used.
     /// </summary>
     public enum XRHardwareType
     {
