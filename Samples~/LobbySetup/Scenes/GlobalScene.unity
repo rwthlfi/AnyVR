@@ -171,10 +171,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: GlobalSceneManager
       objectReference: {fileID: 0}
-    - target: {fileID: 6133850801313696456, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
-      propertyPath: _playerStatePrefab
-      value: 
-      objectReference: {fileID: 555325396295775035, guid: 8abde327d0837ae898daebf3ee88b3b1, type: 3}
     - target: {fileID: 6574523170611092761, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
       propertyPath: WasActiveDuringEdit
       value: 1
@@ -183,42 +179,6 @@ PrefabInstance:
       propertyPath: <SceneId>k__BackingField
       value: 3214915063
       objectReference: {fileID: 0}
-    - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
-      propertyPath: offlineScene
-      value: Assets/Samples/AnyVr/0.1.0/NewLobbySetup/Scenes/WelcomeScene.unity
-      objectReference: {fileID: 0}
-    - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
-      propertyPath: _offlineScene
-      value: Assets/LobbySetup/Scenes/OfflineScene.unity
-      objectReference: {fileID: 0}
-    - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
-      propertyPath: LobbyConfiguration
-      value: 
-      objectReference: {fileID: 11400000, guid: fd75de8b3e25a333a8d3a74c750e6577, type: 2}
-    - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
-      propertyPath: lobbyHandlerPrefab
-      value: 
-      objectReference: {fileID: 3580284226864861460, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
-    - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
-      propertyPath: _lobbyHandlerPrefab
-      value: 
-      objectReference: {fileID: 3580284226864861460, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
-    - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
-      propertyPath: lobbyScenes.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
-      propertyPath: _lobbyScenes.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
-      propertyPath: 'lobbyScenes.Array.data[0]'
-      value: 
-      objectReference: {fileID: 11400000, guid: 3428efdfb54f41ec7978ef580f9b76bd, type: 2}
-    - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
-      propertyPath: '_lobbyScenes.Array.data[0]'
-      value: 
-      objectReference: {fileID: 11400000, guid: 2c08e8844fa3005fa912625d44f7f9f3, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -48,12 +48,15 @@ namespace AnyVR.LobbySystem.Internal
 
             if (ReferenceEquals(completed, delay))
             {
+                Logger.Log(LogLevel.Error, Tag, "Timeout while waiting for LobbyHandler");
                 _loadSceneTcs = null;
                 return null;
             }
-
+            
             LobbyHandler result = await _loadSceneTcs.Task;
+            
             Assert.IsTrue(_loadSceneTcs.Task.IsCompletedSuccessfully);
+            
             _loadSceneTcs = null;
 
             return result;
@@ -185,13 +188,6 @@ namespace AnyVR.LobbySystem.Internal
             if (Guid.Empty == lobbyId)
             {
                 errorMsg = "The passed lobbyId is null.";
-                return false;
-            }
-
-            // Check if lobby exists
-            if (!_internal.Lobbies.ContainsKey(lobbyId))
-            {
-                errorMsg = $"Lobby with ID '{lobbyId}' does not exist.";
                 return false;
             }
 

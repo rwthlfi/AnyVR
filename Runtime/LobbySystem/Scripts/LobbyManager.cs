@@ -24,14 +24,13 @@ namespace AnyVR.LobbySystem
         private void Awake()
         {
             InitSingleton();
-        }
-
-        private void Start()
-        {
+            
             Internal = GetComponent<LobbyManagerInternal>();
             Internal.OnLobbyOpened += lobbyId =>
             {
-                OnLobbyOpened?.Invoke(Internal.GetLobbyMeta(lobbyId));
+                var info = Internal.GetLobbyMeta(lobbyId);
+                Assert.IsNotNull(info.Name);
+                OnLobbyOpened?.Invoke(info);
             };
             Internal.OnLobbyClosed += OnLobbyClosed;
             Internal.OnClientInitialized += () => OnClientInitialized?.Invoke(this);

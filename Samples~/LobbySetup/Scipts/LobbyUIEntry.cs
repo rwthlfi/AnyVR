@@ -2,6 +2,7 @@ using System;
 using AnyVR.LobbySystem;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.UI;
 
 namespace AnyVR.Sample
@@ -22,19 +23,28 @@ namespace AnyVR.Sample
 
         public event JoinEvent OnJoinButtonPressed;
 
-        public void SetLobby(Guid id, string lobbyName, string lobbySceneName, int lobbyCreatorId, ushort lobbyLobbyCapacity)
+        private ILobbyInfo _lobbyInfo;
+        
+        private void UpdateCapacityLabel()
         {
-            _lobbyNameText.text = lobbyName;
-            _lobbySceneNameText.text = lobbySceneName;
-            _lobbyCreatorText.text = lobbyCreatorId.ToString();
+            _lobbyCapacityText.text = $"{_lobbyInfo.NumPlayers.Value} / {_lobbyInfo.LobbyCapacity}";
+        }
+        
+        public void SetLobby(ILobbyInfo lobby)
+        {
+            Assert.IsNotNull(lobby);
+            Assert.IsNotNull(lobby.Name);
+            Assert.IsNotNull(lobby.Name.Value);
+            
+            _lobbyNameText.text = lobby.Name.Value;
+            _lobbySceneNameText.text = lobby.Scene.Name;
+            _lobbyCreatorText.text = lobby.Creator != null ? lobby.Creator.GetName() : "";
 
-            GameState gameState = FindAnyObjectByType<GameState>();
-            PlayerState playerState = gameState.GetPlayerState(lobbyCreatorId);
-
-            _lobbyCapacityText.text = playerState != null ? playerState.GetName() : $"Client_{lobbyCreatorId.ToString()}";
+            UpdateCapacityLabel();
+            lobby.NumPlayers.OnValueChanged += _ => UpdateCapacityLabel();
 
             _joinBtn.onClick.RemoveAllListeners();
-            _joinBtn.onClick.AddListener(() => OnJoinButtonPressed?.Invoke(id));
+            _joinBtn.onClick.AddListener(() => OnJoinButtonPressed?.Invoke(lobby.LobbyId));
         }
     }
 }

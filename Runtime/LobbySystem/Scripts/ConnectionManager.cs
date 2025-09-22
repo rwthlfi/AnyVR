@@ -51,6 +51,7 @@ namespace AnyVR.LobbySystem
             Assert.IsTrue(_networkManager.Initialized);
 
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
+            _networkManager.ClientManager.OnClientConnectionState += _ => OnClientConnectionState?.Invoke(State);
             _networkManager.ClientManager.OnClientTimeOut += OnClientTimeout;
             _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
             _networkManager.SceneManager.OnLoadStart += SceneManager_OnLoadStart;

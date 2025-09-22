@@ -11,10 +11,12 @@ using FishNet.Managing.Scened;
 using FishNet.Object;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Debug = UnityEngine.Debug;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem.Internal
 {
+    [RequireComponent(typeof(LobbyRegistry))]
     internal class LobbyManagerInternal : NetworkBehaviour
     {
         private const string Tag = nameof(LobbyManagerInternal);
@@ -29,7 +31,7 @@ namespace AnyVR.LobbySystem.Internal
 
         public IReadOnlyDictionary<Guid, LobbyMetaData> Lobbies => _lobbyRegistry.Lobbies;
 
-        private void Start()
+        public override void OnStartNetwork()
         {
             _lobbyRegistry = GetComponent<LobbyRegistry>();
             _sceneService = new LobbySceneService(this);

@@ -130,13 +130,14 @@ namespace AnyVR.Sample
 
         private void AddLobbyEntry(ILobbyInfo lobbyInfo)
         {
+            Debug.Log("AddLobbyEntry");
             if (_lobbyUIEntries.ContainsKey(lobbyInfo.LobbyId))
             {
                 return;
             }
 
             LobbyUIEntry entry = Instantiate(_lobbyEntryPrefab, _lobbyEntryParent);
-            entry.SetLobby(lobbyInfo.LobbyId, lobbyInfo.Name.Value, lobbyInfo.Scene.Name, lobbyInfo.CreatorId, lobbyInfo.LobbyCapacity);
+            entry.SetLobby(lobbyInfo);
 
             Assert.IsNotNull(LobbyManager.Instance);
 
