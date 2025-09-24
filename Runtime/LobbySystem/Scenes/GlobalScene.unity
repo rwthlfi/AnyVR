@@ -192,6 +192,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
+      propertyPath: _lobbyInfoPrefab
+      value: 
+      objectReference: {fileID: 6768404924572295194, guid: 22b0b368b9aa61865ba7bc3af51c219b, type: 3}
+    - target: {fileID: 8216294827977510481, guid: e1acdb4d734df6c60a1f4d4740b919c7, type: 3}
       propertyPath: lobbyHandlerPrefab
       value: 
       objectReference: {fileID: 3580284226864861460, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}

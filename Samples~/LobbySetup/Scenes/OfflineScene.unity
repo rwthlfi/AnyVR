@@ -2057,6 +2057,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3053725bb3ae522b4beab8283c58b06a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _lobbyConfiguration: {fileID: 11400000, guid: fd75de8b3e25a333a8d3a74c750e6577, type: 2}
   _connectBtn: {fileID: 1411010728}
   _connectionPanel: {fileID: 1883483271}
   _serverPanel: {fileID: 1418004559}

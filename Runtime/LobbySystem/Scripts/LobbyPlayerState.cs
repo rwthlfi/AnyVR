@@ -43,7 +43,7 @@ namespace AnyVR.LobbySystem
             LobbyHandler = lobbyHandler;
 
             _lobbyId.Value = LobbyHandler.GetLobbyId();
-            _isAdmin.Value = LobbyHandler.MetaData.CreatorId == OwnerId;
+            _isAdmin.Value = LobbyHandler.LobbyInfo.CreatorId == OwnerId;
 
             NetworkObject nob = Instantiate(_playerPrefab);
             _onlinePlayer = nob;

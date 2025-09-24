@@ -1,7 +1,9 @@
 using System;
 using System.Runtime.CompilerServices;
+using AnyVR.LobbySystem.Internal;
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 [assembly: InternalsVisibleTo("AnyVR.Tests.Runtime")]
 
@@ -26,6 +28,14 @@ namespace AnyVR.LobbySystem
 
         [SerializeField]
         internal MinMaxRange _recommendedUsers;
+
+        public int ID
+        {
+            get
+            {
+                return Array.FindIndex(LobbyManager.LobbyConfiguration.LobbyScenes, lmd => lmd == this);
+            }
+        }
 
         public string Name => _sceneName;
         public string ScenePath => _scenePath;

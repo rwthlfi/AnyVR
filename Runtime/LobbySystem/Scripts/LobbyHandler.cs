@@ -41,20 +41,14 @@ namespace AnyVR.LobbySystem
             get
             {
                 Assert.IsNotNull(LobbyManager.Instance);
-                return !LobbyManager.Instance.TryGetLobby(_lobbyId.Value, out ILobbyInfo info) ? null : info;
+                Assert.IsFalse(_lobbyId.Value == Guid.Empty);
+                ILobbyInfo result = !LobbyManager.Instance.TryGetLobby(_lobbyId.Value, out ILobbyInfo info) ? null : info;
+                Assert.IsNotNull(result);
+                return result;
             }
         }
 
-        internal LobbyMetaData MetaData
-        {
-            get
-            {
-                Assert.IsNotNull(LobbyManager.Instance);
-                LobbyMetaData lmd = LobbyManager.Instance.Internal.Lobbies.GetValueOrDefault(_lobbyId.Value);
-                Assert.IsNotNull(lmd);
-                return lmd;
-            }
-        }
+        private LobbyInfo Info => (LobbyInfo) LobbyInfo;
 
         private void Awake()
         {
@@ -72,6 +66,9 @@ namespace AnyVR.LobbySystem
         [Server]
         internal void Init(Guid lobbyId, uint quickConnectCode)
         {
+            Logger.Log(LogLevel.Verbose, Tag, $"Initializing LobbyHandler: {lobbyId}");
+            Assert.IsFalse(lobbyId == Guid.Empty);
+
             _lobbyId.Value = lobbyId;
             _quickConnectCode.Value = quickConnectCode;
 
@@ -87,9 +84,13 @@ namespace AnyVR.LobbySystem
             base.OnSpawnServer(conn);
             AddPlayerState(conn);
 
+            OnPlayerJoin += _ =>
+            {
+                Info.SetPlayerNum((ushort)GetPlayerStates().Count());
+            };
             OnPlayerLeave += _ =>
             {
-                Debug.Log("Closing Inactive LobbyHandler");
+                Info.SetPlayerNum((ushort)GetPlayerStates().Count());
                 StartCoroutine(CloseInactiveLobby());
             };
         }
@@ -156,7 +157,7 @@ namespace AnyVR.LobbySystem
         [Server]
         internal void Server_RemovePlayer(NetworkConnection conn)
         {
-            SceneUnloadData sud = LobbySceneService.CreateUnloadData(MetaData);
+            SceneUnloadData sud = LobbySceneService.CreateUnloadData(LobbyInfo);
             if (sud == null)
             {
                 Logger.Log(LogLevel.Error, Tag, "Can't unload connection scene. SceneHandle is null");
@@ -183,6 +184,7 @@ namespace AnyVR.LobbySystem
 
         public Guid GetLobbyId()
         {
+            Assert.IsFalse(_lobbyId.Value == Guid.Empty);
             return _lobbyId.Value;
         }
 
@@ -194,7 +196,7 @@ namespace AnyVR.LobbySystem
         [CanBeNull]
         public PlayerState GetLobbyOwner()
         {
-            return GetPlayerState(MetaData.CreatorId);
+            return GetPlayerState(LobbyInfo.CreatorId);
         }
 
 #region ClientOnly

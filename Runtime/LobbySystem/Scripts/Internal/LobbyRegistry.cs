@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using AnyVR.Logging;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
@@ -11,65 +10,63 @@ namespace AnyVR.LobbySystem.Internal
 {
     internal class LobbyRegistry : NetworkBehaviour
     {
+        private readonly SyncDictionary<Guid, LobbyInfo> _lobbies = new();
+        internal IReadOnlyDictionary<Guid, LobbyInfo> Lobbies => _lobbies;
+        
+#region ServerOnly
         private readonly Dictionary<Guid, LobbyHandler> _handlers = new();
-        private readonly SyncDictionary<Guid, LobbyMetaData> _meta = new();
         private readonly Dictionary<Guid, byte[]> _passwordHashes = new();
+#endregion
 
         internal event Action<Guid> OnLobbyRegistered;
-
         internal event Action<Guid> OnLobbyUnregistered;
 
-        internal IReadOnlyDictionary<Guid, LobbyMetaData> Lobbies => _meta;
-
-        public override void OnStartClient()
+        public override void OnStartNetwork()
         {
-            base.OnStartClient();
-            _meta.OnChange += (op, key, lmd, _) =>
+            base.OnStartNetwork();
+
+            _lobbies.OnChange += (op, key, dto, _) =>
             {
                 switch (op)
                 {
                     case SyncDictionaryOperation.Add:
-                        Debug.Log("LobbyRegistered");
-                        Debug.Log(key);
-                        Debug.Log(lmd.LobbyId);
-                        Debug.Log(lmd.Name);
-                        Debug.Log(lmd.Name.Value);
+                        Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"LobbyRegistered: {key}");
                         OnLobbyRegistered?.Invoke(key);
                         break;
+
                     case SyncDictionaryOperation.Remove:
                         OnLobbyUnregistered?.Invoke(key);
                         break;
                 }
             };
         }
+
         [Server]
-        internal void Register(LobbyMetaData meta, LobbyHandler handler, byte[] passwordHash = null)
+        internal void Register(LobbyInfo lobbyInfo, LobbyHandler handler, byte[] passwordHash = null)
         {
-            if (_meta.ContainsKey(meta.LobbyId))
+            if (_lobbies.ContainsKey(lobbyInfo.LobbyId))
             {
-                Logger.Log(LogLevel.Warning, nameof(LobbyRegistry), $"Lobby {meta.LobbyId} already registered. Skipping.");
+                Logger.Log(LogLevel.Warning, nameof(LobbyRegistry), $"Lobby {lobbyInfo.LobbyId} already registered. Skipping.");
                 return;
             }
 
-            Assert.IsFalse(_handlers.ContainsKey(meta.LobbyId));
-            Assert.IsFalse(_passwordHashes.ContainsKey(meta.LobbyId));
+            Assert.IsFalse(_handlers.ContainsKey(lobbyInfo.LobbyId));
+            Assert.IsFalse(_passwordHashes.ContainsKey(lobbyInfo.LobbyId));
 
-            _meta[meta.LobbyId] = meta;
-            _handlers[meta.LobbyId] = handler;
+            _lobbies.Add(lobbyInfo.LobbyId, lobbyInfo);
+            _handlers[lobbyInfo.LobbyId] = handler;
 
             if (passwordHash != null)
-                _passwordHashes[meta.LobbyId] = passwordHash;
+                _passwordHashes[lobbyInfo.LobbyId] = passwordHash;
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {meta.LobbyId} registered successfully.");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {lobbyInfo.LobbyId} registered successfully.");
         }
 
         [Server]
         internal void Unregister(Guid lobbyId)
         {
-            if (!_meta.Remove(lobbyId))
-            {
+            if (!_lobbies.Remove(lobbyId))
                 return;
-            }
 
             bool handlerRemoved = _handlers.Remove(lobbyId);
             bool passwordRemoved = _passwordHashes.Remove(lobbyId);
@@ -78,10 +75,11 @@ namespace AnyVR.LobbySystem.Internal
 
             Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {lobbyId} unregistered successfully.");
         }
-        
-        internal LobbyMetaData GetLobbyMetaData(Guid lobbyId)
+
+        internal LobbyInfo GetLobbyMetaData(Guid lobbyId)
         {
-            return _meta[lobbyId];
+            _lobbies.TryGetValue(lobbyId, out LobbyInfo lobby);
+            return lobby;
         }
 
         internal byte[] GetPasswordHash(Guid lobbyId)

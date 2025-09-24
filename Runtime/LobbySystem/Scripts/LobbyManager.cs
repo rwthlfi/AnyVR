@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
 using UnityEngine;
@@ -19,16 +20,17 @@ namespace AnyVR.LobbySystem
         /// <summary>
         ///     All available scenes for a lobby
         /// </summary>
-        public IReadOnlyCollection<LobbySceneMetaData> LobbyScenes => Internal.LobbyConfiguration.LobbyScenes;
+        public IReadOnlyCollection<LobbySceneMetaData> LobbyScenes => LobbyConfiguration.LobbyScenes;
+        public static LobbyConfiguration LobbyConfiguration { get; set; }
 
         private void Awake()
         {
             InitSingleton();
-            
+
             Internal = GetComponent<LobbyManagerInternal>();
             Internal.OnLobbyOpened += lobbyId =>
             {
-                var info = Internal.GetLobbyMeta(lobbyId);
+                LobbyInfo info = Internal.GetLobbyMeta(lobbyId);
                 Assert.IsNotNull(info.Name);
                 OnLobbyOpened?.Invoke(info);
             };
@@ -64,7 +66,7 @@ namespace AnyVR.LobbySystem
 
         public bool TryGetLobby(Guid lobbyId, out ILobbyInfo lobbyInfo)
         {
-            bool found = Internal.Lobbies.TryGetValue(lobbyId, out LobbyMetaData lmd);
+            bool found = Internal.Lobbies.TryGetValue(lobbyId, out LobbyInfo lmd);
             lobbyInfo = lmd;
             return found;
         }

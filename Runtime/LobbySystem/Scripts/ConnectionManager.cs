@@ -104,7 +104,7 @@ namespace AnyVR.LobbySystem
             {
                 return res;
             }
-            
+
             if (!TryParseAddress(res.fishnet_server_address, out (string host, ushort port) fishnetAddress))
             {
                 res.Success = false;
@@ -225,7 +225,7 @@ namespace AnyVR.LobbySystem
                     {
                         (object)SceneLoadParam.Global
                     },
-                    ClientParams = LobbyMetaData.SerializeObjects(new[]
+                    ClientParams = LobbySceneService.SerializeClientParams(new[]
                     {
                         (object)SceneLoadParam.Global
                     })
@@ -253,7 +253,7 @@ namespace AnyVR.LobbySystem
             else
             {
                 byte[] arr = queueData.SceneLoadData.Params.ClientParams;
-                object[] clientParams = LobbyMetaData.DeserializeClientParams(arr);
+                object[] clientParams = LobbySceneService.DeserializeClientParams(arr);
 
                 if (clientParams.Length < 1)
                 {

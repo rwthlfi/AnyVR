@@ -1,4 +1,7 @@
 using System;
+using AnyVR.Logging;
+using FishNet.Object.Synchronizing;
+using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem.Internal
 {
@@ -8,27 +11,14 @@ namespace AnyVR.LobbySystem.Internal
         event Action<T> OnValueChanged;
     }
 
-    internal class ObservedVar<T> : IReadOnlyObservedVar<T>
+    [Serializable]
+    internal class ObservedSyncVar<T> : SyncVar<T>, IReadOnlyObservedVar<T>
     {
-        private T _value;
-
-        public ObservedVar(T initialValue = default)
-        {
-            _value = initialValue;
-        }
         public event Action<T> OnValueChanged;
 
-        public T Value
+        public ObservedSyncVar()
         {
-            get => _value;
-            set
-            {
-                if (Equals(_value, value))
-                    return;
-
-                _value = value;
-                OnValueChanged?.Invoke(_value);
-            }
+            OnChange += (_, next, _) => OnValueChanged?.Invoke(next);
         }
     }
 }

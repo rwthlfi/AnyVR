@@ -32,13 +32,11 @@ namespace AnyVR.Sample
         
         public void SetLobby(ILobbyInfo lobby)
         {
-            Assert.IsNotNull(lobby);
-            Assert.IsNotNull(lobby.Name);
-            Assert.IsNotNull(lobby.Name.Value);
+            _lobbyInfo = lobby;
             
             _lobbyNameText.text = lobby.Name.Value;
             _lobbySceneNameText.text = lobby.Scene.Name;
-            _lobbyCreatorText.text = lobby.Creator != null ? lobby.Creator.GetName() : "";
+            _lobbyCreatorText.text = lobby.Creator != null ? lobby.Creator.GetName() : "N/A";
 
             UpdateCapacityLabel();
             lobby.NumPlayers.OnValueChanged += _ => UpdateCapacityLabel();

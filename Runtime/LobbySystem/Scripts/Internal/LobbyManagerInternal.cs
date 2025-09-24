@@ -21,7 +21,8 @@ namespace AnyVR.LobbySystem.Internal
     {
         private const string Tag = nameof(LobbyManagerInternal);
 
-        [SerializeField] internal LobbyConfiguration LobbyConfiguration;
+        [SerializeField] private LobbyInfo _lobbyInfoPrefab;
+        public LobbyInfo LobbyInfoPrefab => _lobbyInfoPrefab;
 
         private TaskCompletionSource<JoinLobbyResult> _lobbyJoinTcs;
 
@@ -29,7 +30,7 @@ namespace AnyVR.LobbySystem.Internal
 
         private LobbySceneService _sceneService;
 
-        public IReadOnlyDictionary<Guid, LobbyMetaData> Lobbies => _lobbyRegistry.Lobbies;
+        public IReadOnlyDictionary<Guid, LobbyInfo> Lobbies => _lobbyRegistry.Lobbies;
 
         public override void OnStartNetwork()
         {
@@ -83,37 +84,37 @@ namespace AnyVR.LobbySystem.Internal
         [Client]
         public void CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMetaData, ushort maxClients, DateTime? expirationDate = null)
         {
-            ServerRPC_CreateLobby(lobbyName, password, sceneMetaData.ScenePath, maxClients, sceneMetaData.Name, expirationDate, LocalConnection);
+            // todo check that lobbyName not null or whitespace
+            ServerRPC_CreateLobby(lobbyName, password, sceneMetaData.ID, maxClients, expirationDate, LocalConnection);
         }
 
         /// <summary>
         ///     Server Rpc to create a new lobby on the server.
         /// </summary>
         [ServerRpc(RequireOwnership = false)]
-        private void ServerRPC_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients, string sceneName, DateTime? expirationDate, NetworkConnection conn = null)
+        private void ServerRPC_CreateLobby(string lobbyName, string password, int sceneId, ushort maxClients, DateTime? expirationDate, NetworkConnection conn = null)
         {
-            Server_CreateLobby(lobbyName, password, scenePath, maxClients, sceneName, expirationDate, conn);
+            Server_CreateLobby(lobbyName, password, sceneId, maxClients, expirationDate, conn);
         }
 
         [Server]
-        private async void Server_CreateLobby(string lobbyName, string password, string scenePath, ushort maxClients, string sceneName, DateTime? expirationDate, NetworkConnection creator)
+        private async void Server_CreateLobby(string lobbyName, string password, int sceneId, ushort maxClients, DateTime? expirationDate, NetworkConnection creator)
         {
-            if (string.IsNullOrEmpty(lobbyName))
-            {
-                lobbyName = $"{sceneName}"; //TODO
-            }
-
             maxClients = (ushort)Mathf.Max(1, maxClients);
-            LobbyMetaData lmd = new LobbyMetaData.Builder()
+            LobbyInfo lobbyInfo = new LobbyFactory()
                 .WithName(lobbyName)
                 .WithCreator(creator.ClientId)
-                .WithScene(scenePath, sceneName)
+                .WithSceneID(sceneId)
                 .WithCapacity(maxClients)
                 .WithPasswordProtection(!string.IsNullOrWhiteSpace(password))
                 .WithExpiration(expirationDate)
-                .Build();
+                .Create();
+            
+            Assert.IsNotNull(lobbyInfo);
+            Debug.Log(lobbyInfo.LobbyId);
+            Debug.Log(lobbyInfo.Scene.ScenePath);
 
-            LobbyHandler handler = await _sceneService.StartConnectionScene(lmd);
+            LobbyHandler handler = await _sceneService.StartConnectionScene(lobbyInfo);
 
             if (handler == null)
             {
@@ -122,11 +123,8 @@ namespace AnyVR.LobbySystem.Internal
             }
 
             // Lobby scene successfully loaded.
-
-            _lobbyRegistry.Register(lmd, handler, ComputeSha256(password));
-
-            _quickConnectHandler.RegisterLobby(lmd.LobbyId);
-
+            _lobbyRegistry.Register(lobbyInfo, handler, ComputeSha256(password));
+            handler.Init(lobbyInfo.LobbyId, _quickConnectHandler.RegisterLobby(lobbyInfo.LobbyId));
         }
 
         [Client]
@@ -241,7 +239,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             Assert.IsNotNull(conn);
 
-            if (!_lobbyRegistry.Lobbies.TryGetValue(lobbyId, out LobbyMetaData lobby))
+            if (!_lobbyRegistry.Lobbies.TryGetValue(lobbyId, out LobbyInfo lobby))
             {
                 Logger.Log(LogLevel.Warning, Tag,
                     $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Lobby was not found.");
@@ -273,7 +271,7 @@ namespace AnyVR.LobbySystem.Internal
             TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.Success, lobbyId);
 
             // Only load scenes if successful
-            SceneManager.LoadConnectionScenes(conn, lobby.GetSceneLoadData());
+            SceneManager.LoadConnectionScenes(conn, LobbySceneService.CreateSceneLoadData(lobby)); // TODO move to LobbySceneService
         }
 
         [TargetRpc]
@@ -297,7 +295,7 @@ namespace AnyVR.LobbySystem.Internal
                 handler.Server_RemovePlayer(player.ClientManager.Connection);
             }
 
-            SceneUnloadData sud = LobbySceneService.CreateUnloadData(handler.MetaData);
+            SceneUnloadData sud = LobbySceneService.CreateUnloadData(handler.LobbyInfo);
             Assert.IsNotNull(sud);
 
             _lobbyRegistry.Unregister(lobbyId);
@@ -309,9 +307,14 @@ namespace AnyVR.LobbySystem.Internal
             Logger.Log(LogLevel.Verbose, Tag, $"Lobby with id '{lobbyId}' is closed");
         }
 
-        internal LobbyMetaData GetLobbyMeta(Guid lobbyId)
+        internal LobbyInfo GetLobbyMeta(Guid lobbyId)
         {
             return _lobbyRegistry.GetLobbyMetaData(lobbyId);
+        }
+
+        public LobbyHandler GetLobbyHandler(Guid lobbyId)
+        {
+            return _lobbyRegistry.GetLobbyHandler(lobbyId);
         }
 
         #region ServerOnly

@@ -6,6 +6,11 @@ namespace AnyVR.LobbySystem
 {
     public class GlobalGameState : GameState
     {
+        private void Awake()
+        {
+            InitSingleton();
+        }
+
         public override void OnStartServer()
         {
             base.OnStartServer();

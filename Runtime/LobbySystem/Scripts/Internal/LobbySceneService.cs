@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 using AnyVR.Logging;
 using FishNet.Connection;
@@ -22,17 +24,16 @@ namespace AnyVR.LobbySystem.Internal
         internal LobbySceneService(LobbyManagerInternal @internal)
         {
             _internal = @internal;
-            _internal.SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
             _internal.SceneManager.OnUnloadEnd += OnUnloadEnd;
+
+            if (_internal.ServerManager.Started)
+                _internal.SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
         }
 
-        internal async Task<LobbyHandler> StartConnectionScene(LobbyMetaData lmd)
+        [Server]
+        internal async Task<LobbyHandler> StartConnectionScene(LobbyInfo lobbyInfo)
         {
             Assert.IsTrue(_internal.ServerManager.Started);
-
-            // Starts the lobby scene without clients. When loaded, the LoadEnd callback will be called, and we spawn a LobbyHandler.
-            Logger.Log(LogLevel.Verbose, Tag, "Loading lobby scene. Waiting for lobby handler");
-            _internal.SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), lmd.GetSceneLoadData());
 
             if (_loadSceneTcs != null)
             {
@@ -43,6 +44,9 @@ namespace AnyVR.LobbySystem.Internal
 
             _loadSceneTcs = new TaskCompletionSource<LobbyHandler>(TaskCreationOptions.RunContinuationsAsynchronously);
 
+            Logger.Log(LogLevel.Verbose, Tag, "Loading lobby scene. Waiting for lobby handler");
+            _internal.SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), CreateSceneLoadData(lobbyInfo));
+
             Task delay = Task.Delay(TimeSpan.FromSeconds(10));
             Task completed = await Task.WhenAny(_loadSceneTcs.Task, delay);
 
@@ -52,11 +56,11 @@ namespace AnyVR.LobbySystem.Internal
                 _loadSceneTcs = null;
                 return null;
             }
-            
+
             LobbyHandler result = await _loadSceneTcs.Task;
-            
+
             Assert.IsTrue(_loadSceneTcs.Task.IsCompletedSuccessfully);
-            
+
             _loadSceneTcs = null;
 
             return result;
@@ -65,6 +69,11 @@ namespace AnyVR.LobbySystem.Internal
         [Server]
         private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
         {
+            if (_loadSceneTcs == null)
+            {
+                return;
+            }
+
             if (!IsLoadingLobby(loadArgs.QueueData, true, out string errorMsg))
             {
                 if (!string.IsNullOrEmpty(errorMsg))
@@ -75,7 +84,6 @@ namespace AnyVR.LobbySystem.Internal
                 return;
             }
 
-            Assert.IsNotNull(_loadSceneTcs);
 
             object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
 
@@ -134,12 +142,12 @@ namespace AnyVR.LobbySystem.Internal
                 return;
             }
 
-            AsyncOperation op = USceneManager.LoadSceneAsync(_internal.LobbyConfiguration.OfflineScene, LoadSceneMode.Additive);
+            AsyncOperation op = USceneManager.LoadSceneAsync(LobbyManager.LobbyConfiguration.OfflineScene, LoadSceneMode.Additive);
             if (op != null)
             {
                 op.completed += _ =>
                 {
-                    USceneManager.SetActiveScene(USceneManager.GetSceneByPath(_internal.LobbyConfiguration.OfflineScene));
+                    USceneManager.SetActiveScene(USceneManager.GetSceneByPath(LobbyManager.LobbyConfiguration.OfflineScene));
                 };
             }
         }
@@ -148,7 +156,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             object[] loadParams = asServer
                 ? queueData.SceneUnloadData.Params.ServerParams
-                : LobbyMetaData.DeserializeClientParams(queueData.SceneUnloadData.Params.ClientParams);
+                : DeserializeClientParams(queueData.SceneUnloadData.Params.ClientParams);
 
             if (loadParams.Length < 2 || loadParams[0] is not SceneLoadParam)
             {
@@ -168,7 +176,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             object[] loadParams = asServer
                 ? queueData.SceneLoadData.Params.ServerParams
-                : LobbyMetaData.DeserializeClientParams(queueData.SceneLoadData.Params.ClientParams);
+                : DeserializeClientParams(queueData.SceneLoadData.Params.ClientParams);
 
             errorMsg = string.Empty;
 
@@ -199,16 +207,65 @@ namespace AnyVR.LobbySystem.Internal
             return false;
         }
 
-        internal static SceneUnloadData CreateUnloadData(LobbyMetaData lmd)
+        /// <summary>
+        ///     Returns the SceneLoadData of the lobby as handle if possible.
+        /// </summary>
+        [Server]
+        internal static SceneLoadData CreateSceneLoadData(LobbyInfo lobbyInfo)
         {
-            if (lmd.SceneHandle == null)
+            LobbyManagerInternal manager = LobbyManager.Instance.Internal;
+            Assert.IsNotNull(manager);
+
+            int sceneHandle;
+            string scenePath;
+
+            LobbyHandler handler = manager.GetLobbyHandler(lobbyInfo.LobbyId);
+            if (handler != null)
+            {
+                // Scene already loaded, use handle
+                sceneHandle = handler.gameObject.scene.handle;
+                scenePath = null;
+            }
+            else
+            {
+                sceneHandle = 0;
+                scenePath = lobbyInfo.Scene.ScenePath;
+            }
+
+            SceneLoadData sceneLoadData = scenePath != null
+                ? new SceneLoadData(scenePath)
+                : new SceneLoadData(sceneHandle);
+
+            sceneLoadData.ReplaceScenes = ReplaceOption.OnlineOnly;
+            sceneLoadData.Options.AllowStacking = true;
+            sceneLoadData.Options.LocalPhysics = LocalPhysicsMode.None;
+            sceneLoadData.Options.AutomaticallyUnload = false;
+
+            sceneLoadData.Params.ServerParams = new object[]
+            {
+                SceneLoadParam.Lobby, lobbyInfo.LobbyId, lobbyInfo.CreatorId
+            };
+
+            sceneLoadData.Params.ClientParams = SerializeClientParams(sceneLoadData.Params.ServerParams);
+
+            return sceneLoadData;
+        }
+
+        [Server]
+        internal static SceneUnloadData CreateUnloadData(ILobbyInfo lmd)
+        {
+            LobbyManagerInternal manager = LobbyManager.Instance.Internal;
+            Assert.IsNotNull(manager);
+
+            LobbyHandler handler = manager.GetLobbyHandler(lmd.LobbyId);
+            if (handler == null)
             {
                 return null;
             }
 
             SceneLookupData sld = new()
             {
-                Handle = lmd.SceneHandle.Value, Name = lmd.ScenePath
+                Handle = handler.gameObject.scene.handle, Name = lmd.Scene.ScenePath
             };
             object[] unloadParams =
             {
@@ -225,10 +282,35 @@ namespace AnyVR.LobbySystem.Internal
                 },
                 Params =
                 {
-                    ServerParams = unloadParams, ClientParams = LobbyMetaData.SerializeObjects(unloadParams)
+                    ServerParams = unloadParams, ClientParams = SerializeClientParams(unloadParams)
                 }
             };
             return sud;
+        }
+
+        internal static byte[] SerializeClientParams(object[] objects)
+        {
+            if (objects == null)
+            {
+                return null;
+            }
+
+            using MemoryStream stream = new();
+            BinaryFormatter formatter = new();
+            formatter.Serialize(stream, objects);
+            return stream.ToArray();
+        }
+
+        internal static object[] DeserializeClientParams(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0)
+            {
+                return Array.Empty<object>();
+            }
+
+            using MemoryStream stream = new(bytes);
+            BinaryFormatter formatter = new();
+            return (object[])formatter.Deserialize(stream);
         }
     }
 }

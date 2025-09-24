@@ -10,6 +10,8 @@ namespace AnyVR.Sample
 {
     public class OfflineSceneManger : MonoBehaviour
     {
+        [SerializeField] private LobbyConfiguration _lobbyConfiguration;
+        
         [Header("UI/Connection Panel")]
         [SerializeField] private Button _connectBtn;
 
@@ -49,6 +51,8 @@ namespace AnyVR.Sample
             _connectionManager = ConnectionManager.GetInstance();
             Assert.IsNotNull(_connectionManager);
             
+            LobbyManager.LobbyConfiguration = _lobbyConfiguration;
+            
 #if UNITY_SERVER
             _connectionManager.StartServer();
 #else
@@ -61,7 +65,7 @@ namespace AnyVR.Sample
             _connectBtn.onClick.AddListener(ConnectToServer);
             _leaveServerBtn.onClick.AddListener(LeaveServer);
             OnClientConnectionStateChanged(_connectionManager.State);
-
+            
             LobbyManager.OnClientInitialized += lobbyManager =>
             {
                 lobbyManager.OnLobbyOpened += AddLobbyEntry;
