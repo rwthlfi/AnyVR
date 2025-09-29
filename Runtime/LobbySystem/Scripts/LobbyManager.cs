@@ -30,9 +30,9 @@ namespace AnyVR.LobbySystem
             Internal = GetComponent<LobbyManagerInternal>();
             Internal.OnLobbyOpened += lobbyId =>
             {
-                LobbyInfo info = Internal.GetLobbyMeta(lobbyId);
-                Assert.IsNotNull(info.Name);
-                OnLobbyOpened?.Invoke(info);
+                LobbyState state = Internal.GetLobbyMeta(lobbyId);
+                Assert.IsNotNull(state.Name);
+                OnLobbyOpened?.Invoke(state);
             };
             Internal.OnLobbyClosed += OnLobbyClosed;
             Internal.OnClientInitialized += () => OnClientInitialized?.Invoke(this);
@@ -66,7 +66,7 @@ namespace AnyVR.LobbySystem
 
         public bool TryGetLobby(Guid lobbyId, out ILobbyInfo lobbyInfo)
         {
-            bool found = Internal.Lobbies.TryGetValue(lobbyId, out LobbyInfo lmd);
+            bool found = Internal.Lobbies.TryGetValue(lobbyId, out LobbyState lmd);
             lobbyInfo = lmd;
             return found;
         }

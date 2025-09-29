@@ -31,7 +31,7 @@ namespace AnyVR.LobbySystem.Internal
         }
 
         [Server]
-        internal async Task<LobbyHandler> StartConnectionScene(LobbyInfo lobbyInfo)
+        internal async Task<LobbyHandler> StartConnectionScene(LobbyState lobbyState)
         {
             Assert.IsTrue(_internal.ServerManager.Started);
 
@@ -45,7 +45,7 @@ namespace AnyVR.LobbySystem.Internal
             _loadSceneTcs = new TaskCompletionSource<LobbyHandler>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             Logger.Log(LogLevel.Verbose, Tag, "Loading lobby scene. Waiting for lobby handler");
-            _internal.SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), CreateSceneLoadData(lobbyInfo));
+            _internal.SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), CreateSceneLoadData(lobbyState));
 
             Task delay = Task.Delay(TimeSpan.FromSeconds(10));
             Task completed = await Task.WhenAny(_loadSceneTcs.Task, delay);
@@ -211,7 +211,7 @@ namespace AnyVR.LobbySystem.Internal
         ///     Returns the SceneLoadData of the lobby as handle if possible.
         /// </summary>
         [Server]
-        internal static SceneLoadData CreateSceneLoadData(LobbyInfo lobbyInfo)
+        internal static SceneLoadData CreateSceneLoadData(LobbyState lobbyState)
         {
             LobbyManagerInternal manager = LobbyManager.Instance.Internal;
             Assert.IsNotNull(manager);
@@ -219,7 +219,7 @@ namespace AnyVR.LobbySystem.Internal
             int sceneHandle;
             string scenePath;
 
-            LobbyHandler handler = manager.GetLobbyHandler(lobbyInfo.LobbyId);
+            LobbyHandler handler = manager.GetLobbyHandler(lobbyState.LobbyId);
             if (handler != null)
             {
                 // Scene already loaded, use handle
@@ -229,7 +229,7 @@ namespace AnyVR.LobbySystem.Internal
             else
             {
                 sceneHandle = 0;
-                scenePath = lobbyInfo.Scene.ScenePath;
+                scenePath = lobbyState.Scene.ScenePath;
             }
 
             SceneLoadData sceneLoadData = scenePath != null
@@ -243,7 +243,7 @@ namespace AnyVR.LobbySystem.Internal
 
             sceneLoadData.Params.ServerParams = new object[]
             {
-                SceneLoadParam.Lobby, lobbyInfo.LobbyId, lobbyInfo.CreatorId
+                SceneLoadParam.Lobby, lobbyState.LobbyId, lobbyState.CreatorId
             };
 
             sceneLoadData.Params.ClientParams = SerializeClientParams(sceneLoadData.Params.ServerParams);

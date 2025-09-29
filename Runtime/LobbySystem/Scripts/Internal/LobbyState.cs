@@ -1,12 +1,10 @@
 ﻿using System;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem.Internal
 {
-    internal class LobbyInfo : NetworkBehaviour, ILobbyInfo
+    internal class LobbyState : NetworkBehaviour, ILobbyInfo
     {
         private readonly SyncVar<Guid> _lobbyId = new();
         public Guid LobbyId => _lobbyId.Value;
@@ -53,6 +51,5 @@ namespace AnyVR.LobbySystem.Internal
             return
                 $"LobbyMetaData (Id={LobbyId}, Name={Name}, Scene={_sceneId.Value}, Creator={CreatorId}, MaxClients={LobbyCapacity}, IsPasswordProtected={IsPasswordProtected})";
         }
-
     }
 }

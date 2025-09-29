@@ -11,6 +11,7 @@ using FishNet.Managing.Scened;
 using FishNet.Object;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Serialization;
 using Debug = UnityEngine.Debug;
 using Logger = AnyVR.Logging.Logger;
 
@@ -21,8 +22,9 @@ namespace AnyVR.LobbySystem.Internal
     {
         private const string Tag = nameof(LobbyManagerInternal);
 
-        [SerializeField] private LobbyInfo _lobbyInfoPrefab;
-        public LobbyInfo LobbyInfoPrefab => _lobbyInfoPrefab;
+        [FormerlySerializedAs("_lobbyInfoPrefab")]
+        [SerializeField] private LobbyState _lobbyStatePrefab;
+        public LobbyState LobbyStatePrefab => _lobbyStatePrefab;
 
         private TaskCompletionSource<JoinLobbyResult> _lobbyJoinTcs;
 
@@ -30,7 +32,7 @@ namespace AnyVR.LobbySystem.Internal
 
         private LobbySceneService _sceneService;
 
-        public IReadOnlyDictionary<Guid, LobbyInfo> Lobbies => _lobbyRegistry.Lobbies;
+        public IReadOnlyDictionary<Guid, LobbyState> Lobbies => _lobbyRegistry.Lobbies;
 
         public override void OnStartNetwork()
         {
@@ -101,7 +103,7 @@ namespace AnyVR.LobbySystem.Internal
         private async void Server_CreateLobby(string lobbyName, string password, int sceneId, ushort maxClients, DateTime? expirationDate, NetworkConnection creator)
         {
             maxClients = (ushort)Mathf.Max(1, maxClients);
-            LobbyInfo lobbyInfo = new LobbyFactory()
+            LobbyState lobbyState = new LobbyFactory()
                 .WithName(lobbyName)
                 .WithCreator(creator.ClientId)
                 .WithSceneID(sceneId)
@@ -110,11 +112,11 @@ namespace AnyVR.LobbySystem.Internal
                 .WithExpiration(expirationDate)
                 .Create();
             
-            Assert.IsNotNull(lobbyInfo);
-            Debug.Log(lobbyInfo.LobbyId);
-            Debug.Log(lobbyInfo.Scene.ScenePath);
+            Assert.IsNotNull(lobbyState);
+            Debug.Log(lobbyState.LobbyId);
+            Debug.Log(lobbyState.Scene.ScenePath);
 
-            LobbyHandler handler = await _sceneService.StartConnectionScene(lobbyInfo);
+            LobbyHandler handler = await _sceneService.StartConnectionScene(lobbyState);
 
             if (handler == null)
             {
@@ -123,8 +125,8 @@ namespace AnyVR.LobbySystem.Internal
             }
 
             // Lobby scene successfully loaded.
-            _lobbyRegistry.Register(lobbyInfo, handler, ComputeSha256(password));
-            handler.Init(lobbyInfo.LobbyId, _quickConnectHandler.RegisterLobby(lobbyInfo.LobbyId));
+            _lobbyRegistry.Register(lobbyState, handler, ComputeSha256(password));
+            handler.Init(lobbyState.LobbyId, _quickConnectHandler.RegisterLobby(lobbyState.LobbyId));
         }
 
         [Client]
@@ -239,7 +241,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             Assert.IsNotNull(conn);
 
-            if (!_lobbyRegistry.Lobbies.TryGetValue(lobbyId, out LobbyInfo lobby))
+            if (!_lobbyRegistry.Lobbies.TryGetValue(lobbyId, out LobbyState lobby))
             {
                 Logger.Log(LogLevel.Warning, Tag,
                     $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Lobby was not found.");
@@ -307,7 +309,7 @@ namespace AnyVR.LobbySystem.Internal
             Logger.Log(LogLevel.Verbose, Tag, $"Lobby with id '{lobbyId}' is closed");
         }
 
-        internal LobbyInfo GetLobbyMeta(Guid lobbyId)
+        internal LobbyState GetLobbyMeta(Guid lobbyId)
         {
             return _lobbyRegistry.GetLobbyMetaData(lobbyId);
         }

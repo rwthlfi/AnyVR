@@ -57,10 +57,10 @@ namespace AnyVR.LobbySystem.Internal
             return this;
         }
 
-        public LobbyInfo Create()
+        public LobbyState Create()
         {
             LobbyManagerInternal @internal = LobbyManager.Instance.Internal;
-            LobbyInfo lmd = Object.Instantiate(@internal.LobbyInfoPrefab);
+            LobbyState lmd = Object.Instantiate(@internal.LobbyStatePrefab);
             SceneManager.MoveGameObjectToScene(lmd.gameObject, @internal.gameObject.scene);
             @internal.Spawn(lmd.NetworkObject);
             lmd.Init(_name, _creatorId, (ushort)_sceneId, _lobbyCapacity, _isPasswordProtected);

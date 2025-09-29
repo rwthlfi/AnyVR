@@ -10,8 +10,8 @@ namespace AnyVR.LobbySystem.Internal
 {
     internal class LobbyRegistry : NetworkBehaviour
     {
-        private readonly SyncDictionary<Guid, LobbyInfo> _lobbies = new();
-        internal IReadOnlyDictionary<Guid, LobbyInfo> Lobbies => _lobbies;
+        private readonly SyncDictionary<Guid, LobbyState> _lobbies = new();
+        internal IReadOnlyDictionary<Guid, LobbyState> Lobbies => _lobbies;
         
 #region ServerOnly
         private readonly Dictionary<Guid, LobbyHandler> _handlers = new();
@@ -42,24 +42,24 @@ namespace AnyVR.LobbySystem.Internal
         }
 
         [Server]
-        internal void Register(LobbyInfo lobbyInfo, LobbyHandler handler, byte[] passwordHash = null)
+        internal void Register(LobbyState lobbyState, LobbyHandler handler, byte[] passwordHash = null)
         {
-            if (_lobbies.ContainsKey(lobbyInfo.LobbyId))
+            if (_lobbies.ContainsKey(lobbyState.LobbyId))
             {
-                Logger.Log(LogLevel.Warning, nameof(LobbyRegistry), $"Lobby {lobbyInfo.LobbyId} already registered. Skipping.");
+                Logger.Log(LogLevel.Warning, nameof(LobbyRegistry), $"Lobby {lobbyState.LobbyId} already registered. Skipping.");
                 return;
             }
 
-            Assert.IsFalse(_handlers.ContainsKey(lobbyInfo.LobbyId));
-            Assert.IsFalse(_passwordHashes.ContainsKey(lobbyInfo.LobbyId));
+            Assert.IsFalse(_handlers.ContainsKey(lobbyState.LobbyId));
+            Assert.IsFalse(_passwordHashes.ContainsKey(lobbyState.LobbyId));
 
-            _lobbies.Add(lobbyInfo.LobbyId, lobbyInfo);
-            _handlers[lobbyInfo.LobbyId] = handler;
+            _lobbies.Add(lobbyState.LobbyId, lobbyState);
+            _handlers[lobbyState.LobbyId] = handler;
 
             if (passwordHash != null)
-                _passwordHashes[lobbyInfo.LobbyId] = passwordHash;
+                _passwordHashes[lobbyState.LobbyId] = passwordHash;
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {lobbyInfo.LobbyId} registered successfully.");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {lobbyState.LobbyId} registered successfully.");
         }
 
         [Server]
@@ -76,9 +76,9 @@ namespace AnyVR.LobbySystem.Internal
             Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {lobbyId} unregistered successfully.");
         }
 
-        internal LobbyInfo GetLobbyMetaData(Guid lobbyId)
+        internal LobbyState GetLobbyMetaData(Guid lobbyId)
         {
-            _lobbies.TryGetValue(lobbyId, out LobbyInfo lobby);
+            _lobbies.TryGetValue(lobbyId, out LobbyState lobby);
             return lobby;
         }
 

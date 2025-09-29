@@ -48,7 +48,7 @@ namespace AnyVR.LobbySystem
             }
         }
 
-        private LobbyInfo Info => (LobbyInfo) LobbyInfo;
+        private LobbyState State => (LobbyState) LobbyInfo;
 
         private void Awake()
         {
@@ -86,11 +86,11 @@ namespace AnyVR.LobbySystem
 
             OnPlayerJoin += _ =>
             {
-                Info.SetPlayerNum((ushort)GetPlayerStates().Count());
+                State.SetPlayerNum((ushort)GetPlayerStates().Count());
             };
             OnPlayerLeave += _ =>
             {
-                Info.SetPlayerNum((ushort)GetPlayerStates().Count());
+                State.SetPlayerNum((ushort)GetPlayerStates().Count());
                 StartCoroutine(CloseInactiveLobby());
             };
         }
