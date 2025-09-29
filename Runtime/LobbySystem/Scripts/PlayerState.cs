@@ -6,21 +6,15 @@ namespace AnyVR.LobbySystem
 {
     public class PlayerState : NetworkBehaviour
     {
+        internal Action PostServerInitialized;
+        
+#region Replicated Properties
         private readonly SyncVar<int> _id = new();
         private readonly SyncVar<string> _playerName = new();
+#endregion
 
-        internal Action PostServerInitialized;
 
-        public int GetID()
-        {
-            return _id.Value;
-        }
-
-        public string GetName()
-        {
-            return _playerName.Value;
-        }
-
+#region Lifecycle Overrides
         public override void OnStartServer()
         {
             base.OnStartServer();
@@ -36,7 +30,19 @@ namespace AnyVR.LobbySystem
 
             SetName(ConnectionManager.UserName);
         }
+#endregion
 
+#region Public API
+        public int GetID()
+        {
+            return _id.Value;
+        }
+
+        public string GetName()
+        {
+            return _playerName.Value;
+        }
+        
         public void SetName(string playerName)
         {
             if (IsServerStarted)
@@ -48,16 +54,20 @@ namespace AnyVR.LobbySystem
                 ServerRPC_SetName(playerName);
             }
         }
+#endregion
 
+#region Server Method
         [ServerRpc(RequireOwnership = true)]
         private void ServerRPC_SetName(string playerName)
         {
             SetName_Internal(playerName);
         }
-
+        
+        [Server]
         private void SetName_Internal(string playerName)
         {
             _playerName.Value = playerName;
         }
+#endregion
     }
 }

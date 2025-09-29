@@ -13,40 +13,43 @@ namespace AnyVR.LobbySystem
 {
     public class LobbyPlayerState : PlayerState
     {
+#region Serialized Properties
         /// <summary>
         ///     Prefab to spawn for the player.
         /// </summary>
         [SerializeField] private NetworkObject _playerPrefab;
+#endregion
 
+#region Replicated Properties
         private readonly SyncVar<bool> _isAdmin = new(); // WritePermission is ServerOnly by default
+        
         private readonly SyncVar<Guid> _lobbyId = new(Guid.Empty);
-
-        private NetworkObject _onlinePlayer;
-
-        public LobbyHandler LobbyHandler { get; private set; }
-
-        public bool IsLocalPlayer => IsController;
-
+        
+        private NetworkObject _playerAvatar; // TODO add player avatar class
+#endregion
+        
+#region Lifecycle Overrides
         public override void OnStartServer()
         {
             base.OnStartServer();
 
-            if (_playerPrefab == null)
-                return;
-
+            // Initialize replicated fields
             LobbyHandler lobbyHandler =
                 gameObject.scene.GetRootGameObjects()
                     .Select(root => root.GetComponent<LobbyHandler>())
                     .FirstOrDefault(comp => comp != null);
 
             Assert.IsNotNull(lobbyHandler);
-            LobbyHandler = lobbyHandler;
 
-            _lobbyId.Value = LobbyHandler.GetLobbyId();
-            _isAdmin.Value = LobbyHandler.LobbyInfo.CreatorId == OwnerId;
+            _lobbyId.Value = lobbyHandler.GetLobbyId();
+            _isAdmin.Value = lobbyHandler.LobbyInfo.CreatorId == OwnerId;
 
+            // spawn player avatar
+            if (_playerPrefab == null)
+                return;
+            
             NetworkObject nob = Instantiate(_playerPrefab);
-            _onlinePlayer = nob;
+            _playerAvatar = nob;
             Spawn(nob, Owner, gameObject.scene);
         }
 
@@ -62,8 +65,24 @@ namespace AnyVR.LobbySystem
             base.OnDespawnServer(conn);
             if (conn == Owner)
             {
-                Despawn(_onlinePlayer);
+                Despawn(_playerAvatar);
             }
+        }
+#endregion
+
+#region Public API
+        public bool IsLocalPlayer => IsController;
+
+        public LobbyHandler GetLobbyHandler()
+        {
+            LobbyHandler handler = LobbyManager.Instance.Internal.GetLobbyHandler(_lobbyId.Value);
+            Assert.IsNotNull(handler);
+            return handler;
+        }
+        
+        public bool GetIsAdmin()
+        {
+            return _isAdmin.Value;
         }
 
         public void PromoteToAdmin()
@@ -77,7 +96,21 @@ namespace AnyVR.LobbySystem
                 ServerRPC_PromoteToAdmin(LocalConnection);
             }
         }
+        
+        public void KickPlayer()
+        {
+            if (IsServerStarted)
+            {
+                KickPlayer_Internal();
+            }
+            else
+            {
+                ServerRPC_KickPlayer(LocalConnection);
+            }
+        }
+#endregion
 
+#region Server Methods
         [ServerRpc(RequireOwnership = false)]
         private void ServerRPC_PromoteToAdmin(NetworkConnection conn)
         {
@@ -93,18 +126,6 @@ namespace AnyVR.LobbySystem
         {
             _isAdmin.Value = true;
             Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({GetName()}) promoted to admin.");
-        }
-
-        public void KickPlayer()
-        {
-            if (IsServerStarted)
-            {
-                KickPlayer_Internal();
-            }
-            else
-            {
-                ServerRPC_KickPlayer(LocalConnection);
-            }
         }
 
         [Server]
@@ -125,18 +146,9 @@ namespace AnyVR.LobbySystem
         [Server]
         private bool Server_IsCallerAdmin(NetworkConnection callerConn)
         {
-            LobbyPlayerState caller = LobbyHandler.GetPlayerState<LobbyPlayerState>(callerConn.ClientId);
+            LobbyPlayerState caller = GetLobbyHandler().GetPlayerState<LobbyPlayerState>(callerConn.ClientId);
             return caller.GetIsAdmin();
         }
-
-        public bool GetIsAdmin()
-        {
-            return _isAdmin.Value;
-        }
-
-        public Guid GetLobby()
-        {
-            return _lobbyId.Value;
-        }
+  #endregion
     }
 }
