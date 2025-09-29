@@ -82,7 +82,6 @@ namespace AnyVR.LobbySystem
         public override void OnSpawnServer(NetworkConnection conn)
         {
             base.OnSpawnServer(conn);
-            AddPlayerState(conn);
 
             OnPlayerJoin += _ =>
             {
@@ -93,7 +92,11 @@ namespace AnyVR.LobbySystem
                 State.SetPlayerNum((ushort)GetPlayerStates().Count());
                 StartCoroutine(CloseInactiveLobby());
             };
+            
+            AddPlayerState(conn);
         }
+        
+        
 
         public override void OnDespawnServer(NetworkConnection conn)
         {

@@ -24,15 +24,17 @@ namespace AnyVR.LobbySystem.Internal
 
         [FormerlySerializedAs("_lobbyInfoPrefab")]
         [SerializeField] private LobbyState _lobbyStatePrefab;
-        public LobbyState LobbyStatePrefab => _lobbyStatePrefab;
+        internal LobbyState LobbyStatePrefab => _lobbyStatePrefab;
 
-        private TaskCompletionSource<JoinLobbyResult> _lobbyJoinTcs;
+        private TaskCompletionSource<JoinLobbyResult> _joinLobbyTcs;
+        
+        private TaskCompletionSource<CreateLobbyResult> _createLobbyTcs;
 
         private LobbyRegistry _lobbyRegistry;
 
         private LobbySceneService _sceneService;
 
-        public IReadOnlyDictionary<Guid, LobbyState> Lobbies => _lobbyRegistry.Lobbies;
+        internal IReadOnlyDictionary<Guid, LobbyState> Lobbies => _lobbyRegistry.LobbyStates;
 
         public override void OnStartNetwork()
         {
@@ -45,12 +47,12 @@ namespace AnyVR.LobbySystem.Internal
         /// <summary>
         ///     Invoked when a remote client opened a new lobby
         /// </summary>
-        public event Action<Guid> OnLobbyOpened;
+        internal event Action<Guid> OnLobbyOpened;
 
         /// <summary>
         ///     Invoked when a remote client closed a lobby
         /// </summary>
-        public event Action<Guid> OnLobbyClosed;
+        internal event Action<Guid> OnLobbyClosed;
 
         public override void OnStartServer()
         {
@@ -68,13 +70,6 @@ namespace AnyVR.LobbySystem.Internal
             OnClientInitialized?.Invoke();
         }
 
-        [ObserversRpc]
-        private void OnLobbyPlayerCountUpdate(Guid lobby, ushort playerCount)
-        {
-            //PlayerCountUpdate?.Invoke(lobby, playerCount);
-            // TODO
-        }
-
         /// <summary>
         ///     Initiates the creation of a new lobby on the server with a remote procedure call.
         /// </summary>
@@ -83,11 +78,42 @@ namespace AnyVR.LobbySystem.Internal
         /// <param name="sceneMetaData">The scene of the lobby</param>
         /// <param name="maxClients">The maximum number of clients allowed in the lobby.</param>
         /// <param name="expirationDate">Optional expiration date for the lobby.</param>
+        /// <param name="timeout">Timeout for lobby creation</param>
         [Client]
-        public void CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMetaData, ushort maxClients, DateTime? expirationDate = null)
+        internal async Task<CreateLobbyResult> CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMetaData, ushort maxClients, DateTime? expirationDate = null, TimeSpan? timeout = null)
         {
-            // todo check that lobbyName not null or whitespace
-            ServerRPC_CreateLobby(lobbyName, password, sceneMetaData.ID, maxClients, expirationDate, LocalConnection);
+            if (_createLobbyTcs != null && !_createLobbyTcs.Task.IsCompleted)
+            {
+                return new CreateLobbyResult(CreateLobbyStatus.CreationInProgress);
+            }
+            
+            if (string.IsNullOrWhiteSpace(lobbyName))
+            {
+                return new CreateLobbyResult(CreateLobbyStatus.InvalidParameters);
+            }
+            
+            if (!sceneMetaData.IsValid())
+            {
+                return new CreateLobbyResult(CreateLobbyStatus.InvalidScene);
+            }
+
+            _createLobbyTcs = new TaskCompletionSource<CreateLobbyResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            ServerRPC_CreateLobby(lobbyName, password, sceneMetaData.ID, maxClients, expirationDate);
+
+            Task delay = Task.Delay(timeout ?? TimeSpan.FromSeconds(10));
+            Task completed = await Task.WhenAny(_createLobbyTcs.Task, delay);
+
+            if (ReferenceEquals(completed, delay))
+            {
+                _createLobbyTcs = null;
+                return new CreateLobbyResult(CreateLobbyStatus.Timeout);
+            }
+
+            CreateLobbyResult result = await _createLobbyTcs.Task;
+            _createLobbyTcs = null;
+
+            return result;
         }
 
         /// <summary>
@@ -102,6 +128,12 @@ namespace AnyVR.LobbySystem.Internal
         [Server]
         private async void Server_CreateLobby(string lobbyName, string password, int sceneId, ushort maxClients, DateTime? expirationDate, NetworkConnection creator)
         {
+            if(GetLobbyStates().Any(lobbyState => lobbyState.Name.Value == lobbyName))
+            {
+                TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.LobbyNameTaken);
+                return;
+            }
+            
             maxClients = (ushort)Mathf.Max(1, maxClients);
             LobbyState lobbyState = new LobbyFactory()
                 .WithName(lobbyName)
@@ -113,85 +145,52 @@ namespace AnyVR.LobbySystem.Internal
                 .Create();
             
             Assert.IsNotNull(lobbyState);
-            Debug.Log(lobbyState.LobbyId);
-            Debug.Log(lobbyState.Scene.ScenePath);
-
+            
             LobbyHandler handler = await _sceneService.StartConnectionScene(lobbyState);
-
-            if (handler == null)
-            {
-                Logger.Log(LogLevel.Error, Tag, "Failed to start lobby scene");
-                return;
-            }
-
+            Assert.IsNotNull(handler, "Failed to load lobby scene");
+            
             // Lobby scene successfully loaded.
             _lobbyRegistry.Register(lobbyState, handler, ComputeSha256(password));
             handler.Init(lobbyState.LobbyId, _quickConnectHandler.RegisterLobby(lobbyState.LobbyId));
+            
+            TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.Success, lobbyState.LobbyId);
         }
 
         [Client]
         private async Task<JoinLobbyResult> Client_JoinLobbyInternal(Action rpcCall, TimeSpan? timeout = null)
         {
-            if (_lobbyJoinTcs != null && !_lobbyJoinTcs.Task.IsCompleted)
+            if (_joinLobbyTcs != null && !_joinLobbyTcs.Task.IsCompleted)
             {
                 return new JoinLobbyResult(JoinLobbyStatus.AlreadyJoining);
             }
 
-            _lobbyJoinTcs = new TaskCompletionSource<JoinLobbyResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _joinLobbyTcs = new TaskCompletionSource<JoinLobbyResult>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             rpcCall?.Invoke();
 
             Task delay = Task.Delay(timeout ?? TimeSpan.FromSeconds(10));
-            Task completed = await Task.WhenAny(_lobbyJoinTcs.Task, delay);
+            Task completed = await Task.WhenAny(_joinLobbyTcs.Task, delay);
 
             if (ReferenceEquals(completed, delay))
             {
-                _lobbyJoinTcs = null;
+                _joinLobbyTcs = null;
                 return new JoinLobbyResult(JoinLobbyStatus.Timeout);
             }
 
-            JoinLobbyResult result = await _lobbyJoinTcs.Task;
-            _lobbyJoinTcs = null;
-
-            if (result.Status.Equals(JoinLobbyStatus.Success))
-            {
-                Assert.IsTrue(result.LobbyId.HasValue);
-            }
-
-            LogJoinResult(result);
+            JoinLobbyResult result = await _joinLobbyTcs.Task;
+            _joinLobbyTcs = null;
 
             return result;
         }
 
-        [Conditional("ANY_VR_LOG")]
-        private static void LogJoinResult(JoinLobbyResult result)
-        {
-            string message = result.Status switch
-            {
-                JoinLobbyStatus.Success => $"Successfully joined lobby {result.LobbyId.GetValueOrDefault()}.",
-                JoinLobbyStatus.AlreadyConnected => "You are already connected.",
-                JoinLobbyStatus.LobbyDoesNotExist => "The lobby does not exist.",
-                JoinLobbyStatus.LobbyIsFull => "The lobby is full.",
-                JoinLobbyStatus.PasswordMismatch => "Incorrect lobby password.",
-                JoinLobbyStatus.AlreadyJoining => "Already attempting to join a lobby.",
-                JoinLobbyStatus.Timeout => "Server did not handle join request (timeout).",
-                JoinLobbyStatus.InvalidFormat => "Quick connect code has an invalid format.",
-                JoinLobbyStatus.OutOfRange => "Quick connect code is out of range.",
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            Logger.Log(LogLevel.Verbose, Tag, message);
-        }
-
         [Client]
-        public Task<JoinLobbyResult> JoinLobby(Guid lobbyId, string password = null, TimeSpan? timeout = null)
+        internal Task<JoinLobbyResult> JoinLobby(Guid lobbyId, string password = null, TimeSpan? timeout = null)
         {
-            Logger.Log(LogLevel.Verbose, Tag, $"Requesting to join lobby {lobbyId}.");
             return Client_JoinLobbyInternal(() => ServerRPC_JoinLobby(lobbyId, password, LocalConnection), timeout);
         }
 
         [Client]
-        public Task<JoinLobbyResult> QuickConnect(string quickConnectCode, TimeSpan? timeout = null)
+        internal Task<JoinLobbyResult> QuickConnect(string quickConnectCode, TimeSpan? timeout = null)
         {
             quickConnectCode = quickConnectCode.Trim();
 
@@ -241,7 +240,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             Assert.IsNotNull(conn);
 
-            if (!_lobbyRegistry.Lobbies.TryGetValue(lobbyId, out LobbyState lobby))
+            if (!_lobbyRegistry.LobbyStates.TryGetValue(lobbyId, out LobbyState lobby))
             {
                 Logger.Log(LogLevel.Warning, Tag,
                     $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Lobby was not found.");
@@ -279,9 +278,17 @@ namespace AnyVR.LobbySystem.Internal
         [TargetRpc]
         private void TargetRPC_OnJoinLobbyResult(NetworkConnection _, JoinLobbyStatus status, Guid? lobbyId = null)
         {
-            _lobbyJoinTcs?.TrySetResult(new JoinLobbyResult(status, lobbyId));
+            _joinLobbyTcs?.TrySetResult(new JoinLobbyResult(status, lobbyId));
 
             Assert.IsTrue(status != JoinLobbyStatus.Success || lobbyId.HasValue); // Success => HasValue
+        }
+        
+        [TargetRpc]
+        private void TargetRPC_OnCreateLobbyResult(NetworkConnection _, CreateLobbyStatus status, Guid? lobbyId = null)
+        {
+            _createLobbyTcs?.TrySetResult(new CreateLobbyResult(status, lobbyId));
+
+            Assert.IsTrue(status != CreateLobbyStatus.Success || lobbyId.HasValue); // Success => HasValue
         }
 
         [Server]
@@ -309,12 +316,17 @@ namespace AnyVR.LobbySystem.Internal
             Logger.Log(LogLevel.Verbose, Tag, $"Lobby with id '{lobbyId}' is closed");
         }
 
-        internal LobbyState GetLobbyMeta(Guid lobbyId)
+        internal LobbyState GetLobbyState(Guid lobbyId)
         {
-            return _lobbyRegistry.GetLobbyMetaData(lobbyId);
+            return _lobbyRegistry.GetLobbyState(lobbyId);
+        }
+        
+        internal IEnumerable<LobbyState> GetLobbyStates()
+        {
+            return _lobbyRegistry.LobbyStates.Values;
         }
 
-        public LobbyHandler GetLobbyHandler(Guid lobbyId)
+        internal LobbyHandler GetLobbyHandler(Guid lobbyId)
         {
             return _lobbyRegistry.GetLobbyHandler(lobbyId);
         }

@@ -18,7 +18,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
       propertyPath: <AssetPathHash>k__BackingField
-      value: 4544662602715785717
+      value: 6928069949996599539
       objectReference: {fileID: 0}
     - target: {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
       propertyPath: 'NetworkBehaviours.Array.data[0]'
@@ -26,7 +26,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1183095803115659666, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
       propertyPath: m_Name
-      value: LobbyPlayerState Variant
+      value: SamplePlayerState
       objectReference: {fileID: 0}
     - target: {fileID: 1620113714310754332, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
       propertyPath: m_LocalPosition.x

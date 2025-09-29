@@ -114,7 +114,7 @@ namespace AnyVR.Sample
             if (lobbyManager == null)
                 return;
             
-            foreach (ILobbyInfo lobbyInfo in lobbyManager.Lobbies)
+            foreach (ILobbyInfo lobbyInfo in lobbyManager.GetLobbies())
             {
                 AddLobbyEntry(lobbyInfo);
             }
@@ -134,7 +134,6 @@ namespace AnyVR.Sample
 
         private void AddLobbyEntry(ILobbyInfo lobbyInfo)
         {
-            Debug.Log("AddLobbyEntry");
             if (_lobbyUIEntries.ContainsKey(lobbyInfo.LobbyId))
             {
                 return;
@@ -170,8 +169,9 @@ namespace AnyVR.Sample
             LobbyManager lobbyManager = LobbyManager.Instance;
             Assert.IsNotNull(lobbyManager);
             
-            lobbyManager.CreateLobby(lobbyName, password, _lobbySceneMetaData, _lobbySceneMetaData.MaxUsers);
+            _ = lobbyManager.CreateLobby(lobbyName, password, _lobbySceneMetaData, _lobbySceneMetaData.MaxUsers);
         }
+            
         private void LeaveServer()
         {
             _connectionManager.LeaveServer();

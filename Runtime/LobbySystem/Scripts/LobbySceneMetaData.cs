@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using AnyVR.LobbySystem.Internal;
 using GameKit.Dependencies.Utilities.Types;
@@ -36,6 +37,8 @@ namespace AnyVR.LobbySystem
                 return Array.FindIndex(LobbyManager.LobbyConfiguration.LobbyScenes, lmd => lmd == this);
             }
         }
+
+        public bool IsValid() => LobbyManager.LobbyConfiguration.LobbyScenes.Contains(this);
 
         public string Name => _sceneName;
         public string ScenePath => _scenePath;

@@ -9,10 +9,9 @@ namespace AnyVR.LobbySystem
         internal Action PostServerInitialized;
         
 #region Replicated Properties
-        private readonly SyncVar<int> _id = new();
+        private readonly SyncVar<int> _id = new(); // TODO: Remove and use OwnerId
         private readonly SyncVar<string> _playerName = new();
 #endregion
-
 
 #region Lifecycle Overrides
         public override void OnStartServer()

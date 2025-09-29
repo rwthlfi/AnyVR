@@ -41,6 +41,7 @@ namespace AnyVR.LobbySystem.Internal
             _isPasswordProtected.Value = isPasswordProtected;
         }
 
+        [Server]
         public void SetPlayerNum(ushort playerNum)
         {
             _numPlayers.Value = playerNum;

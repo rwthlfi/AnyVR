@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
+using AnyVR.Logging;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
@@ -15,12 +17,15 @@ namespace AnyVR.LobbySystem
 
         public static LobbyManager Instance { get; private set; }
 
-        public IEnumerable<ILobbyInfo> Lobbies => Internal.Lobbies.Values;
+        public IEnumerable<ILobbyInfo> GetLobbies() => Internal.GetLobbyStates();
+        
+        public ILobbyInfo GetLobbyInfo(Guid id) => Internal.GetLobbyState(id);
 
         /// <summary>
         ///     All available scenes for a lobby
         /// </summary>
         public IReadOnlyCollection<LobbySceneMetaData> LobbyScenes => LobbyConfiguration.LobbyScenes;
+        
         public static LobbyConfiguration LobbyConfiguration { get; set; }
 
         private void Awake()
@@ -30,7 +35,7 @@ namespace AnyVR.LobbySystem
             Internal = GetComponent<LobbyManagerInternal>();
             Internal.OnLobbyOpened += lobbyId =>
             {
-                LobbyState state = Internal.GetLobbyMeta(lobbyId);
+                LobbyState state = Internal.GetLobbyState(lobbyId);
                 Assert.IsNotNull(state.Name);
                 OnLobbyOpened?.Invoke(state);
             };
@@ -49,20 +54,62 @@ namespace AnyVR.LobbySystem
         /// </summary>
         public static event Action<LobbyManager> OnClientInitialized;
 
-        public void CreateLobby(string lobbyName, string password, LobbySceneMetaData scene, ushort maxClients)
+        public async Task<CreateLobbyResult> CreateLobby(string lobbyName, string password, LobbySceneMetaData scene, ushort maxClients)
         {
-            Internal.CreateLobby(lobbyName, password, scene, maxClients);
+            CreateLobbyResult result = await Internal.CreateLobby(lobbyName, password, scene, maxClients);
+            LogCreateLobbyResult(result);
+            return result;
         }
 
-        public Task<JoinLobbyResult> JoinLobby(Guid lobbyId, string password = null, TimeSpan? timeout = null)
+        public async Task<JoinLobbyResult> JoinLobby(Guid lobbyId, string password = null, TimeSpan? timeout = null)
         {
-            return Internal.JoinLobby(lobbyId, password, timeout);
+            JoinLobbyResult result = await Internal.JoinLobby(lobbyId, password, timeout);
+            LogJoinLobbyResult(result);
+            return result;
         }
 
         public Task<JoinLobbyResult> QuickConnect(string code, TimeSpan? timeout = null)
         {
             return Internal.QuickConnect(code, timeout);
         }
+        
+        [Conditional("ANY_VR_LOG")]
+        private static void LogJoinLobbyResult(JoinLobbyResult result)
+        {
+            string message = result.Status switch
+            {
+                JoinLobbyStatus.Success => $"Successfully joined lobby {result.LobbyId.GetValueOrDefault()}.",
+                JoinLobbyStatus.AlreadyConnected => "Failed to Join Lobby. You are already connected.",
+                JoinLobbyStatus.LobbyDoesNotExist => "Failed to Join Lobby. The lobby does not exist.",
+                JoinLobbyStatus.LobbyIsFull => "Failed to Join Lobby. The lobby is full.",
+                JoinLobbyStatus.PasswordMismatch => "Failed to Join Lobby. Incorrect lobby password.",
+                JoinLobbyStatus.AlreadyJoining => "Failed to Join Lobby. Already attempting to join a lobby.",
+                JoinLobbyStatus.Timeout => "Failed to Join Lobby. Server did not handle join request (timeout).",
+                JoinLobbyStatus.InvalidFormat => "Failed to Join Lobby. Quick connect code has an invalid format.",
+                JoinLobbyStatus.OutOfRange => "Failed to Join Lobby. Quick connect code is out of range.",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            Logger.Log(LogLevel.Verbose, nameof(LobbyManager), message);
+        }
+        
+        [Conditional("ANY_VR_LOG")]
+        private static void LogCreateLobbyResult(CreateLobbyResult result)
+        {
+            string message = result.Status switch
+            {
+                CreateLobbyStatus.Success => $"Successfully created lobby {result.LobbyId.GetValueOrDefault()}.",
+                CreateLobbyStatus.LobbyNameTaken => "Lobby Creation Failed. Lobby name is taken.",
+                CreateLobbyStatus.InvalidScene => "Lobby Creation Failed. Invalid scene.",
+                CreateLobbyStatus.Timeout => "Lobby Creation Failed. Timeout occured.",
+                CreateLobbyStatus.CreationInProgress => "Lobby Creation Failed. Creation is in progress.",
+                CreateLobbyStatus.InvalidParameters => "Lobby Creation Failed. Invalid Parameters.",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            Logger.Log(LogLevel.Verbose, nameof(LobbyManager), message);
+        }
+
 
         public bool TryGetLobby(Guid lobbyId, out ILobbyInfo lobbyInfo)
         {

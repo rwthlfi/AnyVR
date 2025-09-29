@@ -112,19 +112,6 @@ namespace AnyVR.LobbySystem.Internal
 
             Assert.IsNotNull(lobbyHandler);
 
-            // TODO:
-            // lobbyHandler.Init(lobbyId, quickConnectCode);
-            // lobbyHandler.OnPlayerJoin += _ =>
-            // {
-            //     int currentPlayerCount = _lobbyHandlers[lobbyId].GetPlayerStates().Count();
-            //     OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
-            // };
-            // lobbyHandler.OnPlayerLeave += _ =>
-            // {
-            //     int currentPlayerCount = _lobbyHandlers[lobbyId].GetPlayerStates().Count();
-            //     OnLobbyPlayerCountUpdate(lobbyId, (ushort)currentPlayerCount);
-            // };
-
             Logger.Log(LogLevel.Verbose, Tag, $"Found LobbyHandler with lobbyId '{lobbyId}'");
             _loadSceneTcs.SetResult(lobbyHandler);
         }
