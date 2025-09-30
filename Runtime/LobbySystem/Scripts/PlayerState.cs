@@ -9,7 +9,6 @@ namespace AnyVR.LobbySystem
         internal Action PostServerInitialized;
         
 #region Replicated Properties
-        private readonly SyncVar<int> _id = new(); // TODO: Remove and use OwnerId
         private readonly SyncVar<string> _playerName = new();
 #endregion
 
@@ -17,7 +16,6 @@ namespace AnyVR.LobbySystem
         public override void OnStartServer()
         {
             base.OnStartServer();
-            _id.Value = OwnerId;
             PostServerInitialized?.Invoke();
         }
 
@@ -34,7 +32,7 @@ namespace AnyVR.LobbySystem
 #region Public API
         public int GetID()
         {
-            return _id.Value;
+            return OwnerId;
         }
 
         public string GetName()
