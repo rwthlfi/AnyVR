@@ -8,18 +8,18 @@ using UnityEditor.XR.Management.Metadata;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.XR.Management;
+using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
 namespace AnyVR.Editor
 {
     public static class BuildScript
     {
-        private static readonly string Path = UnityEditor.PackageManager.PackageInfo.FindForPackageName("rwth.lfi.anyvr").assetPath;
+        private const string OpenXRLoaderName = "UnityEngine.XR.OpenXR.OpenXRLoader";
+        private static readonly string Path = PackageInfo.FindForPackageName("rwth.lfi.anyvr").assetPath;
         private static readonly string DockerFile = System.IO.Path.Combine(Path, "Editor/Dockerfile");
         private static readonly string DockerIgnoreFile = System.IO.Path.Combine(Path, "Editor/.dockerignore");
         private static readonly string BinaryName = Application.productName.Replace(" ", "-");
-        
-        private const string OpenXRLoaderName = "UnityEngine.XR.OpenXR.OpenXRLoader";
-        
+
         private static string[] Scenes => EditorBuildSettings.scenes
             .Where(s => s.enabled)
             .Select(s => s.path)
@@ -52,10 +52,10 @@ namespace AnyVR.Editor
 
             string dir = System.IO.Path.GetDirectoryName(report.summary.outputPath);
             Assert.IsFalse(string.IsNullOrWhiteSpace(dir));
-            
+
             string sourceText = File.ReadAllText(DockerFile);
             string destFile = System.IO.Path.Combine(dir, "Dockerfile");
-            
+
             File.WriteAllText(destFile, sourceText.Replace("gamebinary", $"{BinaryName}.x86_64"));
             File.Copy(DockerIgnoreFile, System.IO.Path.Combine(dir, ".dockerignore"), true);
         }
@@ -126,7 +126,7 @@ namespace AnyVR.Editor
                 Debug.LogError(e.ToString());
                 return;
             }
-            
+
             Debug.Log("Clean succeeded");
         }
     }

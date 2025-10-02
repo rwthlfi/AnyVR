@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,7 +11,6 @@ using FishNet.Object;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Serialization;
-using Debug = UnityEngine.Debug;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem.Internal
@@ -24,15 +22,15 @@ namespace AnyVR.LobbySystem.Internal
 
         [FormerlySerializedAs("_lobbyInfoPrefab")]
         [SerializeField] private LobbyState _lobbyStatePrefab;
-        internal LobbyState LobbyStatePrefab => _lobbyStatePrefab;
+
+        private TaskCompletionSource<CreateLobbyResult> _createLobbyTcs;
 
         private TaskCompletionSource<JoinLobbyResult> _joinLobbyTcs;
-        
-        private TaskCompletionSource<CreateLobbyResult> _createLobbyTcs;
 
         private LobbyRegistry _lobbyRegistry;
 
         private LobbySceneService _sceneService;
+        internal LobbyState LobbyStatePrefab => _lobbyStatePrefab;
 
         internal IReadOnlyDictionary<Guid, LobbyState> Lobbies => _lobbyRegistry.LobbyStates;
 
@@ -86,12 +84,12 @@ namespace AnyVR.LobbySystem.Internal
             {
                 return new CreateLobbyResult(CreateLobbyStatus.CreationInProgress);
             }
-            
+
             if (string.IsNullOrWhiteSpace(lobbyName))
             {
                 return new CreateLobbyResult(CreateLobbyStatus.InvalidParameters);
             }
-            
+
             if (!sceneMetaData.IsValid())
             {
                 return new CreateLobbyResult(CreateLobbyStatus.InvalidScene);
@@ -128,12 +126,12 @@ namespace AnyVR.LobbySystem.Internal
         [Server]
         private async void Server_CreateLobby(string lobbyName, string password, int sceneId, ushort maxClients, DateTime? expirationDate, NetworkConnection creator)
         {
-            if(GetLobbyStates().Any(lobbyState => lobbyState.Name.Value == lobbyName))
+            if (GetLobbyStates().Any(lobbyState => lobbyState.Name.Value == lobbyName))
             {
                 TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.LobbyNameTaken);
                 return;
             }
-            
+
             maxClients = (ushort)Mathf.Max(1, maxClients);
             LobbyState lobbyState = new LobbyFactory()
                 .WithName(lobbyName)
@@ -143,16 +141,16 @@ namespace AnyVR.LobbySystem.Internal
                 .WithPasswordProtection(!string.IsNullOrWhiteSpace(password))
                 .WithExpiration(expirationDate)
                 .Create();
-            
+
             Assert.IsNotNull(lobbyState);
-            
+
             LobbyHandler handler = await _sceneService.StartConnectionScene(lobbyState);
             Assert.IsNotNull(handler, "Failed to load lobby scene");
-            
+
             // Lobby scene successfully loaded.
             _lobbyRegistry.Register(lobbyState, handler, ComputeSha256(password));
             handler.Init(lobbyState.LobbyId, _quickConnectHandler.RegisterLobby(lobbyState.LobbyId));
-            
+
             TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.Success, lobbyState.LobbyId);
         }
 
@@ -282,7 +280,7 @@ namespace AnyVR.LobbySystem.Internal
 
             Assert.IsTrue(status != JoinLobbyStatus.Success || lobbyId.HasValue); // Success => HasValue
         }
-        
+
         [TargetRpc]
         private void TargetRPC_OnCreateLobbyResult(NetworkConnection _, CreateLobbyStatus status, Guid? lobbyId = null)
         {
@@ -320,12 +318,13 @@ namespace AnyVR.LobbySystem.Internal
         {
             return _lobbyRegistry.GetLobbyState(lobbyId);
         }
-        
+
         internal IEnumerable<LobbyState> GetLobbyStates()
         {
             return _lobbyRegistry.LobbyStates.Values;
         }
 
+        [Server]
         internal LobbyHandler GetLobbyHandler(Guid lobbyId)
         {
             return _lobbyRegistry.GetLobbyHandler(lobbyId);

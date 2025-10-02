@@ -21,7 +21,6 @@ using UnityEngine;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning;
-using UnityEngine.XR.Management;
 
 namespace AnyVR.UserControlSystem.InputModality
 {
@@ -37,7 +36,7 @@ namespace AnyVR.UserControlSystem.InputModality
         [SerializeField] private Transform _xrGazeInteractionOrigin;
         [SerializeField] private Transform _pcGazeInteractionOrigin;
         [SerializeField] private XRGazeInteractor _gazeInteractor;
-        
+
 #if !UNITY_SERVER
         private void Start()
         {

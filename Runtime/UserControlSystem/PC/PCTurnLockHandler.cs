@@ -52,7 +52,7 @@ namespace AnyVR.UserControlSystem.PC
 
         private void Start()
         {
-            PlatformManager.Instance.OnInitialized += () => 
+            PlatformManager.Instance.OnInitialized += () =>
             {
                 if (PlatformInfo.IsXRPlatform())
                 {

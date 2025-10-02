@@ -6,32 +6,37 @@ namespace AnyVR.LobbySystem.Internal
 {
     internal class LobbyState : NetworkBehaviour, ILobbyInfo
     {
-        private readonly SyncVar<Guid> _lobbyId = new();
-        public Guid LobbyId => _lobbyId.Value;
-        
-        private readonly ObservedSyncVar<string> _name = new();
-        public IReadOnlyObservedVar<string> Name => _name;
-        
-        private readonly ObservedSyncVar<bool> _isPasswordProtected = new();
-        public IReadOnlyObservedVar<bool> IsPasswordProtected => _isPasswordProtected;
-        
-        private readonly ObservedSyncVar<ushort> _numPlayers = new();
-        public IReadOnlyObservedVar<ushort> NumPlayers => _numPlayers;
-        
-        private readonly ObservedSyncVar<DateTime?> _expirationDate = new();
-        public IReadOnlyObservedVar<DateTime?> ExpirationDate => _expirationDate;
-        
+#region Replicated Properties
         private readonly SyncVar<int> _creatorId = new();
-        public int CreatorId => _creatorId.Value;
-        public PlayerState Creator => GlobalGameState.Instance.GetPlayerState(CreatorId);
-        
+
+        private readonly ObservedSyncVar<DateTime?> _expirationDate = new();
+
+        private readonly ObservedSyncVar<bool> _isPasswordProtected = new();
+
         private readonly SyncVar<ushort> _lobbyCapacity = new();
-        public ushort LobbyCapacity => _lobbyCapacity.Value;
+        
+        private readonly SyncVar<Guid> _lobbyId = new();
+
+        private readonly ObservedSyncVar<string> _name = new();
+
+        private readonly ObservedSyncVar<ushort> _numPlayers = new();
 
         private readonly SyncVar<ushort> _sceneId = new();
+#endregion
+        
+#region Public API
+        public Guid LobbyId => _lobbyId.Value;
+        public IReadOnlyObservedVar<string> Name => _name;
+        public IReadOnlyObservedVar<bool> IsPasswordProtected => _isPasswordProtected;
+        public IReadOnlyObservedVar<ushort> NumPlayers => _numPlayers;
+        public IReadOnlyObservedVar<DateTime?> ExpirationDate => _expirationDate;
+        public int CreatorId => _creatorId.Value;
+        public GlobalPlayerState Creator => GlobalGameState.Instance.GetPlayerState(CreatorId);
+        public ushort LobbyCapacity => _lobbyCapacity.Value;
         public LobbySceneMetaData Scene => LobbyManager.LobbyConfiguration.LobbyScenes[_sceneId.Value];
+#endregion
 
-        public void Init(string lobbyName, int creatorId, ushort sceneId, ushort lobbyCapacity, bool isPasswordProtected)
+        internal void Init(string lobbyName, int creatorId, ushort sceneId, ushort lobbyCapacity, bool isPasswordProtected)
         {
             _lobbyId.Value = Guid.NewGuid();
             _name.Value = lobbyName;
@@ -42,11 +47,11 @@ namespace AnyVR.LobbySystem.Internal
         }
 
         [Server]
-        public void SetPlayerNum(ushort playerNum)
+        internal void SetPlayerNum(ushort playerNum)
         {
             _numPlayers.Value = playerNum;
         }
-        
+
         public override string ToString()
         {
             return

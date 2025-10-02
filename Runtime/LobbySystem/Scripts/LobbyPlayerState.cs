@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
+using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using AnyVR.Voicechat;
 using FishNet.Connection;
@@ -11,24 +13,39 @@ using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
-    public class LobbyPlayerState : PlayerState
+    public class LobbyPlayerState : NetworkBehaviour
     {
 #region Serialized Properties
+
         /// <summary>
         ///     Prefab to spawn for the player.
         /// </summary>
         [SerializeField] private NetworkObject _playerPrefab;
+
 #endregion
 
+        private readonly RpcAwaiter<PlayerKickResult> _playerKickUpdateAwaiter = new(PlayerKickResult.Timeout, PlayerKickResult.Cancelled);
+        private readonly RpcAwaiter<PlayerPromotionResult> _playerPromoteUpdateAwaiter = new(PlayerPromotionResult.Timeout, PlayerPromotionResult.Cancelled);
+
 #region Replicated Properties
+
         private readonly SyncVar<bool> _isAdmin = new(); // WritePermission is ServerOnly by default
-        
+
         private readonly SyncVar<Guid> _lobbyId = new(Guid.Empty);
-        
+
         private NetworkObject _playerAvatar; // TODO add player avatar class
+
 #endregion
-        
+
 #region Lifecycle Overrides
+
+        public override void OnStartNetwork()
+        {
+            base.OnStartNetwork();
+            Global = GlobalGameState.Instance.GetPlayerState(OwnerId);
+            Assert.IsNotNull(Global);
+        }
+
         public override void OnStartServer()
         {
             base.OnStartServer();
@@ -39,25 +56,19 @@ namespace AnyVR.LobbySystem
                     .Select(root => root.GetComponent<LobbyHandler>())
                     .FirstOrDefault(comp => comp != null);
 
-            Assert.IsNotNull(lobbyHandler);
+            Assert.IsNotNull(lobbyHandler, "LobbyHandler not found. Ensure there is one LobbyHandler placed in the lobby scene.");
 
             _lobbyId.Value = lobbyHandler.GetLobbyId();
             _isAdmin.Value = lobbyHandler.LobbyInfo.CreatorId == OwnerId;
 
-            // spawn player avatar
-            if (_playerPrefab == null)
-                return;
-            
-            NetworkObject nob = Instantiate(_playerPrefab);
-            _playerAvatar = nob;
-            Spawn(nob, Owner, gameObject.scene);
+            SpawnAvatar();
         }
 
         public override void OnStartClient()
         {
             base.OnStartClient();
             Assert.IsFalse(_lobbyId.Value == Guid.Empty);
-            VoiceChatManager.GetInstance()?.TryConnectToRoom(_lobbyId.Value, GetName(), ConnectionManager.GetInstance()!.UseSecureProtocol);
+            VoiceChatManager.GetInstance()?.TryConnectToRoom(_lobbyId.Value, Global.GetName(), ConnectionManager.GetInstance()!.UseSecureProtocol);
         }
 
         public override void OnDespawnServer(NetworkConnection conn)
@@ -68,10 +79,17 @@ namespace AnyVR.LobbySystem
                 Despawn(_playerAvatar);
             }
         }
+
 #endregion
 
 #region Public API
+
         public bool IsLocalPlayer => IsController;
+
+        /// <summary>
+        ///     The global player state of the player.
+        /// </summary>
+        public GlobalPlayerState Global { get; private set; }
 
         public LobbyHandler GetLobbyHandler()
         {
@@ -79,76 +97,113 @@ namespace AnyVR.LobbySystem
             Assert.IsNotNull(handler);
             return handler;
         }
-        
+
         public bool GetIsAdmin()
         {
             return _isAdmin.Value;
         }
 
-        public void PromoteToAdmin()
+        [Client]
+        public Task<PlayerPromotionResult> PromoteToAdmin(TimeSpan? timeout = null)
         {
-            if (IsServerStarted)
-            {
-                PromoteToAdmin_Internal();
-            }
-            else if (!_isAdmin.Value)
-            {
-                ServerRPC_PromoteToAdmin(LocalConnection);
-            }
+            Task<PlayerPromotionResult> task = _playerPromoteUpdateAwaiter.WaitForResult(timeout);
+            ServerRPC_PromoteToAdmin();
+            return task;
         }
-        
-        public void KickPlayer()
+
+        [Client]
+        public Task<PlayerKickResult> Kick(TimeSpan? timeout = null)
         {
-            if (IsServerStarted)
-            {
-                KickPlayer_Internal();
-            }
-            else
-            {
-                ServerRPC_KickPlayer(LocalConnection);
-            }
+            Task<PlayerKickResult> task = _playerKickUpdateAwaiter.WaitForResult(timeout);
+            ServerRPC_KickPlayer();
+            return task;
         }
+
 #endregion
 
 #region Server Methods
-        [ServerRpc(RequireOwnership = false)]
-        private void ServerRPC_PromoteToAdmin(NetworkConnection conn)
+
+        [Server]
+        private void SpawnAvatar()
         {
-            if (_isAdmin.Value)
+            if (_playerAvatar != null)
                 return;
 
-            if (Server_IsCallerAdmin(conn))
-                PromoteToAdmin_Internal();
+            if (_playerPrefab == null)
+                return;
+
+            NetworkObject nob = Instantiate(_playerPrefab);
+            _playerAvatar = nob;
+            Spawn(nob, Owner, gameObject.scene);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void ServerRPC_PromoteToAdmin(NetworkConnection caller = null)
+        {
+            if (_isAdmin.Value)
+            {
+                TargetRPC_OnPromotionResult(caller, PlayerPromotionResult.AlreadyAdmin);
+                return;
+            }
+
+            if (!Server_IsCallerAdmin(caller))
+            {
+                TargetRPC_OnPromotionResult(caller, PlayerPromotionResult.InsufficientPermissions);
+                return;
+            }
+
+            PromoteToAdmin_Internal();
+            TargetRPC_OnPromotionResult(caller, PlayerPromotionResult.Success);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void ServerRPC_KickPlayer(NetworkConnection caller = null)
+        {
+            if (!Server_IsCallerAdmin(caller))
+            {
+                TargetRPC_OnKickResult(caller, PlayerKickResult.InsufficientPermissions);
+                return;
+            }
+
+            KickPlayer_Internal();
+            TargetRPC_OnKickResult(caller, PlayerKickResult.Success);
+        }
+
+        [TargetRpc]
+        private void TargetRPC_OnPromotionResult(NetworkConnection _, PlayerPromotionResult playerNameUpdateResult)
+        {
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Promotion result: {playerNameUpdateResult}");
+            _playerPromoteUpdateAwaiter?.Complete(playerNameUpdateResult);
+        }
+
+        [TargetRpc]
+        private void TargetRPC_OnKickResult(NetworkConnection _, PlayerKickResult playerKickResult)
+        {
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Kick result: {playerKickResult}");
+            _playerKickUpdateAwaiter?.Complete(playerKickResult);
         }
 
         [Server]
         private void PromoteToAdmin_Internal()
         {
             _isAdmin.Value = true;
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({GetName()}) promoted to admin.");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({Global.GetName()}) promoted to admin.");
         }
 
         [Server]
         private void KickPlayer_Internal()
         {
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({GetName()}) kicked.");
-            //LobbyManager.Instance.Server_TryRemoveClientFromLobby(Owner);
-            //TODO
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void ServerRPC_KickPlayer(NetworkConnection conn)
-        {
-            if (Server_IsCallerAdmin(conn))
-                KickPlayer_Internal();
+            GetLobbyHandler().Server_RemovePlayer(Owner);
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({Global.GetName()}) kicked.");
         }
 
         [Server]
-        private bool Server_IsCallerAdmin(NetworkConnection callerConn)
+        private bool Server_IsCallerAdmin(NetworkConnection conn)
         {
-            LobbyPlayerState caller = GetLobbyHandler().GetPlayerState<LobbyPlayerState>(callerConn.ClientId);
+            LobbyPlayerState caller = GetLobbyHandler().GetPlayerState<LobbyPlayerState>(conn.ClientId);
             return caller.GetIsAdmin();
         }
+
   #endregion
     }
 }

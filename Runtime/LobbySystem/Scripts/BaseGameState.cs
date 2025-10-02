@@ -8,31 +8,34 @@ using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
 {
-    public class GameState : NetworkBehaviour
+    /// <summary>
+    /// </summary>
+    /// <typeparam name="T">The player state class</typeparam>
+    public abstract class BaseGameState<T> : NetworkBehaviour where T : NetworkBehaviour
     {
-        public delegate void PlayerJoinEvent(PlayerState playerState);
+        public delegate void PlayerJoinEvent(T playerState);
 
         public delegate void PlayerLeaveEvent(int playerId);
 
-        [SerializeField] protected PlayerState _playerStatePrefab;
+        [SerializeField] protected T _playerStatePrefab;
 
-        private readonly SyncDictionary<int, NetworkObject> _playerStates = new();
+        private readonly SyncDictionary<int, NetworkBehaviour> _playerStates = new();
 
-        public IEnumerable<T> GetPlayerStates<T>() where T : PlayerState
+        public IEnumerable<T> GetPlayerStates<TDerived>() where TDerived : T
         {
             if (!_playerStates.IsInitialized)
                 yield break;
 
-            foreach (NetworkObject netObj in _playerStates.Values)
+            foreach (NetworkBehaviour playerState in _playerStates.Values)
             {
-                if (netObj != null && netObj.TryGetComponent(out T ps))
-                    yield return ps;
+                if (playerState is TDerived derived)
+                    yield return derived;
             }
         }
 
-        public IEnumerable<PlayerState> GetPlayerStates()
+        public IEnumerable<T> GetPlayerStates()
         {
-            return GetPlayerStates<PlayerState>();
+            return GetPlayerStates<T>();
         }
 
         public event PlayerJoinEvent OnPlayerJoin;
@@ -44,7 +47,7 @@ namespace AnyVR.LobbySystem
             _playerStates.OnChange += PlayerStatesOnOnChange;
         }
 
-        private void PlayerStatesOnOnChange(SyncDictionaryOperation op, int playerId, NetworkObject _, bool asServer)
+        private void PlayerStatesOnOnChange(SyncDictionaryOperation op, int playerId, NetworkBehaviour _, bool asServer)
         {
             switch (op)
             {
@@ -66,39 +69,40 @@ namespace AnyVR.LobbySystem
         }
 
         [Server]
-        protected virtual PlayerState AddPlayerState(NetworkConnection conn, bool global = false)
+        protected virtual T AddPlayerState(NetworkConnection conn, bool global = false)
         {
-            PlayerState ps = Instantiate(_playerStatePrefab).GetComponent<PlayerState>();
+            T ps = Instantiate(_playerStatePrefab).GetComponent<T>();
             ps.NetworkObject.SetIsGlobal(global);
-            ps.PostServerInitialized += Handler;
             Spawn(ps.gameObject, conn, gameObject.scene);
+
+            _playerStates.Add(conn.ClientId, ps);
             return ps;
 
-            void Handler()
-            {
-                _playerStates.Add(ps.GetID(), ps.NetworkObject);
-                ps.PostServerInitialized -= Handler;
-            }
         }
 
         [Server]
         protected virtual void RemovePlayerState(NetworkConnection conn)
         {
             Assert.IsTrue(_playerStates.ContainsKey(conn.ClientId));
-            _playerStates.TryGetValue(conn.ClientId, out NetworkObject playerState);
-            Despawn(playerState);
+            if (_playerStates.TryGetValue(conn.ClientId, out NetworkBehaviour ps))
+            {
+                Despawn(ps.NetworkObject);
+            }
             _playerStates.Remove(conn.ClientId);
         }
 
-        public PlayerState GetPlayerState(int clientId)
+        public T GetPlayerState(int clientId)
         {
-            return GetPlayerState<PlayerState>(clientId);
+            return GetPlayerState<T>(clientId);
         }
 
-        public T GetPlayerState<T>(int clientId) where T : PlayerState
+        public TDerived GetPlayerState<TDerived>(int clientId) where TDerived : T
         {
-            if (_playerStates.TryGetValue(clientId, out NetworkObject netObj) && netObj != null)
-                return netObj.GetComponent<T>();
+            if (!_playerStates.TryGetValue(clientId, out NetworkBehaviour ps) || ps == null)
+                return null;
+
+            if (ps is TDerived derived)
+                return derived;
             return null;
         }
     }

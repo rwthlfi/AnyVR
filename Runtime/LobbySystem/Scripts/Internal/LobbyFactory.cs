@@ -1,6 +1,4 @@
 using System;
-using FishNet.Component.Ownership;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 

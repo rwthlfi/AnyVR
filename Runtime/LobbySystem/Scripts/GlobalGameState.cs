@@ -4,7 +4,7 @@ using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
 {
-    public class GlobalGameState : GameState
+    public class GlobalGameState : BaseGameState<GlobalPlayerState>
     {
         private void Awake()
         {
@@ -16,7 +16,7 @@ namespace AnyVR.LobbySystem
             base.OnStartServer();
 
             Assert.IsNotNull(_playerStatePrefab);
-            Assert.IsNotNull(_playerStatePrefab.GetComponent<PlayerState>());
+            Assert.IsNotNull(_playerStatePrefab.GetComponent<GlobalPlayerState>());
 
             SceneManager.OnClientLoadedStartScenes += OnClientLoadedStartScenes;
             ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;

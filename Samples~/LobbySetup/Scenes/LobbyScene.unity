@@ -749,7 +749,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4160441510113335179, guid: bb073cccd54d70ac39b56b43c82c335b, type: 3}
       propertyPath: m_Name
-      value: LobbyHandler
+      value: SampleLobbyHandler
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

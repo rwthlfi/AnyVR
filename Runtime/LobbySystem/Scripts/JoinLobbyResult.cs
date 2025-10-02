@@ -5,9 +5,9 @@ namespace AnyVR.LobbySystem
     public struct JoinLobbyResult
     {
         public readonly JoinLobbyStatus Status;
-        
+
         /// <summary>
-        /// Has value if <see cref="CreateLobbyStatus.Success"/>.
+        ///     Has value if <see cref="CreateLobbyStatus.Success" />.
         /// </summary>
         public readonly Guid? LobbyId;
 

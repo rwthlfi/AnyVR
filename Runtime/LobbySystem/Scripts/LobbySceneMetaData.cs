@@ -1,10 +1,8 @@
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using AnyVR.LobbySystem.Internal;
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 [assembly: InternalsVisibleTo("AnyVR.Tests.Runtime")]
 
@@ -38,14 +36,17 @@ namespace AnyVR.LobbySystem
             }
         }
 
-        public bool IsValid() => LobbyManager.LobbyConfiguration.LobbyScenes.Contains(this);
-
         public string Name => _sceneName;
         public string ScenePath => _scenePath;
         public string Description => _description;
         public Sprite Thumbnail => _thumbnail;
         public ushort MinUsers => _recommendedUsers._min;
         public ushort MaxUsers => _recommendedUsers._max;
+
+        public bool IsValid()
+        {
+            return LobbyManager.LobbyConfiguration.LobbyScenes.Contains(this);
+        }
 
         [Serializable]
         internal class MinMaxRange

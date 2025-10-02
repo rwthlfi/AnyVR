@@ -2,7 +2,6 @@ using System;
 using AnyVR.LobbySystem;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.UI;
 
 namespace AnyVR.Sample
@@ -21,19 +20,19 @@ namespace AnyVR.Sample
 
         [SerializeField] private Button _joinBtn;
 
+        private ILobbyInfo _lobbyInfo;
+
         public event JoinEvent OnJoinButtonPressed;
 
-        private ILobbyInfo _lobbyInfo;
-        
         private void UpdateCapacityLabel()
         {
             _lobbyCapacityText.text = $"{_lobbyInfo.NumPlayers.Value} / {_lobbyInfo.LobbyCapacity}";
         }
-        
+
         public void SetLobby(ILobbyInfo lobby)
         {
             _lobbyInfo = lobby;
-            
+
             _lobbyNameText.text = lobby.Name.Value;
             _lobbySceneNameText.text = lobby.Scene.Name;
             _lobbyCreatorText.text = lobby.Creator != null ? lobby.Creator.GetName() : "N/A";

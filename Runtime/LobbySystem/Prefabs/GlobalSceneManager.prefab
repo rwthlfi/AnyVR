@@ -63,7 +63,7 @@ MonoBehaviour:
   _componentIndexCache: 1
   _addedNetworkObject: {fileID: 6574523170611092761}
   _networkObjectCache: {fileID: 6574523170611092761}
-  LobbyConfiguration: {fileID: 11400000, guid: fd75de8b3e25a333a8d3a74c750e6577, type: 2}
+  _lobbyStatePrefab: {fileID: 6768404924572295194, guid: 22b0b368b9aa61865ba7bc3af51c219b, type: 3}
 --- !u!114 &5094753083787772916
 MonoBehaviour:
   m_ObjectHideFlags: 0

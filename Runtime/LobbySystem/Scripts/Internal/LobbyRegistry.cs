@@ -12,11 +12,6 @@ namespace AnyVR.LobbySystem.Internal
     {
         private readonly SyncDictionary<Guid, LobbyState> _lobbyStates = new();
         internal IReadOnlyDictionary<Guid, LobbyState> LobbyStates => _lobbyStates;
-        
-#region ServerOnly
-        private readonly Dictionary<Guid, LobbyHandler> _handlers = new();
-        private readonly Dictionary<Guid, byte[]> _passwordHashes = new();
-#endregion
 
         internal event Action<Guid> OnLobbyRegistered;
         internal event Action<Guid> OnLobbyUnregistered;
@@ -91,5 +86,12 @@ namespace AnyVR.LobbySystem.Internal
         {
             return _handlers.GetValueOrDefault(lobbyId);
         }
+
+#region ServerOnly
+
+        private readonly Dictionary<Guid, LobbyHandler> _handlers = new();
+        private readonly Dictionary<Guid, byte[]> _passwordHashes = new();
+
+#endregion
     }
 }

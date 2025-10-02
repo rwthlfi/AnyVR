@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
@@ -22,9 +21,9 @@ namespace AnyVR.LobbySystem
     ///     container for the lobby's functionalities.
     /// </summary>
     [RequireComponent(typeof(TextChatManager))]
-    public class LobbyHandler : GameState // TODO Rename to LobbyState?
+    public class LobbyHandler : BaseGameState<LobbyPlayerState>
     {
-        public delegate void ClientEvent(PlayerState clientId);
+        public delegate void ClientEvent(GlobalPlayerState clientId);
 
         private const string Tag = nameof(LobbyHandler);
 
@@ -48,7 +47,7 @@ namespace AnyVR.LobbySystem
             }
         }
 
-        private LobbyState State => (LobbyState) LobbyInfo;
+        private LobbyState State => (LobbyState)LobbyInfo;
 
         private void Awake()
         {
@@ -92,11 +91,9 @@ namespace AnyVR.LobbySystem
                 State.SetPlayerNum((ushort)GetPlayerStates().Count());
                 StartCoroutine(CloseInactiveLobby());
             };
-            
+
             AddPlayerState(conn);
         }
-        
-        
 
         public override void OnDespawnServer(NetworkConnection conn)
         {
@@ -197,7 +194,7 @@ namespace AnyVR.LobbySystem
         /// </summary>
         /// <returns></returns>
         [CanBeNull]
-        public PlayerState GetLobbyOwner()
+        public LobbyPlayerState GetLobbyOwner()
         {
             return GetPlayerState(LobbyInfo.CreatorId);
         }

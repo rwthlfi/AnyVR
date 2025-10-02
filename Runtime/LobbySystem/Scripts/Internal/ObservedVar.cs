@@ -1,8 +1,5 @@
 using System;
-using AnyVR.Logging;
 using FishNet.Object.Synchronizing;
-using UnityEngine;
-using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem.Internal
 {
@@ -15,19 +12,18 @@ namespace AnyVR.LobbySystem.Internal
     [Serializable]
     internal class ObservedSyncVar<T> : SyncVar<T>, IReadOnlyObservedVar<T>
     {
-        public event Action<T> OnValueChanged;
-
-        public void InvokeCallback()
-        {
-            OnValueChanged?.Invoke(Value);
-        }
-
         public ObservedSyncVar()
         {
             OnChange += (_, next, _) =>
             {
                 OnValueChanged?.Invoke(next);
             };
+        }
+        public event Action<T> OnValueChanged;
+
+        public void InvokeCallback()
+        {
+            OnValueChanged?.Invoke(Value);
         }
     }
 }

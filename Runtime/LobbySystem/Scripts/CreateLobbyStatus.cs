@@ -13,7 +13,7 @@ namespace AnyVR.LobbySystem
         /// </summary>
         Timeout,
         /// <summary>
-        /// There can only be one lobby creation in progress at a time.
+        ///     There can only be one lobby creation in progress at a time.
         /// </summary>
         CreationInProgress
     }

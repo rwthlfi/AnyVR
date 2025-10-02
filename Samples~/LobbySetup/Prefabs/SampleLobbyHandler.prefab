@@ -54,7 +54,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7871490986633539190, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
       propertyPath: m_Name
-      value: SampleLobbyHandlerHandler
+      value: SampleLobbyHandler
       objectReference: {fileID: 0}
     - target: {fileID: 9052915785183046015, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
       propertyPath: WasActiveDuringEdit
@@ -66,7 +66,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9052915785183046015, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
       propertyPath: <AssetPathHash>k__BackingField
-      value: 6750980519188163263
+      value: 13281557468310643411
       objectReference: {fileID: 0}
     - target: {fileID: 9052915785183046015, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
       propertyPath: 'NetworkBehaviours.Array.data[0]'

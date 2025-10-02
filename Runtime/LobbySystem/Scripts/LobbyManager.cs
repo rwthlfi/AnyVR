@@ -17,15 +17,11 @@ namespace AnyVR.LobbySystem
 
         public static LobbyManager Instance { get; private set; }
 
-        public IEnumerable<ILobbyInfo> GetLobbies() => Internal.GetLobbyStates();
-        
-        public ILobbyInfo GetLobbyInfo(Guid id) => Internal.GetLobbyState(id);
-
         /// <summary>
         ///     All available scenes for a lobby
         /// </summary>
         public IReadOnlyCollection<LobbySceneMetaData> LobbyScenes => LobbyConfiguration.LobbyScenes;
-        
+
         public static LobbyConfiguration LobbyConfiguration { get; set; }
 
         private void Awake()
@@ -43,6 +39,16 @@ namespace AnyVR.LobbySystem
             Internal.OnClientInitialized += () => OnClientInitialized?.Invoke(this);
 
             Assert.IsNotNull(Internal);
+        }
+
+        public IEnumerable<ILobbyInfo> GetLobbies()
+        {
+            return Internal.GetLobbyStates();
+        }
+
+        public ILobbyInfo GetLobbyInfo(Guid id)
+        {
+            return Internal.GetLobbyState(id);
         }
 
         public event Action<ILobbyInfo> OnLobbyOpened;
@@ -72,7 +78,7 @@ namespace AnyVR.LobbySystem
         {
             return Internal.QuickConnect(code, timeout);
         }
-        
+
         [Conditional("ANY_VR_LOG")]
         private static void LogJoinLobbyResult(JoinLobbyResult result)
         {
@@ -92,7 +98,7 @@ namespace AnyVR.LobbySystem
 
             Logger.Log(LogLevel.Verbose, nameof(LobbyManager), message);
         }
-        
+
         [Conditional("ANY_VR_LOG")]
         private static void LogCreateLobbyResult(CreateLobbyResult result)
         {

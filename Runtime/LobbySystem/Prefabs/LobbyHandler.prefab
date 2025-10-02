@@ -47,10 +47,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b03b3d1696a02b45a79b2c5cd00560c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 9052915785183046015}
-  _networkObjectCache: {fileID: 0}
-  _playerStatePrefab: {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
+  _networkObjectCache: {fileID: 9052915785183046015}
+  _playerStatePrefab: {fileID: 3207414219965831246, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
 --- !u!114 &4292095357965459054
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -63,9 +63,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c073b843ed96b5408ffc86f3bcbb298, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 1
   _addedNetworkObject: {fileID: 9052915785183046015}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 9052915785183046015}
 --- !u!114 &9052915785183046015
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -92,22 +92,24 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 0
+  <PrefabId>k__BackingField: 3
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 14773537448476061606
+  <AssetPathHash>k__BackingField: 5382803494249536823
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
   <IsNested>k__BackingField: 0
   WasActiveDuringEdit: 0
   WasActiveDuringEdit_Set1: 1
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 3580284226864861460}
+  - {fileID: 4292095357965459054}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}

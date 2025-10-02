@@ -29,9 +29,9 @@ namespace AnyVR.UserControlSystem.PC
 
         [SerializeField]
         private ushort _movementLockCounter;
-        private DynamicMoveProvider _moveProvider;
 
         private readonly UnityEvent<bool> _onMovementLockToggle = new();
+        private DynamicMoveProvider _moveProvider;
 
         /// <summary>
         ///     Read-only property that indicates whether the movement is currently locked or not.
@@ -59,7 +59,7 @@ namespace AnyVR.UserControlSystem.PC
 
         private void Start()
         {
-            PlatformManager.Instance.OnInitialized += () => 
+            PlatformManager.Instance.OnInitialized += () =>
             {
                 if (PlatformInfo.IsXRPlatform())
                 {
