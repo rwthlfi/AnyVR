@@ -7,7 +7,7 @@ namespace AnyVR.LobbySystem.Internal
     internal class LobbyFactory
     {
         private int _creatorId;
-        private DateTime? _expireDate;
+        private DateTime? _expirationDate;
         private bool _isPasswordProtected;
         private ushort _lobbyCapacity = 16;
         private string _name;
@@ -51,7 +51,7 @@ namespace AnyVR.LobbySystem.Internal
 
         public LobbyFactory WithExpiration(DateTime? expireDate)
         {
-            _expireDate = expireDate;
+            _expirationDate = expireDate;
             return this;
         }
 
@@ -61,11 +61,7 @@ namespace AnyVR.LobbySystem.Internal
             LobbyState lmd = Object.Instantiate(@internal.LobbyStatePrefab);
             SceneManager.MoveGameObjectToScene(lmd.gameObject, @internal.gameObject.scene);
             @internal.Spawn(lmd.NetworkObject);
-            lmd.Init(_name, _creatorId, (ushort)_sceneId, _lobbyCapacity, _isPasswordProtected);
-            // if (_expireDate.HasValue)
-            // {
-            //     lmd.SetExpiration(_expireDate);
-            // }
+            lmd.Init(_name, _creatorId, (ushort)_sceneId, _lobbyCapacity, _isPasswordProtected, _expirationDate);
             return lmd;
         }
     }

@@ -17,6 +17,7 @@ namespace AnyVR.LobbySystem.Internal
     internal class LobbySceneService
     {
         private const string Tag = nameof(LobbySceneService);
+
         private readonly LobbyManagerInternal _internal;
 
         private TaskCompletionSource<LobbyHandler> _loadSceneTcs;
@@ -26,8 +27,25 @@ namespace AnyVR.LobbySystem.Internal
             _internal = @internal;
             _internal.SceneManager.OnUnloadEnd += OnUnloadEnd;
 
+            if (_internal.ClientManager.Started)
+            {
+                _internal.SceneManager.OnLoadStart += Client_OnLoadStart;
+            }
+
             if (_internal.ServerManager.Started)
+            {
                 _internal.SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
+            }
+        }
+
+        [Client]
+        private static void Client_OnLoadStart(SceneLoadStartEventArgs args)
+        {
+            Assert.IsNotNull(LobbyManager.LobbyConfiguration);
+            if (IsLoadingLobby(args.QueueData, false))
+            {
+                USceneManager.UnloadSceneAsync(LobbyManager.LobbyConfiguration.OfflineScene);
+            }
         }
 
         [Server]
@@ -74,13 +92,8 @@ namespace AnyVR.LobbySystem.Internal
                 return;
             }
 
-            if (!IsLoadingLobby(loadArgs.QueueData, true, out string errorMsg))
+            if (!IsLoadingLobby(loadArgs.QueueData, true))
             {
-                if (!string.IsNullOrEmpty(errorMsg))
-                {
-                    Logger.Log(LogLevel.Warning, Tag, $"Can't register LobbyHandler. {errorMsg}");
-                }
-
                 return;
             }
 
@@ -159,39 +172,28 @@ namespace AnyVR.LobbySystem.Internal
             return loadParams[1] is Guid;
         }
 
-        private bool IsLoadingLobby(LoadQueueData queueData, bool asServer, out string errorMsg)
+        private static bool IsLoadingLobby(LoadQueueData queueData, bool asServer)
         {
             object[] loadParams = asServer
                 ? queueData.SceneLoadData.Params.ServerParams
                 : DeserializeClientParams(queueData.SceneLoadData.Params.ClientParams);
-
-            errorMsg = string.Empty;
 
             if (loadParams.Length < 3 || loadParams[0] is not SceneLoadParam)
             {
                 return false;
             }
 
-            // Lobbies must have this flag
             if ((SceneLoadParam)loadParams[0] != SceneLoadParam.Lobby)
             {
                 return false;
             }
 
-            // Try get corresponding lobbyId
             Guid lobbyId = (Guid)loadParams[1];
-            if (Guid.Empty == lobbyId)
-            {
-                errorMsg = "The passed lobbyId is null.";
-                return false;
-            }
+            Assert.IsFalse(Guid.Empty == lobbyId);
 
-            // Check that the creating client is passed as param
-            if (loadParams[2] is int)
-                return true;
+            Assert.IsTrue(loadParams[2] is int);
 
-            errorMsg = "The clientId should be passed as an int.";
-            return false;
+            return true;
         }
 
         /// <summary>

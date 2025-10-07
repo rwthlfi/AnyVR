@@ -4,6 +4,7 @@ using AnyVR.LobbySystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace AnyVR.Sample
@@ -15,7 +16,9 @@ namespace AnyVR.Sample
         [Header("UI/Connection Panel")]
         [SerializeField] private Button _connectBtn;
 
-        [SerializeField] private RectTransform _connectionPanel, _serverPanel;
+        [SerializeField] private RectTransform _connectionPanel;
+        [FormerlySerializedAs("_serverPanel")]
+        [SerializeField] private RectTransform _onlinePanel;
 
         [SerializeField] private TMP_InputField _serverAddressInputField;
 
@@ -48,17 +51,15 @@ namespace AnyVR.Sample
 
         private void Start()
         {
-            _connectionManager = ConnectionManager.GetInstance();
+            _connectionManager = ConnectionManager.Instance;
             Assert.IsNotNull(_connectionManager);
 
             LobbyManager.LobbyConfiguration = _lobbyConfiguration;
 
-#if UNITY_SERVER
-            _connectionManager.StartServer();
-#else
+#if !UNITY_SERVER
             _panels = new[]
             {
-                _connectionPanel, _serverPanel
+                _connectionPanel, _onlinePanel
             };
 
             _connectionManager.OnClientConnectionState += OnClientConnectionStateChanged;
@@ -185,7 +186,7 @@ namespace AnyVR.Sample
                     SetActivePanel(_connectionPanel);
                     break;
                 case ConnectionState.Client:
-                    SetActivePanel(_serverPanel);
+                    SetActivePanel(_onlinePanel);
                     break;
                 case ConnectionState.Server:
                     break;
@@ -197,7 +198,7 @@ namespace AnyVR.Sample
         private async void ConnectToServer()
         {
             _connectionManager.UseSecureProtocol = false;
-            ConnectionResult result = await _connectionManager.ConnectToServer(new Uri(_serverAddressInputField.text), _usernameInputField.text);
+            await _connectionManager.ConnectToServer(new Uri(_serverAddressInputField.text), _usernameInputField.text);
         }
 
         private void SetActivePanel(RectTransform activePanel)

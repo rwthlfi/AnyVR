@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
-using AnyVR.Voicechat;
 using AnyVR.WebRequests;
 using FishNet.Managing;
 using FishNet.Managing.Scened;
@@ -13,84 +13,46 @@ using FishNet.Transporting;
 using FishNet.Transporting.Bayou;
 using FishNet.Transporting.Multipass;
 using GameKit.Dependencies.Utilities.Types;
-using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
-using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVR.LobbySystem
 {
     [RequireComponent(typeof(NetworkManager))]
     public class ConnectionManager : MonoBehaviour
     {
-        private const string Tag = nameof(ConnectionManager);
-
-        private const string GlobalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
+#region Serialized Fields
 
         [SerializeField] [Scene] private string _welcomeScene;
 
-        private NetworkManager _networkManager;
+#endregion
 
-        private TimeManager _tm;
-
-        public static bool IsInitialized { get; private set; }
-
-        public bool UseSecureProtocol { get; set; } = true;
-
-        private void Awake()
+        private static bool TryParseAddress(string address, out (string, ushort) res)
         {
-            InitSingleton();
-            _networkManager = GetComponent<NetworkManager>();
-            _tm = _networkManager.TimeManager;
-            Assert.IsNotNull(_networkManager);
-        }
-
-        private void Start()
-        {
-            Assert.IsTrue(_networkManager.Initialized);
-
-            _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
-            _networkManager.ClientManager.OnClientConnectionState += _ => OnClientConnectionState?.Invoke(State);
-            _networkManager.ClientManager.OnClientTimeOut += OnClientTimeout;
-            _networkManager.SceneManager.OnLoadEnd += SceneManager_OnLoadEnd;
-            _networkManager.SceneManager.OnLoadStart += SceneManager_OnLoadStart;
-
-            // The WelcomeScene gets only unloaded for clients
-            LobbySceneLoadStart += asServer =>
+            res = (null, 0);
+            if (address == null)
             {
-                if (!asServer)
-                {
-                    SceneManager.UnloadSceneAsync(_welcomeScene); // TODO move to LobbySceneService
-                }
-            };
-            IsInitialized = true;
-        }
-
-        public void StartServer()
-        {
-            if (State.HasFlag(ConnectionState.Server))
-            {
-                Logger.Log(LogLevel.Warning, Tag, "The server is already started");
-                return;
+                return false;
             }
 
-            Logger.Log(LogLevel.Verbose, Tag, "Starting server...");
-            _networkManager.ServerManager.StartConnection();
-        }
-
-        public void LeaveServer()
-        {
-            if (!State.HasFlag(ConnectionState.Client))
+            const string pattern = @"^(?:\[(.+)\]|(.+)):(\d+)$";
+            Match m = Regex.Match(address, pattern);
+            if (!m.Success)
             {
-                Logger.Log(LogLevel.Warning, Tag, "Not connected to a server");
-                return;
+                return false;
             }
 
-            Logger.Log(LogLevel.Verbose, Tag, "Stopping server.");
-            _networkManager.ClientManager.StopConnection();
-            VoiceChatManager.GetInstance()?.Disconnect();
+            if (!ushort.TryParse(m.Groups[3].Value, out ushort port))
+            {
+                return false;
+            }
+
+            string ip = m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value;
+            res = (ip, port);
+            return true;
         }
+
 
         private async Task<ServerAddressResponse> RequestServerIp(Uri tokenServerUri, int timeoutSeconds = 10)
         {
@@ -126,192 +88,19 @@ namespace AnyVR.LobbySystem
             return res;
         }
 
-        public async Task<ConnectionResult> ConnectToServer(Uri tokenServerUri, string userName)
-        {
-            Assert.IsNotNull(_networkManager);
+#region Private Fields
 
-            if (State.HasFlag(ConnectionState.Client))
-            {
-                Logger.Log(LogLevel.Warning, Tag, "Could not connect to server. Already connected as a client");
-                return ConnectionResult.AlreadyConnected;
-            }
+        private const string Tag = nameof(ConnectionManager);
 
-            ServerAddressResponse response = await RequestServerIp(tokenServerUri);
-            if (response.Success)
-            {
-                Logger.Log(LogLevel.Verbose, Tag, $"Received server ip: {{FishNet: {response.fishnet_server_address}, LiveKit: {response.livekit_server_address}}}");
-            }
-            else
-            {
-                Logger.Log(LogLevel.Warning, Tag, response.Error);
-                return ConnectionResult.ServerIpRequestFailed;
-            }
+        private const string GlobalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
 
+        private readonly RpcAwaiter<ConnectionStatus> _connectionAwaiter = new(ConnectionStatus.Timeout, ConnectionStatus.Cancelled);
 
-            UserName = userName;
-            if (_networkManager.TransportManager.Transport is Multipass m)
-            {
-                m.SetClientAddress(response.FishnetHost);
-                m.SetPort(response.FishnetPort);
-                m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol);
-            }
-            else
-            {
-                Logger.Log(LogLevel.Error, Tag, "Transport should be Multipass");
-            }
+        private NetworkManager _networkManager;
 
-            _networkManager.ClientManager.StartConnection();
+        private TimeManager _tm;
 
-            VoiceChatManager.GetInstance()?.SetLiveKitServerAddress(new Uri(response.livekit_server_address));
-            VoiceChatManager.GetInstance()?.SetTokenServerAddress(tokenServerUri);
-
-            return ConnectionResult.Connecting;
-        }
-
-        private static bool TryParseAddress(string address, out (string, ushort) res)
-        {
-            res = (null, 0);
-            if (address == null)
-            {
-                return false;
-            }
-
-            const string pattern = @"^(?:\[(.+)\]|(.+)):(\d+)$";
-            Match m = Regex.Match(address, pattern);
-            if (!m.Success)
-            {
-                return false;
-            }
-
-            if (!ushort.TryParse(m.Groups[3].Value, out ushort port))
-            {
-                return false;
-            }
-
-            string ip = m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value;
-            res = (ip, port);
-            return true;
-        }
-
-        private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs state)
-        {
-            // if (state.ConnectionState is LocalConnectionState.Started or LocalConnectionState.Stopped)
-            // {
-            //     ConnectionState?.Invoke(State);
-            // }
-
-            // The OnServerConnectionState will be called for each transport (Tugboat & Bayou). 
-            // But we only want to load the global scene once
-            if (_networkManager.ServerManager.IsOnlyOneServerStarted())
-            {
-                return;
-            }
-
-            Logger.Log(LogLevel.Verbose, Tag, $"Server is {state.ConnectionState.ToString()}");
-            if (state.ConnectionState != LocalConnectionState.Started)
-            {
-                return;
-            }
-
-            Logger.Log(LogLevel.Verbose, Tag, $"Server started on port: {_networkManager.TransportManager.Transport.GetPort()}");
-
-
-            string scene = Path.GetFileNameWithoutExtension(GlobalScene);
-            SceneLoadData sld = new(scene)
-            {
-                Params =
-                {
-                    ServerParams = new[]
-                    {
-                        (object)SceneLoadParam.Global
-                    },
-                    ClientParams = LobbySceneService.SerializeClientParams(new[]
-                    {
-                        (object)SceneLoadParam.Global
-                    })
-                }
-            };
-
-            Logger.Log(LogLevel.Verbose, Tag, "Loading global scene...");
-            _networkManager.SceneManager.LoadGlobalScenes(sld);
-        }
-
-        [CanBeNull]
-        private static SceneLoadParam? GetSceneLoadParam(LoadQueueData queueData)
-        {
-            SceneLoadParam param;
-            if (queueData.AsServer)
-            {
-                object[] serverParams = queueData.SceneLoadData.Params.ServerParams;
-                if (serverParams.Length < 1 || serverParams[0] is not SceneLoadParam)
-                {
-                    return null;
-                }
-
-                param = (SceneLoadParam)serverParams[0];
-            }
-            else
-            {
-                byte[] arr = queueData.SceneLoadData.Params.ClientParams;
-                object[] clientParams = LobbySceneService.DeserializeClientParams(arr);
-
-                if (clientParams.Length < 1)
-                {
-                    return null;
-                }
-
-                param = (SceneLoadParam)clientParams[0];
-            }
-
-            return param;
-        }
-
-        private void SceneManager_OnLoadStart(SceneLoadStartEventArgs args)
-        {
-            SceneLoadParam? param = GetSceneLoadParam(args.QueueData);
-            if (param == null)
-            {
-                return;
-            }
-
-            switch (param.Value)
-            {
-                case SceneLoadParam.Global:
-                    break;
-                case SceneLoadParam.Lobby:
-                    LobbySceneLoadStart?.Invoke(State.HasFlag(ConnectionState.Server));
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        private void SceneManager_OnLoadEnd(SceneLoadEndEventArgs args)
-        {
-            SceneLoadParam? param = GetSceneLoadParam(args.QueueData);
-            if (param == null)
-            {
-                Logger.Log(LogLevel.Error, Tag, "SceneLoadParam is null");
-                return;
-            }
-
-            switch (param.Value)
-            {
-                case SceneLoadParam.Global:
-                    Logger.Log(LogLevel.Verbose, Tag, "Global scene loaded.");
-                    OnGlobalSceneLoaded?.Invoke(args.QueueData.AsServer);
-                    break;
-                case SceneLoadParam.Lobby:
-                    if (!args.QueueData.AsServer)
-                    {
-                        SceneManager.SetActiveScene(args.LoadedScenes[0]);
-                    }
-                    Logger.Log(LogLevel.Verbose, Tag, "Lobby scene loaded.");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+#endregion
 
 #region Public Fields
 
@@ -339,10 +128,6 @@ namespace AnyVR.LobbySystem
             }
         }
 
-        /// <summary>
-        ///     The username of the local client
-        /// </summary>
-        public static string UserName { get; private set; }
 
         public uint Latency
         {
@@ -358,51 +143,173 @@ namespace AnyVR.LobbySystem
             }
         }
 
-        public delegate void ConnectionStateEvent(ConnectionState state);
-
-        public event ConnectionStateEvent OnClientConnectionState;
-
-        public delegate void GlobalSceneLoadedEvent(bool asServer);
-
-        public event GlobalSceneLoadedEvent OnGlobalSceneLoaded;
-
-        public delegate void LobbySceneLoadedEvent(bool asServer);
-
-        public event LobbySceneLoadedEvent LobbySceneLoadStart;
-
         public event Action OnClientTimeout;
 
-        [CanBeNull]
-        public static ConnectionManager GetInstance()
+        public event Action<ConnectionState> OnClientConnectionState;
+        
+        public bool UseSecureProtocol { get; set; } = true;
+
+#endregion
+
+#region Lifecycle
+
+        private void Awake()
         {
-            return _instance;
+            InitSingleton();
+            _networkManager = GetComponent<NetworkManager>();
+            _tm = _networkManager.TimeManager;
+            Assert.IsNotNull(_networkManager);
+        }
+
+        private void Start()
+        {
+            Assert.IsTrue(_networkManager.Initialized);
+
+            _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
+            _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
+            _networkManager.ClientManager.OnClientTimeOut += OnClientTimeout;
+        }
+
+        private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs args)
+        {
+            if (args.ConnectionState == LocalConnectionState.Started)
+            {
+                _connectionAwaiter.Complete(ConnectionStatus.Connected);
+            }
+            
+            OnClientConnectionState?.Invoke(State);
+        }
+
+        private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs state)
+        {
+            // The OnServerConnectionState will be called for each transport (Tugboat & Bayou). 
+            if (_networkManager.ServerManager.IsOnlyOneServerStarted())
+            {
+                return;
+            }
+
+            Logger.Log(LogLevel.Verbose, Tag, $"Server is {state.ConnectionState.ToString()}");
+            if (state.ConnectionState != LocalConnectionState.Started)
+            {
+                return;
+            }
+
+            Logger.Log(LogLevel.Verbose, Tag, $"Server started on port: {_networkManager.TransportManager.Transport.GetPort()}");
+
+            string scene = Path.GetFileNameWithoutExtension(GlobalScene);
+            SceneLoadData sld = new(scene)
+            {
+                Params =
+                {
+                    ServerParams = new[]
+                    {
+                        (object)SceneLoadParam.Global
+                    },
+                    ClientParams = LobbySceneService.SerializeClientParams(new[]
+                    {
+                        (object)SceneLoadParam.Global
+                    })
+                }
+            };
+
+            Logger.Log(LogLevel.Verbose, Tag, "Loading global scene...");
+            _networkManager.SceneManager.LoadGlobalScenes(sld);
         }
 
 #endregion
 
+#region Public API
+
+        public async Task<ConnectionResult> ConnectToServer(Uri tokenServerUri, string userName, TimeSpan? timeout = null)
+        {
+            Assert.IsNotNull(_networkManager);
+
+            if (State.HasFlag(ConnectionState.Client))
+            {
+                Logger.Log(LogLevel.Warning, Tag, "Could not connect to server. Already connected as a client");
+                return new ConnectionResult(ConnectionStatus.AlreadyConnected, null);
+            }
+
+            ServerAddressResponse response = await RequestServerIp(tokenServerUri);
+            if (response.Success)
+            {
+                Logger.Log(LogLevel.Verbose, Tag, $"Received server ip: {{FishNet: {response.fishnet_server_address}, LiveKit: {response.livekit_server_address}}}");
+            }
+            else
+            {
+                Logger.Log(LogLevel.Warning, Tag, response.Error);
+                return new ConnectionResult(ConnectionStatus.ServerIpRequestFailed, null);
+            }
+
+            Assert.IsTrue(_networkManager.TransportManager.Transport is Multipass);
+            Multipass m = (Multipass)_networkManager.TransportManager.Transport;
+
+            m.SetClientAddress(response.FishnetHost);
+            m.SetPort(response.FishnetPort);
+            m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol);
+
+            Task<ConnectionStatus> task = _connectionAwaiter.WaitForResult(timeout);
+            _networkManager.ClientManager.StartConnection();
+            ConnectionStatus connectionStatus = await task;
+
+            if (connectionStatus != ConnectionStatus.Connected)
+                return new ConnectionResult(connectionStatus, null);
+
+            await WaitUntilGameStateInitialized();
+
+            Assert.IsNotNull(GlobalGameState.Instance);
+            Assert.IsNotNull(GlobalPlayerState.LocalPlayer);
+
+            PlayerNameUpdateResult nameResult = await GlobalPlayerState.LocalPlayer.SetName(userName);
+
+            return new ConnectionResult(connectionStatus, nameResult);
+        }
+
+        public void LeaveServer()
+        {
+            if (!State.HasFlag(ConnectionState.Client))
+            {
+                Logger.Log(LogLevel.Warning, Tag, "Not connected to a server");
+                return;
+            }
+
+            Logger.Log(LogLevel.Verbose, Tag, "Stopping server.");
+            _networkManager.ClientManager.StopConnection();
+        }
+
+#endregion
+        
+        private static async Task WaitUntilGameStateInitialized()
+        {
+            TimeSpan timeout = TimeSpan.FromSeconds(3);
+            DateTime start = DateTime.UtcNow;
+            while (GlobalGameState.Instance == null || GlobalPlayerState.LocalPlayer == null)
+            {
+                if (DateTime.UtcNow - start > timeout)
+                {
+                    return;
+                }
+                
+                await Task.Delay(10);
+            }
+        }
+
 #region Singleton
 
-        private static ConnectionManager _instance;
+        public static ConnectionManager Instance { get; private set; }
 
         private void InitSingleton()
         {
-            if (_instance != null)
+            if (Instance != null)
             {
                 Destroy(gameObject);
                 return;
             }
 
             DontDestroyOnLoad(gameObject);
-            _instance = this;
+            Instance = this;
         }
 
 #endregion
-    }
-
-    public enum ConnectionResult
-    {
-        Connecting,
-        AlreadyConnected,
-        ServerIpRequestFailed
     }
 }

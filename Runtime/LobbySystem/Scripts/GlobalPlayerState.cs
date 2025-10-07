@@ -1,12 +1,15 @@
 using System;
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.PlatformManagement;
 using FishNet.Connection;
+using FishNet.Managing.Server;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
@@ -15,13 +18,14 @@ namespace AnyVR.LobbySystem
     {
         private readonly RpcAwaiter<PlayerNameUpdateResult> _playerNameUpdateAwaiter = new(PlayerNameUpdateResult.Timeout, PlayerNameUpdateResult.Cancelled);
 
-        internal Action PostServerInitialized;
+        private Coroutine _kickPlayerCoroutine;
 
 #region Replicated Properties
 
         private readonly SyncVar<string> _playerName = new("null");
 
         private readonly SyncVar<PlatformType> _platformType = new(PlatformType.Unknown);
+        public static GlobalPlayerState LocalPlayer { get; private set; }
 
 #endregion
 
@@ -30,7 +34,7 @@ namespace AnyVR.LobbySystem
         public override void OnStartServer()
         {
             base.OnStartServer();
-            PostServerInitialized?.Invoke();
+            _kickPlayerCoroutine = StartCoroutine(KickIfNameNotSet(3));
         }
 
         public override void OnStartClient()
@@ -39,13 +43,11 @@ namespace AnyVR.LobbySystem
             if (!IsOwner)
                 return;
 
-            Init();
-        }
+            if (!IsController)
+                return;
 
-        private async void Init()
-        {
-            PlayerNameUpdateResult result = await SetName(ConnectionManager.UserName);
-            Assert.AreEqual(PlayerNameUpdateResult.Success, result);
+            Assert.IsNull(LocalPlayer);
+            LocalPlayer = this;
         }
 
 #endregion
@@ -86,7 +88,30 @@ namespace AnyVR.LobbySystem
         private void ServerRPC_SetName(string playerName)
         {
             PlayerNameUpdateResult result = SetName_Internal(playerName);
+
             TargetRPC_OnNameChange(Owner, result);
+
+            if (result == PlayerNameUpdateResult.Success || _playerName.Value != "null")
+                return;
+
+            if (_kickPlayerCoroutine != null)
+            {
+                StopCoroutine(_kickPlayerCoroutine);
+                _kickPlayerCoroutine = null;
+            }
+
+            // Ensure the TargetRPC_OnNameChange is received before the kick.
+            _kickPlayerCoroutine = StartCoroutine(KickIfNameNotSet(0.1f));
+        }
+
+        private IEnumerator KickIfNameNotSet(float delay)
+        {
+            yield return new WaitForSeconds(delay);
+
+            if (_playerName.Value != "null")
+                yield break;
+
+            Owner.Kick(KickReason.UnusualActivity);
         }
 
         [Server]

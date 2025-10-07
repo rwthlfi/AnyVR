@@ -20,7 +20,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             base.OnStartNetwork();
 
-            _lobbyStates.OnChange += (op, key, dto, _) =>
+            _lobbyStates.OnChange += (op, key, _, _) =>
             {
                 switch (op)
                 {

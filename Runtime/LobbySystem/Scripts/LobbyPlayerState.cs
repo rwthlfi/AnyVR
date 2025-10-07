@@ -68,7 +68,7 @@ namespace AnyVR.LobbySystem
         {
             base.OnStartClient();
             Assert.IsFalse(_lobbyId.Value == Guid.Empty);
-            VoiceChatManager.GetInstance()?.TryConnectToRoom(_lobbyId.Value, Global.GetName(), ConnectionManager.GetInstance()!.UseSecureProtocol);
+            VoiceChatManager.GetInstance()?.TryConnectToRoom(_lobbyId.Value, Global.GetName(), ConnectionManager.Instance.UseSecureProtocol);
         }
 
         public override void OnDespawnServer(NetworkConnection conn)

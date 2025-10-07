@@ -79,7 +79,7 @@ namespace AnyVR.Sample
                 yield return null;
             }
 
-            ConnectionManager connectionManager = ConnectionManager.GetInstance();
+            ConnectionManager connectionManager = ConnectionManager.Instance;
             Assert.IsNotNull(connectionManager);
 
             while (_lobbyHandler != null)

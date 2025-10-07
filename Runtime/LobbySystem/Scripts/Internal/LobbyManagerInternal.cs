@@ -332,8 +332,6 @@ namespace AnyVR.LobbySystem.Internal
 
         #region ServerOnly
 
-        private event Action<Guid> LobbyHandlerRegistered;
-
         private QuickConnectHandler _quickConnectHandler;
 
         #endregion
