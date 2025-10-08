@@ -20,7 +20,7 @@
     {
       "displayName": "LobbySetup",
       "description": "Example lobby setup with two lobby scenes",
-      "path": "Samples~/NewLobbySetup"
+      "path": "Samples~/LobbySetup"
     }
   ],
   "testable": true
