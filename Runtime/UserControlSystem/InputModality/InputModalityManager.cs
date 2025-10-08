@@ -41,6 +41,12 @@ namespace AnyVR.UserControlSystem.InputModality
 #if !UNITY_SERVER
         private void Start()
         {
+            if (PlatformManager.Instance.IsXrStartupAttempted)
+            {
+                InitializeUserInput(PlatformInfo.IsXRPlatform());
+                return;
+            }
+
             PlatformManager.Instance.OnInitialized += Handler;
             return;
 
@@ -49,7 +55,6 @@ namespace AnyVR.UserControlSystem.InputModality
                 InitializeUserInput(PlatformInfo.IsXRPlatform());
                 PlatformManager.Instance.OnInitialized -= Handler;
             }
-
         }
 #endif
 
@@ -58,6 +63,7 @@ namespace AnyVR.UserControlSystem.InputModality
         /// </summary>
         private void InitializeUserInput(bool isXRActive)
         {
+            Debug.Log($"[InputModalityManager] Initializing user input. XR Active: {isXRActive}");
             ToggleXRControls(isXRActive);
             InitializeTurnProvider(isXRActive);
             InitializeGazeInteractor(isXRActive);
