@@ -7,6 +7,7 @@ using AnyVR.Logging;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
+using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
@@ -15,8 +16,11 @@ namespace AnyVR.LobbySystem.Internal
     internal class LobbyRegistry : NetworkBehaviour
     {
         private readonly SyncDictionary<Guid, LobbyState> _lobbyStates = new();
+        
         private QuickConnectHandler _quickConnectHandler;
+        
         internal event Action<Guid> OnLobbyRegistered;
+        
         internal event Action<Guid> OnLobbyUnregistered;
 
         public override void OnStartNetwork()
@@ -33,6 +37,7 @@ namespace AnyVR.LobbySystem.Internal
                         break;
 
                     case SyncDictionaryOperation.Remove:
+                        Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"LobbyUnregistered: {key}");
                         OnLobbyUnregistered?.Invoke(key);
                         break;
                 }
@@ -79,12 +84,12 @@ namespace AnyVR.LobbySystem.Internal
                 return;
 
             bool handlerRemoved = _handlers.Remove(lobby.LobbyId);
-            bool passwordRemoved = _passwordHashes.Remove(lobby.LobbyId);
-
-            Assert.IsFalse(!handlerRemoved || !passwordRemoved, "Inconsistent state while unregistering lobby.");
-
+            Assert.IsTrue(handlerRemoved);
+            
             bool success = _quickConnectHandler.UnregisterLobby(lobby);
             Assert.IsTrue(success);
+            
+            _passwordHashes.Remove(lobby.LobbyId);
 
             Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {lobby.LobbyId} unregistered successfully.");
         }

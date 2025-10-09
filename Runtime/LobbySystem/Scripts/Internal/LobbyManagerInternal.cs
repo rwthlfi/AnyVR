@@ -310,11 +310,15 @@ namespace AnyVR.LobbySystem.Internal
                 handler.Server_RemovePlayer(player.ClientManager.Connection);
             }
 
-            SceneUnloadData sud = LobbySceneService.CreateUnloadData(handler.LobbyInfo);
+            SceneUnloadData sud = LobbySceneService.CreateUnloadData(handler.LobbyInfo, UnloadOptions.ServerUnloadMode.UnloadUnused);
             Assert.IsNotNull(sud);
 
-            _lobbyRegistry.Unregister(handler.State);
+            LobbyState state = handler.State;
 
+            _lobbyRegistry.Unregister(state);
+            
+            Despawn(state.NetworkObject, DespawnType.Destroy);
+            
             SceneManager.UnloadConnectionScenes(sud);
 
             Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal), $"Lobby with id '{lobbyId}' is closed");

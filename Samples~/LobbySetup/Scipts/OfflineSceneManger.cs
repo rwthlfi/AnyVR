@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using AnyVR.LobbySystem;
+using FishNet.Managing.Server;
+using FishNet.Object;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -67,11 +69,8 @@ namespace AnyVR.Sample
             _leaveServerBtn.onClick.AddListener(LeaveServer);
             OnClientConnectionStateChanged(_connectionManager.State);
 
-            LobbyManager.OnClientInitialized += lobbyManager =>
-            {
-                lobbyManager.OnLobbyOpened += AddLobbyEntry;
-                lobbyManager.OnLobbyClosed += RemoveLobbyEntry;
-            };
+            LobbyManager.OnClientInitialized += SubscribeLobbyEvents;
+            SubscribeLobbyEvents(LobbyManager.Instance);
 
             _createLobbyBtn.onClick.AddListener(CreateLobby);
             _lobbyUIEntries = new Dictionary<Guid, LobbyUIEntry>();
@@ -79,6 +78,18 @@ namespace AnyVR.Sample
             _quickConnectBtn.onClick.AddListener(HandleQuickConnect);
 
             UpdateLobbyUIEntries();
+            
+            return;
+            
+            void SubscribeLobbyEvents(LobbyManager lobbyManager)
+            {
+                if (lobbyManager == null)
+                {
+                    return;
+                }
+                lobbyManager.OnLobbyOpened += AddLobbyEntry;
+                lobbyManager.OnLobbyClosed += RemoveLobbyEntry;
+            }
 #endif
         }
 
@@ -151,6 +162,7 @@ namespace AnyVR.Sample
 
         private void RemoveLobbyEntry(Guid lobbyId)
         {
+            Debug.Log("RemoveLobbyEntry");
             if (!_lobbyUIEntries.Remove(lobbyId, out LobbyUIEntry entry))
                 return;
 

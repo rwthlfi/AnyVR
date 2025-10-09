@@ -182,6 +182,10 @@ namespace AnyVR.LobbySystem
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
             _networkManager.ClientManager.OnClientTimeOut += OnClientTimeout;
+            
+#if UNITY_EDITOR && UNITY_SERVER
+            _networkManager.ServerManager.StartConnection();
+#endif
         }
 
         private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs args)

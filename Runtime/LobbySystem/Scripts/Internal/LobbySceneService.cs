@@ -25,16 +25,16 @@ namespace AnyVR.LobbySystem.Internal
         internal LobbySceneService(LobbyManagerInternal @internal)
         {
             _internal = @internal;
-            _internal.SceneManager.OnUnloadEnd += OnUnloadEnd;
 
             if (_internal.ClientManager.Started)
             {
                 _internal.SceneManager.OnLoadStart += Client_OnLoadStart;
+                _internal.SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
             }
 
             if (_internal.ServerManager.Started)
             {
-                _internal.SceneManager.OnLoadEnd += TryRegisterLobbyHandler;
+                _internal.SceneManager.OnLoadEnd += Server_TryRegisterLobbyHandler;
             }
         }
 
@@ -85,7 +85,7 @@ namespace AnyVR.LobbySystem.Internal
         }
 
         [Server]
-        private void TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
+        private void Server_TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
         {
             if (_loadSceneTcs == null)
             {
@@ -97,14 +97,12 @@ namespace AnyVR.LobbySystem.Internal
                 return;
             }
 
-
             object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
-
-            if (serverParams[1] is not Guid lobbyId)
-            {
-                return;
-            }
-
+            
+            Assert.IsTrue(serverParams[1] is Guid);
+            Assert.IsTrue(serverParams[2] is int);
+            
+            Guid lobbyId = (Guid)serverParams[1];
             int creatorId = (int)serverParams[2];
 
             Assert.IsTrue(_internal.ServerManager.Clients.ContainsKey(creatorId));
@@ -130,13 +128,8 @@ namespace AnyVR.LobbySystem.Internal
         }
 
         [Client]
-        private void OnUnloadEnd(SceneUnloadEndEventArgs args)
+        private static void Client_OnUnloadEnd(SceneUnloadEndEventArgs args)
         {
-            if (args.QueueData.AsServer)
-            {
-                return;
-            }
-
             if (!IsUnloadingLobby(args.QueueData, false))
             {
                 return;
@@ -241,7 +234,7 @@ namespace AnyVR.LobbySystem.Internal
         }
 
         [Server]
-        internal static SceneUnloadData CreateUnloadData(ILobbyInfo lmd)
+        internal static SceneUnloadData CreateUnloadData(ILobbyInfo lmd, UnloadOptions.ServerUnloadMode unloadMode = UnloadOptions.ServerUnloadMode.KeepUnused)
         {
             LobbyManagerInternal manager = LobbyManager.Instance.Internal;
             Assert.IsNotNull(manager);
@@ -267,7 +260,7 @@ namespace AnyVR.LobbySystem.Internal
             {
                 Options =
                 {
-                    Mode = UnloadOptions.ServerUnloadMode.KeepUnused
+                    Mode = unloadMode
                 },
                 Params =
                 {

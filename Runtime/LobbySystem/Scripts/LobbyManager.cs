@@ -6,6 +6,7 @@ using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Debug = UnityEngine.Debug;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
@@ -28,12 +29,17 @@ namespace AnyVR.LobbySystem
             Instance = this;
 
             Internal = GetComponent<LobbyManagerInternal>();
+            
+            Assert.IsNotNull(Internal);
+            
             Internal.OnLobbyOpened += lobbyId =>
             {
                 LobbyState state = Internal.GetLobbyState(lobbyId);
                 OnLobbyOpened?.Invoke(state);
             };
-            Internal.OnLobbyClosed += OnLobbyClosed;
+
+            Internal.OnLobbyClosed += lobbyId => OnLobbyClosed?.Invoke(lobbyId);
+            
             Internal.OnClientInitialized += () => OnClientInitialized?.Invoke(this);
 
             Assert.IsNotNull(Internal);
