@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
@@ -88,6 +87,21 @@ namespace AnyVR.LobbySystem
             return res;
         }
 
+        private static async Task WaitUntilGameStateInitialized()
+        {
+            TimeSpan timeout = TimeSpan.FromSeconds(3);
+            DateTime start = DateTime.UtcNow;
+            while (GlobalGameState.Instance == null || GlobalPlayerState.LocalPlayer == null)
+            {
+                if (DateTime.UtcNow - start > timeout)
+                {
+                    return;
+                }
+
+                await Task.Delay(10);
+            }
+        }
+
 #region Private Fields
 
         private const string Tag = nameof(ConnectionManager);
@@ -146,7 +160,7 @@ namespace AnyVR.LobbySystem
         public event Action OnClientTimeout;
 
         public event Action<ConnectionState> OnClientConnectionState;
-        
+
         public bool UseSecureProtocol { get; set; } = true;
 
 #endregion
@@ -176,7 +190,7 @@ namespace AnyVR.LobbySystem
             {
                 _connectionAwaiter.Complete(ConnectionStatus.Connected);
             }
-            
+
             OnClientConnectionState?.Invoke(State);
         }
 
@@ -278,21 +292,6 @@ namespace AnyVR.LobbySystem
         }
 
 #endregion
-        
-        private static async Task WaitUntilGameStateInitialized()
-        {
-            TimeSpan timeout = TimeSpan.FromSeconds(3);
-            DateTime start = DateTime.UtcNow;
-            while (GlobalGameState.Instance == null || GlobalPlayerState.LocalPlayer == null)
-            {
-                if (DateTime.UtcNow - start > timeout)
-                {
-                    return;
-                }
-                
-                await Task.Delay(10);
-            }
-        }
 
 #region Singleton
 

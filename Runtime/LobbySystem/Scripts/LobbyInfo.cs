@@ -30,5 +30,7 @@ namespace AnyVR.LobbySystem
         ushort LobbyCapacity { get; }
 
         LobbySceneMetaData Scene { get; } // TODO add readonly interface?
+
+        public uint QuickConnectCode { get; }
     }
 }

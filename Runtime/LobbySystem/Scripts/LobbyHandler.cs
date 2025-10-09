@@ -47,7 +47,7 @@ namespace AnyVR.LobbySystem
             }
         }
 
-        private LobbyState State => (LobbyState)LobbyInfo;
+        internal LobbyState State => (LobbyState)LobbyInfo;
 
         private void Awake()
         {
@@ -63,15 +63,15 @@ namespace AnyVR.LobbySystem
         }
 
         [Server]
-        internal void Init(Guid lobbyId, uint quickConnectCode)
+        internal void Init(LobbyState state)
         {
-            Logger.Log(LogLevel.Verbose, Tag, $"Initializing LobbyHandler: {lobbyId}");
-            Assert.IsFalse(lobbyId == Guid.Empty);
+            Logger.Log(LogLevel.Verbose, Tag, $"Initializing LobbyHandler: {state.LobbyId}");
+            Assert.IsFalse(state.LobbyId == Guid.Empty);
 
-            _lobbyId.Value = lobbyId;
-            _quickConnectCode.Value = quickConnectCode;
+            _lobbyId.Value = state.LobbyId;
+            _quickConnectCode.Value = state.QuickConnectCode;
 
-            DateTime? expiration = LobbyInfo.ExpirationDate.Value;
+            DateTime? expiration = state.ExpirationDate.Value;
             if (expiration.HasValue)
             {
                 StartCoroutine(ExpireLobby(expiration.Value));

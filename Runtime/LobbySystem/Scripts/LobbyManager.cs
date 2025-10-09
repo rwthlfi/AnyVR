@@ -13,26 +13,24 @@ namespace AnyVR.LobbySystem
     [RequireComponent(typeof(LobbyManagerInternal))]
     public class LobbyManager : MonoBehaviour
     {
+#region Internal Fields
+
         internal LobbyManagerInternal Internal;
 
-        public static LobbyManager Instance { get; private set; }
+#endregion
 
-        /// <summary>
-        ///     All available scenes for a lobby
-        /// </summary>
-        public IReadOnlyCollection<LobbySceneMetaData> LobbyScenes => LobbyConfiguration.LobbyScenes;
-
-        public static LobbyConfiguration LobbyConfiguration { get; set; }
+#region Lifecycle
 
         private void Awake()
         {
-            InitSingleton();
+            // Init Singleton
+            if (Instance != null) Destroy(this);
+            Instance = this;
 
             Internal = GetComponent<LobbyManagerInternal>();
             Internal.OnLobbyOpened += lobbyId =>
             {
                 LobbyState state = Internal.GetLobbyState(lobbyId);
-                Assert.IsNotNull(state.Name);
                 OnLobbyOpened?.Invoke(state);
             };
             Internal.OnLobbyClosed += OnLobbyClosed;
@@ -41,43 +39,87 @@ namespace AnyVR.LobbySystem
             Assert.IsNotNull(Internal);
         }
 
-        public IEnumerable<ILobbyInfo> GetLobbies()
-        {
-            return Internal.GetLobbyStates();
-        }
+#endregion
 
-        public ILobbyInfo GetLobbyInfo(Guid id)
-        {
-            return Internal.GetLobbyState(id);
-        }
+#region Public API
 
-        public event Action<ILobbyInfo> OnLobbyOpened;
+        public static LobbyManager Instance { get; private set; }
 
-        public event Action<Guid> OnLobbyClosed;
+        public static LobbyConfiguration LobbyConfiguration { get; set; }
+
+        /// <summary>
+        ///     All available scenes for a lobby
+        /// </summary>
+        public IReadOnlyCollection<LobbySceneMetaData> LobbyScenes => LobbyConfiguration.LobbyScenes;
 
         /// <summary>
         ///     This event is invoked after the (local) LobbyManager is spawned and initialized.
         /// </summary>
         public static event Action<LobbyManager> OnClientInitialized;
 
-        public async Task<CreateLobbyResult> CreateLobby(string lobbyName, string password, LobbySceneMetaData scene, ushort maxClients)
+        /// <summary>
+        ///     Invoked when a remote client opened a new lobby.
+        /// </summary>
+        public event Action<ILobbyInfo> OnLobbyOpened;
+
+        /// <summary>
+        ///     Invoked when a remote client closed a lobby.
+        /// </summary>
+        public event Action<Guid> OnLobbyClosed;
+
+        /// <summary>
+        ///     Initiates the creation of a new lobby on the server via a remote procedure call.
+        ///     Lobby creation will fail if the given name is already in use.
+        /// </summary>
+        /// <param name="lobbyName">The desired name of the lobby.</param>
+        /// <param name="password">The password for the lobby. Pass null or white space for no password.</param>
+        /// <param name="sceneMeta">The scene metadata of the lobby.</param>
+        /// <param name="maxClients">The maximum number of clients allowed in the lobby.</param>
+        /// <returns>An asynchronous task that returns the result of the lobby creation.</returns>
+        public async Task<CreateLobbyResult> CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMeta, ushort maxClients)
         {
-            CreateLobbyResult result = await Internal.CreateLobby(lobbyName, password, scene, maxClients);
+            CreateLobbyResult result = await Internal.CreateLobby(lobbyName, password, sceneMeta, maxClients);
             LogCreateLobbyResult(result);
             return result;
         }
 
-        public async Task<JoinLobbyResult> JoinLobby(Guid lobbyId, string password = null, TimeSpan? timeout = null)
+        /// <summary>
+        ///     Attempts to join an existing lobby on the server using the lobby's id.
+        ///     <param name="lobbyId">The id of the lobby.</param>
+        ///     <param name="password">Pass a password if the target lobby is protected by one.</param>
+        ///     <returns>An asynchronous task that returns the result of the join process.</returns>
+        /// </summary>
+        public async Task<JoinLobbyResult> JoinLobby(Guid lobbyId, string password = null)
         {
-            JoinLobbyResult result = await Internal.JoinLobby(lobbyId, password, timeout);
+            JoinLobbyResult result = await Internal.JoinLobby(lobbyId, password);
             LogJoinLobbyResult(result);
             return result;
         }
 
-        public Task<JoinLobbyResult> QuickConnect(string code, TimeSpan? timeout = null)
+        /// <summary>
+        ///     Attempts to join an existing lobby on the server using the lobby's quick connect code.
+        ///     <param name="quickConnectCode">The quick connect code of the target lobby.</param>
+        ///     <returns>An asynchronous task that returns the result of the join process.</returns>
+        /// </summary>
+        public Task<JoinLobbyResult> QuickConnect(string quickConnectCode)
         {
-            return Internal.QuickConnect(code, timeout);
+            return Internal.QuickConnect(quickConnectCode);
         }
+
+        public bool TryGetLobby(Guid lobbyId, out ILobbyInfo lobbyInfo)
+        {
+            lobbyInfo = Internal.GetLobbyState(lobbyId);
+            return lobbyInfo != null;
+        }
+
+        public IEnumerable<ILobbyInfo> GetLobbies()
+        {
+            return Internal.GetLobbyStates();
+        }
+
+#endregion
+
+#region Logs
 
         [Conditional("ANY_VR_LOG")]
         private static void LogJoinLobbyResult(JoinLobbyResult result)
@@ -116,18 +158,6 @@ namespace AnyVR.LobbySystem
             Logger.Log(LogLevel.Verbose, nameof(LobbyManager), message);
         }
 
-
-        public bool TryGetLobby(Guid lobbyId, out ILobbyInfo lobbyInfo)
-        {
-            bool found = Internal.Lobbies.TryGetValue(lobbyId, out LobbyState lmd);
-            lobbyInfo = lmd;
-            return found;
-        }
-
-        private void InitSingleton()
-        {
-            if (Instance != null) Destroy(this);
-            Instance = this;
-        }
+#endregion
     }
 }

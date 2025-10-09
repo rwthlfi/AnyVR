@@ -16,9 +16,13 @@ namespace AnyVR.LobbySystem
 {
     public class GlobalPlayerState : NetworkBehaviour
     {
+#region Private Fields
+
         private readonly RpcAwaiter<PlayerNameUpdateResult> _playerNameUpdateAwaiter = new(PlayerNameUpdateResult.Timeout, PlayerNameUpdateResult.Cancelled);
 
         private Coroutine _kickPlayerCoroutine;
+
+#endregion
 
 #region Replicated Properties
 

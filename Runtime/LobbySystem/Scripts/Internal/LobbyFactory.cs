@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
@@ -6,6 +8,7 @@ namespace AnyVR.LobbySystem.Internal
 {
     internal class LobbyFactory
     {
+        private static readonly Random Random = new();
         private int _creatorId;
         private DateTime? _expirationDate;
         private bool _isPasswordProtected;
@@ -55,13 +58,32 @@ namespace AnyVR.LobbySystem.Internal
             return this;
         }
 
+        private static uint GenerateQuickConnectCode()
+        {
+            Assert.IsNotNull(LobbyManager.Instance);
+
+            const uint maxRetries = 100;
+            const int maxCode = 99999;
+
+            for (int i = 0; i < maxRetries; i++)
+            {
+                uint candidate = (uint)Random.Next(0, maxCode + 1);
+                if (LobbyManager.Instance.GetLobbies().All(lobby => lobby.QuickConnectCode != candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            throw new InvalidOperationException("Failed to generate unique quick connect code");
+        }
+
         public LobbyState Create()
         {
             LobbyManagerInternal @internal = LobbyManager.Instance.Internal;
-            LobbyState lmd = Object.Instantiate(@internal.LobbyStatePrefab);
+            LobbyState lmd = Object.Instantiate(@internal._lobbyStatePrefab);
             SceneManager.MoveGameObjectToScene(lmd.gameObject, @internal.gameObject.scene);
             @internal.Spawn(lmd.NetworkObject);
-            lmd.Init(_name, _creatorId, (ushort)_sceneId, _lobbyCapacity, _isPasswordProtected, _expirationDate);
+            lmd.Init(Guid.NewGuid(), GenerateQuickConnectCode(), _name, _creatorId, (ushort)_sceneId, _lobbyCapacity, _isPasswordProtected, _expirationDate);
             return lmd;
         }
     }

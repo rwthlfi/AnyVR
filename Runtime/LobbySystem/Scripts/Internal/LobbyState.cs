@@ -6,9 +6,10 @@ namespace AnyVR.LobbySystem.Internal
 {
     internal class LobbyState : NetworkBehaviour, ILobbyInfo
     {
-        internal void Init(string lobbyName, int creatorId, ushort sceneId, ushort lobbyCapacity, bool isPasswordProtected, DateTime? expirationDate)
+        internal void Init(Guid lobbyId, uint quickConnectCode, string lobbyName, int creatorId, ushort sceneId, ushort lobbyCapacity, bool isPasswordProtected, DateTime? expirationDate)
         {
-            _lobbyId.Value = Guid.NewGuid();
+            _lobbyId.Value = lobbyId;
+            _quickConnectCode.Value = quickConnectCode;
             _name.Value = lobbyName;
             _creatorId.Value = creatorId;
             _sceneId.Value = sceneId;
@@ -47,6 +48,8 @@ namespace AnyVR.LobbySystem.Internal
 
         private readonly SyncVar<ushort> _sceneId = new();
 
+        private readonly SyncVar<uint> _quickConnectCode = new();
+
 #endregion
 
 #region Public API
@@ -60,6 +63,7 @@ namespace AnyVR.LobbySystem.Internal
         public GlobalPlayerState Creator => GlobalGameState.Instance.GetPlayerState(CreatorId);
         public ushort LobbyCapacity => _lobbyCapacity.Value;
         public LobbySceneMetaData Scene => LobbyManager.LobbyConfiguration.LobbyScenes[_sceneId.Value];
+        public uint QuickConnectCode => _quickConnectCode.Value;
 
 #endregion
     }

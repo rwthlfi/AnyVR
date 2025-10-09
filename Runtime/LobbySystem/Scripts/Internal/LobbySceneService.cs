@@ -108,7 +108,7 @@ namespace AnyVR.LobbySystem.Internal
             int creatorId = (int)serverParams[2];
 
             Assert.IsTrue(_internal.ServerManager.Clients.ContainsKey(creatorId));
-            Assert.IsFalse(_internal.Lobbies.ContainsKey(lobbyId));
+            Assert.IsFalse(_internal.GetLobbyState(lobbyId) != null);
 
             GameObject[] rootObjects = loadArgs.LoadedScenes[0].GetRootGameObjects();
 
@@ -300,6 +300,10 @@ namespace AnyVR.LobbySystem.Internal
             using MemoryStream stream = new(bytes);
             BinaryFormatter formatter = new();
             return (object[])formatter.Deserialize(stream);
+        }
+        public void LoadPlayerIntoLobby(NetworkConnection conn, LobbyState state)
+        {
+            _internal.SceneManager.LoadConnectionScenes(conn, CreateSceneLoadData(state)); // TODO move to LobbySceneService
         }
     }
 }
