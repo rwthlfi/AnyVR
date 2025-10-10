@@ -86,7 +86,7 @@ namespace AnyVR.LobbySystem
 
 #endregion
 
-#region Server Method
+#region Server Methods
 
         [ServerRpc(RequireOwnership = true)]
         private void ServerRPC_SetName(string playerName)

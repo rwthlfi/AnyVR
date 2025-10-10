@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
@@ -58,7 +57,7 @@ namespace AnyVR.LobbySystem
             const string tokenURL = "{0}://{1}/requestServerIp";
             string url = string.Format(tokenURL, UseSecureProtocol ? "https" : "http", tokenServerUri);
 
-            Logger.Log(LogLevel.Verbose, Tag, $"Requesting server ip from '{url}'");
+            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Requesting server ip from '{url}'");
             ServerAddressResponse res = await WebRequestHandler.GetAsync<ServerAddressResponse>(url, timeoutSeconds);
 
             if (!res.Success)
@@ -103,10 +102,6 @@ namespace AnyVR.LobbySystem
         }
 
 #region Private Fields
-
-        private const string Tag = nameof(ConnectionManager);
-
-        private const string GlobalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
 
         private readonly RpcAwaiter<ConnectionStatus> _connectionAwaiter = new(ConnectionStatus.Timeout, ConnectionStatus.Cancelled);
 
@@ -182,7 +177,7 @@ namespace AnyVR.LobbySystem
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
             _networkManager.ClientManager.OnClientTimeOut += OnClientTimeout;
-            
+
 #if UNITY_EDITOR && UNITY_SERVER
             _networkManager.ServerManager.StartConnection();
 #endif
@@ -206,31 +201,17 @@ namespace AnyVR.LobbySystem
                 return;
             }
 
-            Logger.Log(LogLevel.Verbose, Tag, $"Server is {state.ConnectionState.ToString()}");
+            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Server is {state.ConnectionState.ToString()}");
             if (state.ConnectionState != LocalConnectionState.Started)
             {
                 return;
             }
 
-            Logger.Log(LogLevel.Verbose, Tag, $"Server started on port: {_networkManager.TransportManager.Transport.GetPort()}");
+            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Server started on port: {_networkManager.TransportManager.Transport.GetPort()}");
 
-            string scene = Path.GetFileNameWithoutExtension(GlobalScene);
-            SceneLoadData sld = new(scene)
-            {
-                Params =
-                {
-                    ServerParams = new[]
-                    {
-                        (object)SceneLoadParam.Global
-                    },
-                    ClientParams = LobbySceneService.SerializeClientParams(new[]
-                    {
-                        (object)SceneLoadParam.Global
-                    })
-                }
-            };
+            SceneLoadData sld = LobbySceneService.GlobalSceneLoadData();
 
-            Logger.Log(LogLevel.Verbose, Tag, "Loading global scene...");
+            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), "Loading global scene...");
             _networkManager.SceneManager.LoadGlobalScenes(sld);
         }
 
@@ -244,18 +225,18 @@ namespace AnyVR.LobbySystem
 
             if (State.HasFlag(ConnectionState.Client))
             {
-                Logger.Log(LogLevel.Warning, Tag, "Could not connect to server. Already connected as a client");
+                Logger.Log(LogLevel.Warning, nameof(ConnectionManager), "Could not connect to server. Already connected as a client");
                 return new ConnectionResult(ConnectionStatus.AlreadyConnected, null);
             }
 
             ServerAddressResponse response = await RequestServerIp(tokenServerUri);
             if (response.Success)
             {
-                Logger.Log(LogLevel.Verbose, Tag, $"Received server ip: {{FishNet: {response.fishnet_server_address}, LiveKit: {response.livekit_server_address}}}");
+                Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Received server ip: {{FishNet: {response.fishnet_server_address}, LiveKit: {response.livekit_server_address}}}");
             }
             else
             {
-                Logger.Log(LogLevel.Warning, Tag, response.Error);
+                Logger.Log(LogLevel.Warning, nameof(ConnectionManager), response.Error);
                 return new ConnectionResult(ConnectionStatus.ServerIpRequestFailed, null);
             }
 
@@ -287,11 +268,11 @@ namespace AnyVR.LobbySystem
         {
             if (!State.HasFlag(ConnectionState.Client))
             {
-                Logger.Log(LogLevel.Warning, Tag, "Not connected to a server");
+                Logger.Log(LogLevel.Warning, nameof(ConnectionManager), "Not connected to a server");
                 return;
             }
 
-            Logger.Log(LogLevel.Verbose, Tag, "Stopping server.");
+            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), "Stopping server.");
             _networkManager.ClientManager.StopConnection();
         }
 

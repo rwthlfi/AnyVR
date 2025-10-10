@@ -7,7 +7,6 @@ using AnyVR.Logging;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using JetBrains.Annotations;
-using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
@@ -15,13 +14,31 @@ namespace AnyVR.LobbySystem.Internal
 {
     internal class LobbyRegistry : NetworkBehaviour
     {
+#region Replicated Properties
+
         private readonly SyncDictionary<Guid, LobbyState> _lobbyStates = new();
-        
+
+#endregion
+
+#region Server Only Properties
+
         private QuickConnectHandler _quickConnectHandler;
-        
+
+        private Dictionary<Guid, LobbyHandler> _handlers;
+
+        private Dictionary<Guid, byte[]> _passwordHashes;
+
+#endregion
+
+#region Internal Callbacks
+
         internal event Action<Guid> OnLobbyRegistered;
-        
+
         internal event Action<Guid> OnLobbyUnregistered;
+
+#endregion
+
+#region Lifecycle Overrides
 
         public override void OnStartNetwork()
         {
@@ -48,10 +65,16 @@ namespace AnyVR.LobbySystem.Internal
         {
             base.OnStartServer();
             _quickConnectHandler = new QuickConnectHandler();
+            _handlers = new Dictionary<Guid, LobbyHandler>();
+            _passwordHashes = new Dictionary<Guid, byte[]>();
         }
 
+#endregion
+
+#region Server Methods
+
         [Server]
-        internal bool Register(LobbyState lobbyState, LobbyHandler handler, string password = null)
+        internal bool RegisterLobby(LobbyState lobbyState, LobbyHandler handler, string password = null)
         {
             if (_lobbyStates.ContainsKey(lobbyState.LobbyId))
             {
@@ -78,23 +101,24 @@ namespace AnyVR.LobbySystem.Internal
         }
 
         [Server]
-        internal void Unregister(LobbyState lobby)
+        internal void UnregisterLobby(LobbyState lobby)
         {
             if (!_lobbyStates.Remove(lobby.LobbyId))
                 return;
 
             bool handlerRemoved = _handlers.Remove(lobby.LobbyId);
             Assert.IsTrue(handlerRemoved);
-            
+
             bool success = _quickConnectHandler.UnregisterLobby(lobby);
             Assert.IsTrue(success);
-            
+
             _passwordHashes.Remove(lobby.LobbyId);
 
             Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {lobby.LobbyId} unregistered successfully.");
         }
 
-        public bool ValidatePassword(Guid lobbyId, string password)
+        [Server]
+        internal bool ValidatePassword(Guid lobbyId, string password)
         {
             return !_passwordHashes.TryGetValue(lobbyId, out byte[] hash) || ComputeSha256(password).SequenceEqual(hash);
         }
@@ -105,20 +129,19 @@ namespace AnyVR.LobbySystem.Internal
             return sha256.ComputeHash(Encoding.UTF8.GetBytes(s));
         }
 
+#endregion
+
+#region Lobby Accessors
+
         internal LobbyState GetLobbyState(Guid lobbyId)
         {
             return _lobbyStates.GetValueOrDefault(lobbyId);
         }
 
         [CanBeNull]
-        public LobbyState GetLobbyState(uint quickConnect)
+        internal LobbyState GetLobbyState(uint quickConnect)
         {
             return _quickConnectHandler.GetLobbyState(quickConnect);
-        }
-
-        internal byte[] GetPasswordHash(Guid lobbyId)
-        {
-            return _passwordHashes.GetValueOrDefault(lobbyId);
         }
 
         internal LobbyHandler GetLobbyHandler(Guid lobbyId)
@@ -126,16 +149,10 @@ namespace AnyVR.LobbySystem.Internal
             return _handlers.GetValueOrDefault(lobbyId);
         }
 
-        public IEnumerable<LobbyState> GetLobbyStates()
+        internal IEnumerable<LobbyState> GetLobbyStates()
         {
             return _lobbyStates.Values;
         }
-
-#region ServerOnly
-
-        private readonly Dictionary<Guid, LobbyHandler> _handlers = new();
-
-        private readonly Dictionary<Guid, byte[]> _passwordHashes = new();
 
 #endregion
     }

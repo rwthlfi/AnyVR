@@ -146,7 +146,7 @@ namespace AnyVR.PlatformManagement
             CheckInitializationStatus();
             return GetPlatformType() == PlatformType.XR;
         }
-
+        
         private static InputDevice? LookupInputDevice(XRNode node)
         {
             CheckInitializationStatus();

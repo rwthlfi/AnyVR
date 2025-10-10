@@ -25,6 +25,7 @@ namespace AnyVR.LobbySystem
 #endregion
 
         private readonly RpcAwaiter<PlayerKickResult> _playerKickUpdateAwaiter = new(PlayerKickResult.Timeout, PlayerKickResult.Cancelled);
+
         private readonly RpcAwaiter<PlayerPromotionResult> _playerPromoteUpdateAwaiter = new(PlayerPromotionResult.Timeout, PlayerPromotionResult.Cancelled);
 
 #region Replicated Properties
@@ -58,7 +59,7 @@ namespace AnyVR.LobbySystem
 
             Assert.IsNotNull(lobbyHandler, "LobbyHandler not found. Ensure there is one LobbyHandler placed in the lobby scene.");
 
-            _lobbyId.Value = lobbyHandler.GetLobbyId();
+            _lobbyId.Value = lobbyHandler.LobbyInfo.LobbyId;
             _isAdmin.Value = lobbyHandler.LobbyInfo.CreatorId == OwnerId;
 
             SpawnAvatar();
@@ -68,7 +69,7 @@ namespace AnyVR.LobbySystem
         {
             base.OnStartClient();
             Assert.IsFalse(_lobbyId.Value == Guid.Empty);
-            VoiceChatManager.GetInstance()?.TryConnectToRoom(_lobbyId.Value, Global.GetName(), ConnectionManager.Instance.UseSecureProtocol);
+            //VoiceChatManager.GetInstance()?.TryConnectToRoom(_lobbyId.Value, Global.GetName(), ConnectionManager.Instance.UseSecureProtocol);
         }
 
         public override void OnDespawnServer(NetworkConnection conn)
@@ -193,7 +194,7 @@ namespace AnyVR.LobbySystem
         [Server]
         private void KickPlayer_Internal()
         {
-            GetLobbyHandler().Server_RemovePlayer(Owner);
+            LobbyManager.Instance.Internal.RemovePlayerFromLobby(Owner, GetLobbyHandler());
             Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({Global.GetName()}) kicked.");
         }
 

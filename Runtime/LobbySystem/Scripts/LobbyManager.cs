@@ -6,7 +6,6 @@ using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Debug = UnityEngine.Debug;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
@@ -29,9 +28,9 @@ namespace AnyVR.LobbySystem
             Instance = this;
 
             Internal = GetComponent<LobbyManagerInternal>();
-            
+
             Assert.IsNotNull(Internal);
-            
+
             Internal.OnLobbyOpened += lobbyId =>
             {
                 LobbyState state = Internal.GetLobbyState(lobbyId);
@@ -39,7 +38,7 @@ namespace AnyVR.LobbySystem
             };
 
             Internal.OnLobbyClosed += lobbyId => OnLobbyClosed?.Invoke(lobbyId);
-            
+
             Internal.OnClientInitialized += () => OnClientInitialized?.Invoke(this);
 
             Assert.IsNotNull(Internal);
@@ -84,14 +83,30 @@ namespace AnyVR.LobbySystem
         /// <returns>An asynchronous task that returns the result of the lobby creation.</returns>
         public async Task<CreateLobbyResult> CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMeta, ushort maxClients)
         {
-            CreateLobbyResult result = await Internal.CreateLobby(lobbyName, password, sceneMeta, maxClients);
+            CreateLobbyResult result = await Internal.Client_CreateLobby(lobbyName, password, sceneMeta, maxClients);
             LogCreateLobbyResult(result);
             return result;
         }
 
         /// <summary>
-        ///     Attempts to join an existing lobby on the server using the lobby's id.
-        ///     <param name="lobbyId">The id of the lobby.</param>
+        ///     Attempts to join an existing lobby on the server.
+        ///     <param name="lobby">The lobby to join.</param>
+        ///     <param name="password">Pass a password if the target lobby is protected by one.</param>
+        ///     <returns>An asynchronous task that returns the result of the join process.</returns>
+        /// </summary>
+        public Task<JoinLobbyResult> JoinLobby(ILobbyInfo lobby, string password = null)
+        {
+            if (lobby == null)
+            {
+                throw new ArgumentNullException(nameof(lobby));
+            }
+
+            return JoinLobby(lobby.LobbyId, password);
+        }
+
+        /// <summary>
+        ///     Attempts to join an existing lobby on the server.
+        ///     <param name="lobbyId">The id of the lobby to join.</param>
         ///     <param name="password">Pass a password if the target lobby is protected by one.</param>
         ///     <returns>An asynchronous task that returns the result of the join process.</returns>
         /// </summary>

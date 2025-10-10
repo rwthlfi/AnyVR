@@ -123,8 +123,11 @@ namespace AnyVR.Sample
             {
                 return;
             }
-
-            _ = lobbyManager.JoinLobby(id);
+            
+            if(LobbyManager.Instance.TryGetLobby(id, out ILobbyInfo lobby))
+            {
+                _ = lobbyManager.JoinLobby(lobby);
+            }
         }
 
         private void UpdateLobbyUIEntries()
@@ -162,7 +165,6 @@ namespace AnyVR.Sample
 
         private void RemoveLobbyEntry(Guid lobbyId)
         {
-            Debug.Log("RemoveLobbyEntry");
             if (!_lobbyUIEntries.Remove(lobbyId, out LobbyUIEntry entry))
                 return;
 

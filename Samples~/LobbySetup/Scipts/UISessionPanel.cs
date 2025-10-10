@@ -33,7 +33,7 @@ namespace AnyVR.Sample
 
         private void Start()
         {
-            _lobbyHandler = LobbyHandler.GetInstance();
+            _lobbyHandler = LobbyHandler.Instance;
             if (_lobbyHandler == null)
             {
                 Debug.LogWarning("LobbyHandler not found. Disabling UISessionPanel.");
@@ -95,7 +95,7 @@ namespace AnyVR.Sample
             _locationLabel.text = _lobbyHandler.LobbyInfo.Scene.Name;
             _quickConnectLabel.text = _lobbyHandler.QuickConnectCode.ToString();
 
-            LobbyPlayerState owner = _lobbyHandler.GetLobbyOwner();
+            LobbyPlayerState owner = _lobbyHandler.GetLobbyCreator();
             _ownerLabel.text = owner != null ? owner.Global.GetName() : "N/A (disconnected)";
         }
 

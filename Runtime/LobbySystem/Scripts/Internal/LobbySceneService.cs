@@ -1,26 +1,15 @@
 using System;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Threading.Tasks;
-using AnyVR.Logging;
-using FishNet.Connection;
 using FishNet.Managing.Scened;
-using FishNet.Object;
-using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.SceneManagement;
-using USceneManager = UnityEngine.SceneManagement.SceneManager;
-using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem.Internal
 {
-    internal class LobbySceneService
+    internal partial class LobbySceneService
     {
-        private const string Tag = nameof(LobbySceneService);
-
+        private const string GlobalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
         private readonly LobbyManagerInternal _internal;
-
-        private TaskCompletionSource<LobbyHandler> _loadSceneTcs;
 
         internal LobbySceneService(LobbyManagerInternal @internal)
         {
@@ -28,120 +17,12 @@ namespace AnyVR.LobbySystem.Internal
 
             if (_internal.ClientManager.Started)
             {
-                _internal.SceneManager.OnLoadStart += Client_OnLoadStart;
-                _internal.SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
+                Client_Constructor();
             }
 
             if (_internal.ServerManager.Started)
             {
-                _internal.SceneManager.OnLoadEnd += Server_TryRegisterLobbyHandler;
-            }
-        }
-
-        [Client]
-        private static void Client_OnLoadStart(SceneLoadStartEventArgs args)
-        {
-            Assert.IsNotNull(LobbyManager.LobbyConfiguration);
-            if (IsLoadingLobby(args.QueueData, false))
-            {
-                USceneManager.UnloadSceneAsync(LobbyManager.LobbyConfiguration.OfflineScene);
-            }
-        }
-
-        [Server]
-        internal async Task<LobbyHandler> StartConnectionScene(LobbyState lobbyState)
-        {
-            Assert.IsTrue(_internal.ServerManager.Started);
-
-            if (_loadSceneTcs != null)
-            {
-                // Another scene is already loading.
-                // TODO queue scene loading
-                return null;
-            }
-
-            _loadSceneTcs = new TaskCompletionSource<LobbyHandler>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            Logger.Log(LogLevel.Verbose, Tag, "Loading lobby scene. Waiting for lobby handler");
-            _internal.SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), CreateSceneLoadData(lobbyState));
-
-            Task delay = Task.Delay(TimeSpan.FromSeconds(10));
-            Task completed = await Task.WhenAny(_loadSceneTcs.Task, delay);
-
-            if (ReferenceEquals(completed, delay))
-            {
-                Logger.Log(LogLevel.Error, Tag, "Timeout while waiting for LobbyHandler");
-                _loadSceneTcs = null;
-                return null;
-            }
-
-            LobbyHandler result = await _loadSceneTcs.Task;
-
-            Assert.IsTrue(_loadSceneTcs.Task.IsCompletedSuccessfully);
-
-            _loadSceneTcs = null;
-
-            return result;
-        }
-
-        [Server]
-        private void Server_TryRegisterLobbyHandler(SceneLoadEndEventArgs loadArgs)
-        {
-            if (_loadSceneTcs == null)
-            {
-                return;
-            }
-
-            if (!IsLoadingLobby(loadArgs.QueueData, true))
-            {
-                return;
-            }
-
-            object[] serverParams = loadArgs.QueueData.SceneLoadData.Params.ServerParams;
-            
-            Assert.IsTrue(serverParams[1] is Guid);
-            Assert.IsTrue(serverParams[2] is int);
-            
-            Guid lobbyId = (Guid)serverParams[1];
-            int creatorId = (int)serverParams[2];
-
-            Assert.IsTrue(_internal.ServerManager.Clients.ContainsKey(creatorId));
-            Assert.IsFalse(_internal.GetLobbyState(lobbyId) != null);
-
-            GameObject[] rootObjects = loadArgs.LoadedScenes[0].GetRootGameObjects();
-
-            LobbyHandler lobbyHandler = null;
-            foreach (GameObject root in rootObjects)
-            {
-                LobbyHandler comp = root.GetComponent<LobbyHandler>();
-                if (comp == null)
-                    continue;
-
-                lobbyHandler = comp;
-                break;
-            }
-
-            Assert.IsNotNull(lobbyHandler);
-
-            Logger.Log(LogLevel.Verbose, Tag, $"Found LobbyHandler with lobbyId '{lobbyId}'");
-            _loadSceneTcs.SetResult(lobbyHandler);
-        }
-
-        [Client]
-        private static void Client_OnUnloadEnd(SceneUnloadEndEventArgs args)
-        {
-            if (!IsUnloadingLobby(args.QueueData, false))
-            {
-                return;
-            }
-
-            AsyncOperation op = USceneManager.LoadSceneAsync(LobbyManager.LobbyConfiguration.OfflineScene, LoadSceneMode.Additive);
-            if (op != null)
-            {
-                op.completed += _ =>
-                {
-                    USceneManager.SetActiveScene(USceneManager.GetSceneByPath(LobbyManager.LobbyConfiguration.OfflineScene));
-                };
+                Server_Constructor();
             }
         }
 
@@ -171,7 +52,7 @@ namespace AnyVR.LobbySystem.Internal
                 ? queueData.SceneLoadData.Params.ServerParams
                 : DeserializeClientParams(queueData.SceneLoadData.Params.ClientParams);
 
-            if (loadParams.Length < 3 || loadParams[0] is not SceneLoadParam)
+            if (loadParams.Length < 2 || loadParams[0] is not SceneLoadParam)
             {
                 return false;
             }
@@ -184,93 +65,10 @@ namespace AnyVR.LobbySystem.Internal
             Guid lobbyId = (Guid)loadParams[1];
             Assert.IsFalse(Guid.Empty == lobbyId);
 
-            Assert.IsTrue(loadParams[2] is int);
-
             return true;
         }
 
-        /// <summary>
-        ///     Returns the SceneLoadData of the lobby as handle if possible.
-        /// </summary>
-        [Server]
-        internal static SceneLoadData CreateSceneLoadData(LobbyState lobbyState)
-        {
-            LobbyManagerInternal manager = LobbyManager.Instance.Internal;
-            Assert.IsNotNull(manager);
-
-            int sceneHandle;
-            string scenePath;
-
-            LobbyHandler handler = manager.GetLobbyHandler(lobbyState.LobbyId);
-            if (handler != null)
-            {
-                // Scene already loaded, use handle
-                sceneHandle = handler.gameObject.scene.handle;
-                scenePath = null;
-            }
-            else
-            {
-                sceneHandle = 0;
-                scenePath = lobbyState.Scene.ScenePath;
-            }
-
-            SceneLoadData sceneLoadData = scenePath != null
-                ? new SceneLoadData(scenePath)
-                : new SceneLoadData(sceneHandle);
-
-            sceneLoadData.ReplaceScenes = ReplaceOption.OnlineOnly;
-            sceneLoadData.Options.AllowStacking = true;
-            sceneLoadData.Options.LocalPhysics = LocalPhysicsMode.None;
-            sceneLoadData.Options.AutomaticallyUnload = false;
-
-            sceneLoadData.Params.ServerParams = new object[]
-            {
-                SceneLoadParam.Lobby, lobbyState.LobbyId, lobbyState.CreatorId
-            };
-
-            sceneLoadData.Params.ClientParams = SerializeClientParams(sceneLoadData.Params.ServerParams);
-
-            return sceneLoadData;
-        }
-
-        [Server]
-        internal static SceneUnloadData CreateUnloadData(ILobbyInfo lmd, UnloadOptions.ServerUnloadMode unloadMode = UnloadOptions.ServerUnloadMode.KeepUnused)
-        {
-            LobbyManagerInternal manager = LobbyManager.Instance.Internal;
-            Assert.IsNotNull(manager);
-
-            LobbyHandler handler = manager.GetLobbyHandler(lmd.LobbyId);
-            if (handler == null)
-            {
-                return null;
-            }
-
-            SceneLookupData sld = new()
-            {
-                Handle = handler.gameObject.scene.handle, Name = lmd.Scene.ScenePath
-            };
-            object[] unloadParams =
-            {
-                SceneLoadParam.Lobby, lmd.LobbyId
-            };
-            SceneUnloadData sud = new(new[]
-            {
-                sld
-            })
-            {
-                Options =
-                {
-                    Mode = unloadMode
-                },
-                Params =
-                {
-                    ServerParams = unloadParams, ClientParams = SerializeClientParams(unloadParams)
-                }
-            };
-            return sud;
-        }
-
-        internal static byte[] SerializeClientParams(object[] objects)
+        private static byte[] SerializeClientParams(object[] objects)
         {
             if (objects == null)
             {
@@ -283,7 +81,7 @@ namespace AnyVR.LobbySystem.Internal
             return stream.ToArray();
         }
 
-        internal static object[] DeserializeClientParams(byte[] bytes)
+        private static object[] DeserializeClientParams(byte[] bytes)
         {
             if (bytes == null || bytes.Length == 0)
             {
@@ -293,10 +91,6 @@ namespace AnyVR.LobbySystem.Internal
             using MemoryStream stream = new(bytes);
             BinaryFormatter formatter = new();
             return (object[])formatter.Deserialize(stream);
-        }
-        public void LoadPlayerIntoLobby(NetworkConnection conn, LobbyState state)
-        {
-            _internal.SceneManager.LoadConnectionScenes(conn, CreateSceneLoadData(state)); // TODO move to LobbySceneService
         }
     }
 }

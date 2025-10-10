@@ -180,6 +180,7 @@ namespace AnyVR.Voicechat
         public void SetMicrophoneEnabled(bool b)
         {
             _client?.SetMicrophoneEnabled(b);
+            VoiceChatManager.GetInstance()?.SetMicrophoneEnabled(false);
         }
 
         public void SetParticipantMuteActive(string sid, bool b)

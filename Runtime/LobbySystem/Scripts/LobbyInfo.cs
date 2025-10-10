@@ -23,13 +23,13 @@ namespace AnyVR.LobbySystem
         ///     The creator of the lobby.
         ///     Can be null if the creator disconnected from the server.
         /// </summary>
-        [CanBeNull] GlobalPlayerState Creator { get; } // TODO add readonly interface?
+        [CanBeNull] GlobalPlayerState Creator { get; }
 
         int CreatorId { get; }
 
         ushort LobbyCapacity { get; }
 
-        LobbySceneMetaData Scene { get; } // TODO add readonly interface?
+        LobbySceneMetaData Scene { get; }
 
         public uint QuickConnectCode { get; }
     }
