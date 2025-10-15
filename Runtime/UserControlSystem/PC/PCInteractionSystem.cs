@@ -50,9 +50,6 @@ namespace AnyVR.UserControlSystem.PC
         private InputActionProperty _interactionAction =
             new(new InputAction("Interaction", expectedControlType: "Button"));
 
-        private XRBaseInteractable _hoveredObject;
-        private XRBaseInteractable _interactableObject;
-
         protected override void Start()
         {
             base.Start();
@@ -66,15 +63,30 @@ namespace AnyVR.UserControlSystem.PC
         {
             XRBaseInteractable interactable;
 
-            if (_hoveredObject == null && IsThereObject(out interactable))
+            if (!hasHover && IsThereObject(out interactable))
             {
                 interactionManager.HoverEnter((IXRHoverInteractor)this, interactable);
-                _hoveredObject = interactable;
             }
 
-            else if (_hoveredObject != null && !IsThereObject(out interactable))
+            else if (hasHover && !IsThereObject(out interactable))
             {
-                _hoveredObject = null;
+                UnhoverAll();
+            }
+        }
+
+        private void UnhoverAll()
+        {
+            foreach (IXRHoverInteractable hovered in interactablesHovered)
+            {
+                interactionManager.HoverExit(this, hovered);
+            }
+        }
+
+        private void UnselectAll()
+        {
+            foreach (IXRSelectInteractable selected in interactablesSelected)
+            {
+                interactionManager.SelectExit(this, selected);
             }
         }
 
@@ -93,9 +105,9 @@ namespace AnyVR.UserControlSystem.PC
 
         private void ToggleInteraction(InputAction.CallbackContext context)
         {
-            if (_interactableObject == null)
+            if (!hasSelection)
             {
-                TryInteractionObject(context);
+                TryInteractWithObject(context);
             }
             else
             {
@@ -105,21 +117,19 @@ namespace AnyVR.UserControlSystem.PC
 
         private void TryStartInteractionHolding(InputAction.CallbackContext context)
         {
-            if (_interactableObject != null)
+            if (hasSelection)
             {
                 return;
             }
 
-            TryInteractionObject(context);
+            TryInteractWithObject(context);
         }
 
-        private void TryInteractionObject(InputAction.CallbackContext context)
+        private void TryInteractWithObject(InputAction.CallbackContext context)
         {
-            XRBaseInteractable target;
-            if (IsThereObject(out target))
+            if (hasHover)
             {
-                _interactableObject = target;
-                SelectInteractableObject();
+                SelectHoveredObject();
             }
         }
 
@@ -170,26 +180,22 @@ namespace AnyVR.UserControlSystem.PC
 
         private void TryReleaseObject(InputAction.CallbackContext context)
         {
-            if (_interactableObject == null)
+            if (!hasSelection)
             {
                 return;
             }
 
-            ReleaseInteractableObject();
-            _interactableObject = null;
+            ReleaseSelectedObject();
         }
 
-        private void SelectInteractableObject()
+        private void SelectHoveredObject()
         {
-            interactionManager.SelectEnter(this, (IXRSelectInteractable)_interactableObject);
+            interactionManager.SelectEnter(this, interactablesHovered[0].transform.GetComponent<IXRSelectInteractable>());
         }
 
-        private void ReleaseInteractableObject()
+        private void ReleaseSelectedObject()
         {
-            if (IsSelecting(_interactableObject))
-            {
-                interactionManager.SelectExit((IXRSelectInteractor)this, (IXRSelectInteractable)_interactableObject);
-            }        
+            interactionManager.SelectExit(this, firstInteractableSelected);
         }
     }
 }
