@@ -181,12 +181,15 @@ namespace AnyVR.UserControlSystem.PC
 
         private void SelectInteractableObject()
         {
-            StartManualInteraction((IXRSelectInteractable)_interactableObject);
+            interactionManager.SelectEnter(this, (IXRSelectInteractable)_interactableObject);
         }
 
         private void ReleaseInteractableObject()
         {
-            EndManualInteraction();
+            if (IsSelecting(_interactableObject))
+            {
+                interactionManager.SelectExit((IXRSelectInteractor)this, (IXRSelectInteractable)_interactableObject);
+            }        
         }
     }
 }
