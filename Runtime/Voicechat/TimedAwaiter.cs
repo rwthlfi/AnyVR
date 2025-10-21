@@ -1,16 +1,16 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.Voicechat
 {
-    internal class RpcAwaiter<T>
+    public class TimedAwaiter<T>
     {
         private readonly T _canceledValue;
 
         private readonly T _timeoutValue;
         private TaskCompletionSource<T> _tcs;
 
-        public RpcAwaiter(T timeoutValue, T canceledValue)
+        public TimedAwaiter(T timeoutValue, T canceledValue)
         {
             _timeoutValue = timeoutValue;
             _canceledValue = canceledValue;

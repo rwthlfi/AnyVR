@@ -3,7 +3,6 @@ using System.Collections;
 using System.Linq;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
-using AnyVR.TextChat;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;

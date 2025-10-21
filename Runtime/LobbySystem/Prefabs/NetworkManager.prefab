@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 4520142844469642319}
   - component: {fileID: 4796949022164278234}
   - component: {fileID: 1134836361371865964}
-  - component: {fileID: 2808097188437155341}
   - component: {fileID: 2423351291345961283}
   - component: {fileID: 5021902473138039828}
   - component: {fileID: 6287520840629278902}
@@ -54,7 +53,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _logging: {fileID: 0}
-  _spawnablePrefabs: {fileID: 11400000, guid: 88addb99702eee245976360a58a65375, type: 2}
+  _spawnablePrefabs: {fileID: 0}
   _refreshDefaultPrefabs: 1
   _runInBackground: 1
   _dontDestroyOnLoad: 1
@@ -107,14 +106,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f48f002b825cbd45a19bd96d90f9edb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _stopSocketsOnThread: 0
   _dontRoute: 0
+  _reuseAddress: 0
   _unreliableMtu: 1023
   _ipv4BindAddress: 
   _enableIpv6: 0
   _ipv6BindAddress: 
   _port: 7777
   _maximumClients: 4095
-  _clientAddress: 192.168.0.86
+  _clientAddress: 
 --- !u!114 &1134836361371865964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -136,19 +137,7 @@ MonoBehaviour:
   _mtu: 1023
   _port: 7777
   _maximumClients: 2000
-  _clientAddress: 192.168.0.86
---- !u!114 &2808097188437155341
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1087981268889951963}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5dd12f33e8151e43bc7ebf18ee1ad94, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  _clientAddress: 
 --- !u!114 &2423351291345961283
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -173,7 +162,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e838fcb1542f77b4aace907895a68966, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  globalScene: Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity
+  _welcomeScene: 
 --- !u!114 &6287520840629278902
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -199,7 +188,7 @@ MonoBehaviour:
   _changeFrameRate: 1
   _frameRate: 500
   _shareIds: 1
-  _startOnHeadless: 0
+  _startOnHeadless: 1
 --- !u!114 &3804329797783330967
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -212,4 +201,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69c4b531c159c0b1189986a178881708, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentLevel: 3
+  _currentLevel: 1

@@ -144,14 +144,15 @@ namespace AnyVR.LobbySystem.Internal
             return _quickConnectHandler.GetLobbyState(quickConnect);
         }
 
-        internal LobbyHandler GetLobbyHandler(Guid lobbyId)
-        {
-            return _handlers.GetValueOrDefault(lobbyId);
-        }
-
         internal IEnumerable<LobbyState> GetLobbyStates()
         {
             return _lobbyStates.Values;
+        }
+
+        [Server]
+        internal LobbyHandler GetLobbyHandler(Guid lobbyId)
+        {
+            return _handlers.GetValueOrDefault(lobbyId);
         }
 
 #endregion

@@ -791,17 +791,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: NetworkManager
       objectReference: {fileID: 0}
-    - target: {fileID: 1134836361371865964, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
-      propertyPath: _clientAddress
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 3804329797783330967, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: _currentLevel
       value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 4796949022164278234, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
-      propertyPath: _clientAddress
-      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 5021902473138039828, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: _globalScene
@@ -819,10 +811,6 @@ PrefabInstance:
       propertyPath: _spawnablePrefabs
       value: 
       objectReference: {fileID: 11400000, guid: c4dddc0eb86df83588bb6e63d5d958a2, type: 2}
-    - target: {fileID: 6287520840629278902, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
-      propertyPath: _startOnHeadless
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 7371100047868426117, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2060,7 +2048,7 @@ MonoBehaviour:
   _lobbyConfiguration: {fileID: 11400000, guid: fd75de8b3e25a333a8d3a74c750e6577, type: 2}
   _connectBtn: {fileID: 1411010728}
   _connectionPanel: {fileID: 1883483271}
-  _serverPanel: {fileID: 1418004559}
+  _onlinePanel: {fileID: 1418004559}
   _serverAddressInputField: {fileID: 2085816773}
   _usernameInputField: {fileID: 1871650872}
   _lobbyNameInputField: {fileID: 1437408865692159965}

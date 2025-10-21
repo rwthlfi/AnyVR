@@ -11,9 +11,9 @@ using LogLevel = AnyVR.Logging.LogLevel;
 
 namespace AnyVR.Voicechat
 {
-    internal class WebGLVoiceChatClient : VoiceChatClient
+    internal class WebGLVoicechatClient : VoicechatClient
     {
-        private const string Tag = nameof(WebGLVoiceChatClient);
+        private const string Tag = nameof(WebGLVoicechatClient);
         private Room _room;
         internal override event Action<Participant> ParticipantConnected;
         internal override event Action<string> ParticipantDisconnected;
@@ -75,7 +75,7 @@ namespace AnyVR.Voicechat
             _room.LocalTrackPublished += (_, _) => { Logger.Log(LogLevel.Verbose, Tag, "Local Track Published!"); };
             _room.Disconnected += _ => Connected = false;
 
-            Logger.Log(LogLevel.Verbose, Tag, "WebGLVoiceChatClient initialized!");
+            Logger.Log(LogLevel.Verbose, Tag, "WebGLVoicechatClient initialized!");
         }
 
 

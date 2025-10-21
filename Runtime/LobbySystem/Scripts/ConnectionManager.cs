@@ -152,6 +152,10 @@ namespace AnyVR.LobbySystem
             }
         }
 
+        public Uri LiveKitTokenServer { get; private set; }
+
+        public Uri LiveKitVoiceServer { get; private set; }
+
         public event Action OnClientTimeout;
 
         public event Action<ConnectionState> OnClientConnectionState;
@@ -258,6 +262,9 @@ namespace AnyVR.LobbySystem
 
             Assert.IsNotNull(GlobalGameState.Instance);
             Assert.IsNotNull(GlobalPlayerState.LocalPlayer);
+
+            LiveKitTokenServer = tokenServerUri;
+            LiveKitVoiceServer = new Uri(response.livekit_server_address);
 
             PlayerNameUpdateResult nameResult = await GlobalPlayerState.LocalPlayer.SetName(userName);
 

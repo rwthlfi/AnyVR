@@ -1,24 +1,32 @@
-using UnityEngine;
+using System;
 
 namespace AnyVR.Voicechat
 {
-    public class Participant
+    public abstract class Participant
     {
-        public Participant(string sid, string identity)
+        private bool _isSpeaking;
+        
+        public string Sid { get; }
+        
+        public event Action<bool> OnIsSpeakingUpdate;
+
+        public bool IsSpeaking
+        {
+            get => _isSpeaking;
+            
+            internal set
+            {
+                if (value != _isSpeaking)
+                {
+                    OnIsSpeakingUpdate?.Invoke(value);
+                }
+                _isSpeaking = value;
+            }
+        }
+        
+        internal Participant(string sid)
         {
             Sid = sid;
-            Identity = identity;
-        }
-
-        public string Sid { get; }
-
-        public string Identity { get; }
-        public Texture2D VideoTexture { get; internal set; }
-        public bool IsSpeaking { get; internal set; }
-
-        public override string ToString()
-        {
-            return $"Participant({Sid}, {Identity})";
         }
     }
 }
