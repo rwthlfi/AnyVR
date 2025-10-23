@@ -1,12 +1,11 @@
-#if !UNITY_WEBGL && !UNITY_EDITOR || true
-using LiveKit;
-using LiveKit.Proto;
+#if UNITY_STANDALONE
 using System;
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using LiveKit;
+using LiveKit.Proto;
 using UnityEngine;
-using UnityEngine.Assertions;
 using RoomOptions = LiveKit.RoomOptions;
 using Logger = AnyVR.Logging.Logger;
 using LogLevel = AnyVR.Logging.LogLevel;
@@ -16,58 +15,36 @@ namespace AnyVR.Voicechat
 {
     internal class StandaloneLiveKitClient : LiveKitClient
     {
-
-#region Private Fields
-        
-        private string _activeMicName;
-        
-        private RtcAudioSource _audioSource;
-        
-        private LocalAudioTrack _audioTrack;
-
-        private Room _room;
-
-#endregion
-
-#region Public API
-        
-        public override event Action<RemoteParticipant> OnParticipantConnected;
-        public override event Action<string> OnParticipantDisconnected;
-        
-#endregion
-
         public override bool IsConnected => _room is { IsConnected: true };
 
         public override void Init()
         {
             _room = new Room();
-            
+
             _room.ParticipantConnected += participant =>
             {
                 Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), $"Participant Connected! Name: {participant.Name}");
-                Remotes.Add(participant.Sid, new RemoteParticipant(participant.Sid));
-                OnParticipantConnected?.Invoke(Remotes[participant.Sid]);
+                Remotes.Add(participant.Identity, new RemoteParticipant(participant.Sid, participant.Identity, participant.Name));
+                OnParticipantConnected?.Invoke(Remotes[participant.Identity]);
             };
-            
+
             _room.ParticipantDisconnected += participant =>
             {
                 Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), $"Participant Disconnected! Name: {participant.Identity}");
-                Remotes.Remove(participant.Sid);
-                OnParticipantDisconnected?.Invoke(participant.Sid);
+                Remotes.Remove(participant.Identity);
+                OnParticipantDisconnected?.Invoke(participant.Identity);
             };
-            
+
             _room.TrackSubscribed += (track, publication, participant) =>
             {
                 Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), $"Track Subscribed! Participant: {participant.Identity}, Kind: {track.Kind}");
                 OnTrackSubscribed(track, publication, participant);
             };
-            
+
             _room.ActiveSpeakersChanged += speakers =>
             {
-                UpdateActiveSpeakers(speakers.Select(speaker => speaker.Sid).ToHashSet());
+                UpdateActiveSpeakers(speakers.Select(speaker => speaker.Identity).ToHashSet());
             };
-
-            Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), "StandaloneVoicechatClient initialized!");
         }
 
         public override Task<ConnectionResult> Connect(string address, string token)
@@ -76,7 +53,7 @@ namespace AnyVR.Voicechat
             StartCoroutine(Co_Connect(address, token));
             return result;
         }
-        
+
         internal override Task<MicrophonePublishResult> PublishMicrophone(string deviceName)
         {
             if (!IsConnected)
@@ -88,7 +65,7 @@ namespace AnyVR.Voicechat
             {
                 UnpublishMicrophone();
             }
-            
+
             if (Microphone.devices.All(device => device != deviceName))
             {
                 Logger.Log(LogLevel.Error, nameof(StandaloneLiveKitClient), $"Microphone '{deviceName}' is not available.");
@@ -98,7 +75,7 @@ namespace AnyVR.Voicechat
             _activeMicName = deviceName;
 
             _audioSource = new MicrophoneSource(_activeMicName, gameObject);
-            LocalAudioTrack track = LocalAudioTrack.CreateAudioTrack($"audio-track-{LocalParticipant.Sid}", _audioSource, _room);
+            LocalAudioTrack track = LocalAudioTrack.CreateAudioTrack($"audio-track-{LocalParticipant.Identity}", _audioSource, _room);
 
             Task<MicrophonePublishResult> task = TrackPublishResult.WaitForResult();
             StartCoroutine(Co_PublishTrack(track));
@@ -115,22 +92,24 @@ namespace AnyVR.Voicechat
                 },
                 Source = TrackSource.SourceMicrophone
             };
-            
+
             PublishTrackInstruction publish = _room.LocalParticipant.PublishTrack(track, options);
             yield return publish;
 
             if (publish.IsError)
             {
                 Logger.Log(LogLevel.Error, nameof(StandaloneLiveKitClient), "Failed to publish audio track.");
+                TrackPublishResult.Complete(MicrophonePublishResult.Error);
             }
             else
             {
                 Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), $"Published audio track! Active microphone: {_activeMicName}");
                 _audioSource.Start();
+                TrackPublishResult.Complete(MicrophonePublishResult.Published);
             }
         }
 
-        internal override void UnpublishMicrophone()
+        public override void UnpublishMicrophone()
         {
             _room.LocalParticipant.UnpublishTrack(_audioTrack, true);
             _audioSource.Dispose();
@@ -150,8 +129,7 @@ namespace AnyVR.Voicechat
                 ConnectionAwaiter.Complete(ConnectionResult.AlreadyConnected);
                 yield break;
             }
-            
-            Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), "Connecting to LiveKit room ...");
+
             ConnectInstruction op = _room.Connect(address, token, new RoomOptions());
 
             yield return op;
@@ -163,19 +141,17 @@ namespace AnyVR.Voicechat
             }
             else
             {
-                Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), "Successfully connected to LiveKit room!");
-                
-                LocalParticipant = new LocalParticipant(this, _room.LocalParticipant.Sid);
-                
+                LocalParticipant = new LocalParticipant(this, _room.LocalParticipant.Sid, _room.LocalParticipant.Identity, _room.LocalParticipant.Name);
+
                 foreach (LiveKitRemoteParticipant remote in _room.RemoteParticipants.Values)
                 {
-                    Remotes.Add(remote.Sid, new RemoteParticipant(remote.Sid));
+                    Remotes.Add(remote.Identity, new RemoteParticipant(remote.Sid, remote.Identity, remote.Name));
                 }
                 ConnectionAwaiter.Complete(ConnectionResult.Connected);
             }
         }
-        
-        private void OnTrackSubscribed(IRemoteTrack track, RemoteTrackPublication publication, LiveKitRemoteParticipant participant)
+
+        private void OnTrackSubscribed(IRemoteTrack track, RemoteTrackPublication _, LiveKitRemoteParticipant participant)
         {
             switch (track)
             {
@@ -183,11 +159,39 @@ namespace AnyVR.Voicechat
                     Logger.Log(LogLevel.Warning, nameof(StandaloneLiveKitClient), "Video tracks currently not supported."); //TODO
                     break;
                 case RemoteAudioTrack audioTrack:
-                    Assert.IsTrue(Remotes.ContainsKey(participant.Sid));
-                    Remotes[participant.Sid].SetAudioTrack(audioTrack);
+                    GameObject audioObject = AudioObjectMap(participant.Identity);
+
+                    if (audioObject == null)
+                    {
+                        Logger.Log(LogLevel.Error, nameof(StandaloneLiveKitClient), $"Could not fetch audio object for participant {participant.Identity}");
+                        return;
+                    }
+
+                    AudioSource audioSource = audioObject.AddComponent<AudioSource>();
+                    AudioStream audioStream = new(audioTrack, audioSource);
+                    Remotes[participant.Identity].SetAudioSource(audioSource);
                     break;
             }
         }
+
+#region Private Fields
+
+        private string _activeMicName;
+
+        private RtcAudioSource _audioSource;
+
+        private LocalAudioTrack _audioTrack;
+
+        private Room _room;
+
+#endregion
+
+#region Public API
+
+        public override event Action<RemoteParticipant> OnParticipantConnected;
+        public override event Action<string> OnParticipantDisconnected;
+
+#endregion
     }
 }
 #endif

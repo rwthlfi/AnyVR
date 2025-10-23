@@ -1,7 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using AnyVR.WebRequests;
 using FishNet.Managing;
@@ -183,6 +182,7 @@ namespace AnyVR.LobbySystem
             _networkManager.ClientManager.OnClientTimeOut += OnClientTimeout;
 
 #if UNITY_EDITOR && UNITY_SERVER
+            Debug.Log("starting server");
             _networkManager.ServerManager.StartConnection();
 #endif
         }

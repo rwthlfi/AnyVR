@@ -741,16 +741,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2964378093126406274, guid: bb073cccd54d70ac39b56b43c82c335b, type: 3}
       propertyPath: <SceneId>k__BackingField
-      value: 3048077213
-      objectReference: {fileID: 0}
-    - target: {fileID: 2964378093126406274, guid: bb073cccd54d70ac39b56b43c82c335b, type: 3}
-      propertyPath: 'NetworkBehaviours.Array.data[0]'
-      value: 
+      value: 3018715196
       objectReference: {fileID: 0}
     - target: {fileID: 4160441510113335179, guid: bb073cccd54d70ac39b56b43c82c335b, type: 3}
       propertyPath: m_Name
       value: SampleLobbyHandler
       objectReference: {fileID: 0}
+    - target: {fileID: 5259840073338232275, guid: bb073cccd54d70ac39b56b43c82c335b, type: 3}
+      propertyPath: _playerControllerPrefab
+      value: 
+      objectReference: {fileID: 8759174644159321255, guid: ec0acb6b4b9c67189b170d5585b1cdc6, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

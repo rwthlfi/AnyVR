@@ -1,16 +1,10 @@
-using System;
-using LiveKit;
-using UnityEngine;
-
 namespace AnyVR.Voicechat
 {
-    public class LocalParticipant : Participant, IDisposable
+    public class LocalParticipant : Participant
     {
         private readonly LiveKitClient _client;
-        
-        internal MicrophoneSource MicrophoneSource;
 
-        internal LocalParticipant(LiveKitClient client, string sid) : base(sid)
+        internal LocalParticipant(LiveKitClient client, string sid, string identity, string name) : base(sid, identity, name)
         {
             _client = client;
         }
@@ -19,15 +13,10 @@ namespace AnyVR.Voicechat
         {
             _client.PublishMicrophone(deviceName);
         }
-        
+
         public void UnpublishMicrophone()
         {
             _client.UnpublishMicrophone();
-        }
-        
-        public void Dispose()
-        {
-            MicrophoneSource?.Dispose();
         }
     }
 }

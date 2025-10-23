@@ -6,6 +6,7 @@ namespace AnyVR.Voicechat
         Timeout,
         Cancel,
         Error,
-        AlreadyConnected
+        AlreadyConnected,
+        PlatformNotSupported
     }
 }

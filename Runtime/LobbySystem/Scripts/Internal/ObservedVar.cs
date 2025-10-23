@@ -1,7 +1,7 @@
 using System;
 using FishNet.Object.Synchronizing;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     public interface IReadOnlyObservedVar<T>
     {

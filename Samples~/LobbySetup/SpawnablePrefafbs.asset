@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: SpawnablePrefafbs
   m_EditorClassIdentifier: 
   _prefabs:
+  - {fileID: 9111444471847147562, guid: 22b0b368b9aa61865ba7bc3af51c219b, type: 3}
+  - {fileID: 7270096850283665485, guid: 6e6479a9ba502c354b129a82ccf5af6b, type: 3}
   - {fileID: 9065046355952125734, guid: 8abde327d0837ae898daebf3ee88b3b1, type: 3}
   - {fileID: 4297447859890604620, guid: 8845e2a890ebcb2d19d909d9ae863829, type: 3}
   - {fileID: 8505041916568804508, guid: adb8af0480e515c048510a165defe0ab, type: 3}
-  - {fileID: 9111444471847147562, guid: 22b0b368b9aa61865ba7bc3af51c219b, type: 3}
+  - {fileID: 1286854624224253528, guid: ec0acb6b4b9c67189b170d5585b1cdc6, type: 3}

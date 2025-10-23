@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     [RequireComponent(typeof(LobbyRegistry))]
     internal partial class LobbyManagerInternal

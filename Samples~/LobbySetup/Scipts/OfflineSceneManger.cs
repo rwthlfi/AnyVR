@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using AnyVR.LobbySystem;
-using FishNet.Managing.Server;
-using FishNet.Object;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -78,9 +76,9 @@ namespace AnyVR.Sample
             _quickConnectBtn.onClick.AddListener(HandleQuickConnect);
 
             UpdateLobbyUIEntries();
-            
+
             return;
-            
+
             void SubscribeLobbyEvents(LobbyManager lobbyManager)
             {
                 if (lobbyManager == null)
@@ -123,8 +121,8 @@ namespace AnyVR.Sample
             {
                 return;
             }
-            
-            if(LobbyManager.Instance.TryGetLobby(id, out ILobbyInfo lobby))
+
+            if (LobbyManager.Instance.TryGetLobby(id, out GlobalLobbyState lobby))
             {
                 _ = lobbyManager.JoinLobby(lobby);
             }

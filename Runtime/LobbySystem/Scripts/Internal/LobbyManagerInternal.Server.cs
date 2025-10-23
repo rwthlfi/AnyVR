@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     [RequireComponent(typeof(LobbyRegistry))]
     internal partial class LobbyManagerInternal
@@ -22,7 +22,7 @@ namespace AnyVR.LobbySystem.Internal
             }
 
             maxClients = (ushort)Mathf.Max(1, maxClients);
-            LobbyState lobbyState = new LobbyFactory()
+            GlobalLobbyState globalLobbyState = new LobbyFactory()
                 .WithName(lobbyName)
                 .WithCreator(creator.ClientId)
                 .WithSceneID(sceneId)
@@ -31,17 +31,17 @@ namespace AnyVR.LobbySystem.Internal
                 .WithExpiration(expirationDate)
                 .Create();
 
-            Assert.IsNotNull(lobbyState);
+            Assert.IsNotNull(globalLobbyState);
 
-            LobbyHandler handler = await _sceneService.StartLobbyScene(lobbyState);
+            LobbyHandler handler = await _sceneService.StartLobbyScene(globalLobbyState);
             Assert.IsNotNull(handler, "Failed to load lobby scene");
-            handler.Init(lobbyState);
+            handler.Init(globalLobbyState);
 
             // Lobby scene successfully loaded.
-            bool success = _lobbyRegistry.RegisterLobby(lobbyState, handler, password);
+            bool success = _lobbyRegistry.RegisterLobby(globalLobbyState, handler, password);
             Assert.IsTrue(success);
 
-            TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.Success, lobbyState.LobbyId);
+            TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.Success, globalLobbyState.LobbyId);
         }
 
         [Server]
@@ -49,7 +49,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             Assert.IsNotNull(conn);
 
-            LobbyState state = _lobbyRegistry.GetLobbyState(lobbyId);
+            GlobalLobbyState state = _lobbyRegistry.GetLobbyState(lobbyId);
             if (state == null)
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal),
@@ -58,10 +58,7 @@ namespace AnyVR.LobbySystem.Internal
                 return;
             }
 
-            LobbyHandler lobbyHandler = _lobbyRegistry.GetLobbyHandler(lobbyId);
-            Assert.IsNotNull(lobbyHandler);
-
-            if (lobbyHandler.GetPlayerStates().Count() >= state.LobbyCapacity)
+            if (state.NumPlayers.Value >= state.LobbyCapacity)
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal),
                     $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Lobby is full.");
@@ -81,24 +78,31 @@ namespace AnyVR.LobbySystem.Internal
 
             TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.Success, lobbyId);
 
+            LobbyHandler lobbyHandler = _lobbyRegistry.GetLobbyHandler(lobbyId);
+            Assert.IsNotNull(lobbyHandler);
             _sceneService.LoadLobbySceneForPlayer(conn, lobbyHandler);
         }
 
         [Server]
-        public void RemovePlayerFromLobby(NetworkConnection conn, LobbyHandler lobbyHandler)
+        public void RemovePlayerFromLobby(LobbyPlayerState player)
         {
-            _sceneService.UnloadLobbySceneForPlayer(conn, lobbyHandler);
+            LobbyHandler lobbyHandler = _lobbyRegistry.GetLobbyHandler(player.GetLobbyId());
+            Assert.IsNotNull(lobbyHandler);
+
+            _sceneService.UnloadLobbySceneForPlayer(player.Owner, lobbyHandler);
         }
 
         [Server]
         internal void Server_CloseLobby(Guid lobbyId)
         {
+            GlobalLobbyState state = _lobbyRegistry.GetLobbyState(lobbyId);
+            Assert.IsNotNull(state);
+
+            _lobbyRegistry.UnregisterLobby(state);
+            Despawn(state.NetworkObject, DespawnType.Destroy);
+
             LobbyHandler handler = _lobbyRegistry.GetLobbyHandler(lobbyId);
             Assert.IsNotNull(handler);
-
-            _lobbyRegistry.UnregisterLobby(handler.State);
-            Despawn(handler.State.NetworkObject, DespawnType.Destroy);
-
             _sceneService.UnloadLobby(handler);
 
             Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal), $"Lobby with id '{lobbyId}' is closed");
@@ -124,7 +128,7 @@ namespace AnyVR.LobbySystem.Internal
         [ServerRpc(RequireOwnership = false)]
         private void ServerRPC_QuickConnect(uint quickConnect, NetworkConnection conn)
         {
-            LobbyState state = _lobbyRegistry.GetLobbyState(quickConnect);
+            GlobalLobbyState state = _lobbyRegistry.GetLobbyState(quickConnect);
             if (state == null)
             {
                 TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.LobbyDoesNotExist);

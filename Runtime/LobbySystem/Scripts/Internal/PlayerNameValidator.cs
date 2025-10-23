@@ -2,7 +2,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine.Assertions;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     public static class PlayerNameValidator
     {

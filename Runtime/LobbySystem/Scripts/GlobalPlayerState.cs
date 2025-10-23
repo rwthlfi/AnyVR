@@ -3,7 +3,6 @@ using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using AnyVR.LobbySystem.Internal;
 using AnyVR.PlatformManagement;
 using FishNet.Connection;
 using FishNet.Managing.Server;

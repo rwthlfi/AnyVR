@@ -27,40 +27,41 @@ namespace AnyVR.Sample
         [SerializeField] private TextMeshProUGUI _capacityLabel;
 
         private readonly Dictionary<int, UIUserListEntry> _players = new();
-        private LobbyHandler _lobbyHandler;
+
+        private LobbyState _lobbyState;
 
         private Coroutine _pingCoroutine;
 
         private void Start()
         {
-            _lobbyHandler = LobbyHandler.Instance;
-            if (_lobbyHandler == null)
+            _lobbyState = LobbyState.GetInstance();
+            if (_lobbyState == null)
             {
                 Debug.LogWarning("LobbyHandler not found. Disabling UISessionPanel.");
                 return;
             }
 
-            _lobbyHandler.OnPlayerJoin += AddPlayerEntry;
-            _lobbyHandler.OnPlayerLeave += RemovePlayerEntry;
+            _lobbyState.OnPlayerJoin += AddPlayerEntry;
+            _lobbyState.OnPlayerLeave += RemovePlayerEntry;
 
             _pingCoroutine = StartCoroutine(Co_UpdatePingLabel());
         }
 
         private void OnEnable()
         {
-            if (_lobbyHandler == null)
+            if (_lobbyState == null)
                 return;
 
             UpdateSessionInfo();
             RemoveAllEntries();
 
-            foreach (LobbyPlayerState player in _lobbyHandler.GetPlayerStates<LobbyPlayerState>())
+            foreach (LobbyPlayerState player in _lobbyState.GetPlayerStates<LobbyPlayerState>())
             {
                 AddPlayerEntry(player);
             }
 
-            float playerCount = _lobbyHandler.GetPlayerStates().Count();
-            float capacity = _lobbyHandler.LobbyInfo.LobbyCapacity;
+            float playerCount = _lobbyState.GetPlayerStates().Count();
+            float capacity = _lobbyState.Global.LobbyCapacity;
 
             _capacityLabel.text = $"({playerCount} / {capacity})";
         }
@@ -74,7 +75,7 @@ namespace AnyVR.Sample
         private IEnumerator Co_UpdatePingLabel()
         {
             const float pingInterval = 0.5f;
-            if (_lobbyHandler == null)
+            if (_lobbyState == null)
             {
                 yield return null;
             }
@@ -82,7 +83,7 @@ namespace AnyVR.Sample
             ConnectionManager connectionManager = ConnectionManager.Instance;
             Assert.IsNotNull(connectionManager);
 
-            while (_lobbyHandler != null)
+            while (_lobbyState != null)
             {
                 _pingLabel.text = $"{connectionManager.Latency.ToString()} ms";
                 yield return new WaitForSeconds(pingInterval);
@@ -91,12 +92,12 @@ namespace AnyVR.Sample
 
         private void UpdateSessionInfo()
         {
-            _lobbyNameLabel.text = _lobbyHandler.LobbyInfo.Name.Value;
-            _locationLabel.text = _lobbyHandler.LobbyInfo.Scene.Name;
-            _quickConnectLabel.text = _lobbyHandler.QuickConnectCode.ToString();
+            _lobbyNameLabel.text = _lobbyState.Global.Name.Value;
+            _locationLabel.text = _lobbyState.Global.Scene.Name;
+            _quickConnectLabel.text = _lobbyState.Global.QuickConnectCode.ToString();
 
-            LobbyPlayerState owner = _lobbyHandler.GetLobbyCreator();
-            _ownerLabel.text = owner != null ? owner.Global.GetName() : "N/A (disconnected)";
+            GlobalPlayerState owner = _lobbyState.Global.Creator;
+            _ownerLabel.text = owner != null ? owner.GetName() : "N/A (disconnected)";
         }
 
         private void RemoveAllEntries()
@@ -116,8 +117,8 @@ namespace AnyVR.Sample
             UIUserListEntry entry = Instantiate(_entryPrefab, _entryParent);
             entry.SetPlayerInfo(lobbyPlayerState);
 
-            entry.OnKickButtonPressed += player => player.Kick();
-            entry.OnPromoteToAdminButtonPressed += player => player.PromoteToAdmin();
+            entry.OnKickButtonPressed += player => LobbyPlayerController.GetInstance().Kick(player);
+            entry.OnPromoteToAdminButtonPressed += player => LobbyPlayerController.GetInstance().PromoteToAdmin(player);
 
             _players.Add(lobbyPlayerState.Global.GetID(), entry);
         }

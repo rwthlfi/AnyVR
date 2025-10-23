@@ -2,15 +2,17 @@ using System;
 using System.Collections.Generic;
 using FishNet.Object;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     [RequireComponent(typeof(LobbyRegistry))]
     internal partial class LobbyManagerInternal : NetworkBehaviour
     {
 #region Serialized Fields
 
-        [SerializeField] internal LobbyState _lobbyStatePrefab;
+        [FormerlySerializedAs("_lobbyStatePrefab")]
+        [SerializeField] internal GlobalLobbyState _globalLobbyStatePrefab;
 
 #endregion
 
@@ -26,12 +28,12 @@ namespace AnyVR.LobbySystem.Internal
 
 #region Lobby Accessors
 
-        internal LobbyState GetLobbyState(Guid lobbyId)
+        internal GlobalLobbyState GetLobbyState(Guid lobbyId)
         {
             return _lobbyRegistry.GetLobbyState(lobbyId);
         }
 
-        internal IEnumerable<LobbyState> GetLobbyStates()
+        internal IEnumerable<GlobalLobbyState> GetLobbyStates()
         {
             return _lobbyRegistry.GetLobbyStates();
         }

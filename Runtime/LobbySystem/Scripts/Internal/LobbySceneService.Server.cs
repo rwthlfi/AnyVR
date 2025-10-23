@@ -10,7 +10,7 @@ using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using Logger = AnyVR.Logging.Logger;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     internal partial class LobbySceneService
     {
@@ -27,7 +27,7 @@ namespace AnyVR.LobbySystem.Internal
         ///     failed.
         /// </summary>
         [Server]
-        internal async Task<LobbyHandler> StartLobbyScene(LobbyState lobbyState)
+        internal async Task<LobbyHandler> StartLobbyScene(GlobalLobbyState globalLobbyState)
         {
             Assert.IsTrue(_internal.ServerManager.Started);
 
@@ -41,7 +41,7 @@ namespace AnyVR.LobbySystem.Internal
             _loadSceneTcs = new TaskCompletionSource<LobbyHandler>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             Logger.Log(LogLevel.Verbose, nameof(LobbySceneService), "Loading lobby scene. Waiting for lobby handler");
-            _internal.SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), CreateSceneLoadData(lobbyState));
+            _internal.SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), CreateSceneLoadData(globalLobbyState));
 
             Task delay = Task.Delay(TimeSpan.FromSeconds(10));
             Task completed = await Task.WhenAny(_loadSceneTcs.Task, delay);
@@ -103,7 +103,7 @@ namespace AnyVR.LobbySystem.Internal
         }
 
         [Server]
-        private static SceneLoadData CreateSceneLoadData(LobbyState state)
+        private static SceneLoadData CreateSceneLoadData(GlobalLobbyState state)
         {
             return CreateSceneLoadDataInternal(
                 state.Scene.ScenePath,
@@ -150,7 +150,7 @@ namespace AnyVR.LobbySystem.Internal
 
             SceneLookupData sld = new()
             {
-                Handle = handler.gameObject.scene.handle, Name = handler.State.Scene.ScenePath
+                Handle = handler.gameObject.scene.handle, Name = handler.State.Global.Scene.ScenePath
             };
 
             object[] unloadParams =

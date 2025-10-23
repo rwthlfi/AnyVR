@@ -5,7 +5,7 @@ using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     internal partial class LobbySceneService
     {
@@ -13,7 +13,14 @@ namespace AnyVR.LobbySystem.Internal
         private void Client_Constructor()
         {
             _internal.SceneManager.OnLoadStart += Client_OnLoadStart;
+            _internal.SceneManager.OnLoadEnd += Client_OnLoadEnd;
             _internal.SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
+        }
+
+        [Client]
+        private static void Client_OnLoadEnd(SceneLoadEndEventArgs obj)
+        {
+            SceneManager.SetActiveScene(obj.LoadedScenes[0]);
         }
 
         [Client]

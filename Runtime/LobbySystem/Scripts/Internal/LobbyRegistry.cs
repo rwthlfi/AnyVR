@@ -6,17 +6,16 @@ using System.Text;
 using AnyVR.Logging;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using JetBrains.Annotations;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     internal class LobbyRegistry : NetworkBehaviour
     {
 #region Replicated Properties
 
-        private readonly SyncDictionary<Guid, LobbyState> _lobbyStates = new();
+        private readonly SyncDictionary<Guid, GlobalLobbyState> _lobbyStates = new();
 
 #endregion
 
@@ -74,47 +73,47 @@ namespace AnyVR.LobbySystem.Internal
 #region Server Methods
 
         [Server]
-        internal bool RegisterLobby(LobbyState lobbyState, LobbyHandler handler, string password = null)
+        internal bool RegisterLobby(GlobalLobbyState globalLobbyState, LobbyHandler handler, string password = null)
         {
-            if (_lobbyStates.ContainsKey(lobbyState.LobbyId))
+            if (_lobbyStates.ContainsKey(globalLobbyState.LobbyId))
             {
-                Logger.Log(LogLevel.Warning, nameof(LobbyRegistry), $"Lobby {lobbyState.LobbyId} already registered. Skipping.");
+                Logger.Log(LogLevel.Warning, nameof(LobbyRegistry), $"Lobby {globalLobbyState.LobbyId} already registered. Skipping.");
                 return false;
             }
 
-            Assert.IsFalse(_handlers.ContainsKey(lobbyState.LobbyId));
-            Assert.IsFalse(_passwordHashes.ContainsKey(lobbyState.LobbyId));
+            Assert.IsFalse(_handlers.ContainsKey(globalLobbyState.LobbyId));
+            Assert.IsFalse(_passwordHashes.ContainsKey(globalLobbyState.LobbyId));
 
-            _lobbyStates.Add(lobbyState.LobbyId, lobbyState);
-            _handlers[lobbyState.LobbyId] = handler;
+            _lobbyStates.Add(globalLobbyState.LobbyId, globalLobbyState);
+            _handlers[globalLobbyState.LobbyId] = handler;
 
             if (!string.IsNullOrWhiteSpace(password))
             {
-                _passwordHashes[lobbyState.LobbyId] = ComputeSha256(password);
+                _passwordHashes[globalLobbyState.LobbyId] = ComputeSha256(password);
             }
 
-            bool success = _quickConnectHandler.RegisterLobby(lobbyState);
+            bool success = _quickConnectHandler.RegisterLobby(globalLobbyState);
             Assert.IsTrue(success);
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {lobbyState.LobbyId} registered successfully.");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {globalLobbyState.LobbyId} registered successfully.");
             return true;
         }
 
         [Server]
-        internal void UnregisterLobby(LobbyState lobby)
+        internal void UnregisterLobby(GlobalLobbyState globalLobby)
         {
-            if (!_lobbyStates.Remove(lobby.LobbyId))
+            if (!_lobbyStates.Remove(globalLobby.LobbyId))
                 return;
 
-            bool handlerRemoved = _handlers.Remove(lobby.LobbyId);
+            bool handlerRemoved = _handlers.Remove(globalLobby.LobbyId);
             Assert.IsTrue(handlerRemoved);
 
-            bool success = _quickConnectHandler.UnregisterLobby(lobby);
+            bool success = _quickConnectHandler.UnregisterLobby(globalLobby);
             Assert.IsTrue(success);
 
-            _passwordHashes.Remove(lobby.LobbyId);
+            _passwordHashes.Remove(globalLobby.LobbyId);
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {lobby.LobbyId} unregistered successfully.");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyRegistry), $"Lobby {globalLobby.LobbyId} unregistered successfully.");
         }
 
         [Server]
@@ -133,18 +132,17 @@ namespace AnyVR.LobbySystem.Internal
 
 #region Lobby Accessors
 
-        internal LobbyState GetLobbyState(Guid lobbyId)
+        internal GlobalLobbyState GetLobbyState(Guid lobbyId)
         {
             return _lobbyStates.GetValueOrDefault(lobbyId);
         }
 
-        [CanBeNull]
-        internal LobbyState GetLobbyState(uint quickConnect)
+        internal GlobalLobbyState GetLobbyState(uint quickConnect)
         {
             return _quickConnectHandler.GetLobbyState(quickConnect);
         }
 
-        internal IEnumerable<LobbyState> GetLobbyStates()
+        internal IEnumerable<GlobalLobbyState> GetLobbyStates()
         {
             return _lobbyStates.Values;
         }

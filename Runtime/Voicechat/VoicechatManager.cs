@@ -16,16 +16,16 @@ namespace AnyVR.Voicechat
             Logger.Log(LogLevel.Verbose, nameof(VoicechatManager), "VoiceChatManager not initialized. Platform: SERVER");
             return null;
 #endif
-            
+
             GameObject go = new("LiveKitClient");
 #if UNITY_WEBGL
             liveKitClient = go.AddComponent<WebGLVoiceChatClient>();
             Logger.Log(LogLevel.Verbose, nameof(VoicechatManager),"VoiceChatManager initialized. Platform: WEBGL");
-#elif UNITY_STANDALONE || UNITY_EDITOR
+#elif UNITY_STANDALONE // && !UNITY_EDITOR
             liveKitClient = go.AddComponent<StandaloneLiveKitClient>();
             Logger.Log(LogLevel.Verbose, nameof(VoicechatManager), "VoiceChatManager initialized. Platform: STANDALONE");
 #else
-            throw new PlatformNotSupportedException("VoiceChatManager not initialized. Platform: UNKNOWN");
+            // throw new PlatformNotSupportedException("VoiceChatManager not initialized. Platform: UNKNOWN");
 #endif
 
             liveKitClient.Init();

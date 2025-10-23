@@ -1,7 +1,7 @@
 using System;
 using WebRequests;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     [Serializable]
     public class ServerAddressResponse : Response

@@ -4,7 +4,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using FishNet.Managing.Scened;
 using UnityEngine.Assertions;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     internal partial class LobbySceneService
     {

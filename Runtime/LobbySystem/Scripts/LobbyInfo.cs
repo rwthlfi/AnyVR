@@ -1,6 +1,4 @@
 using System;
-using AnyVR.LobbySystem.Internal;
-using JetBrains.Annotations;
 
 namespace AnyVR.LobbySystem
 {
@@ -23,7 +21,7 @@ namespace AnyVR.LobbySystem
         ///     The creator of the lobby.
         ///     Can be null if the creator disconnected from the server.
         /// </summary>
-        [CanBeNull] GlobalPlayerState Creator { get; }
+        GlobalPlayerState Creator { get; }
 
         int CreatorId { get; }
 

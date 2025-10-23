@@ -4,7 +4,7 @@ using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
     internal class LobbyFactory
     {
@@ -77,10 +77,10 @@ namespace AnyVR.LobbySystem.Internal
             throw new InvalidOperationException("Failed to generate unique quick connect code");
         }
 
-        public LobbyState Create()
+        public GlobalLobbyState Create()
         {
             LobbyManagerInternal @internal = LobbyManager.Instance.Internal;
-            LobbyState lmd = Object.Instantiate(@internal._lobbyStatePrefab);
+            GlobalLobbyState lmd = Object.Instantiate(@internal._globalLobbyStatePrefab);
             SceneManager.MoveGameObjectToScene(lmd.gameObject, @internal.gameObject.scene);
             @internal.Spawn(lmd.NetworkObject);
             lmd.Init(Guid.NewGuid(), GenerateQuickConnectCode(), _name, _creatorId, (ushort)_sceneId, _lobbyCapacity, _isPasswordProtected, _expirationDate);

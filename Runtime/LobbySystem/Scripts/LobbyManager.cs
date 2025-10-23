@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -33,7 +32,7 @@ namespace AnyVR.LobbySystem
 
             Internal.OnLobbyOpened += lobbyId =>
             {
-                LobbyState state = Internal.GetLobbyState(lobbyId);
+                GlobalLobbyState state = Internal.GetLobbyState(lobbyId);
                 OnLobbyOpened?.Invoke(state);
             };
 
@@ -127,7 +126,7 @@ namespace AnyVR.LobbySystem
             return Internal.QuickConnect(quickConnectCode);
         }
 
-        public bool TryGetLobby(Guid lobbyId, out ILobbyInfo lobbyInfo)
+        public bool TryGetLobby(Guid lobbyId, out GlobalLobbyState lobbyInfo)
         {
             lobbyInfo = Internal.GetLobbyState(lobbyId);
             return lobbyInfo != null;

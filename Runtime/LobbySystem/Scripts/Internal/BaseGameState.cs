@@ -101,13 +101,13 @@ namespace AnyVR.LobbySystem
         [Server]
         protected T AddPlayerState(NetworkConnection conn, bool global = false)
         {
+            //TODO: Spawn/Despawn the player states somewhere else?
             T ps = Instantiate(_playerStatePrefab).GetComponent<T>();
             ps.NetworkObject.SetIsGlobal(global);
             Spawn(ps.gameObject, conn, gameObject.scene);
 
             _playerStates.Add(conn.ClientId, ps);
             return ps;
-
         }
 
         [Server]
