@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "Input Actions",
     "maps": [
         {
@@ -2815,6 +2816,54 @@
                     "action": "Lock Cursor",
                     "isComposite": false,
                     "isPartOfComposite": true
+                }
+            ]
+        },
+        {
+            "name": "PC Object Selected",
+            "id": "bac655a5-e565-468b-8a30-cccaeb8c74a2",
+            "actions": [
+                {
+                    "name": "PrimaryAction",
+                    "type": "Button",
+                    "id": "e6f60bad-9bb9-42b3-b412-5179799a42e7",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SecondaryAction",
+                    "type": "Button",
+                    "id": "d0bb4719-f967-43a6-88e1-c3434458cbe0",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "2fe57629-eeb3-4c22-a67b-7c8febd07ee5",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "PrimaryAction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a2dbddc1-ad75-4925-8f72-f9c1ec4d95fd",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SecondaryAction",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         }

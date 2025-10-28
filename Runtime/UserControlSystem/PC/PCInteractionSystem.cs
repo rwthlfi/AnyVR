@@ -15,8 +15,11 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
@@ -26,7 +29,7 @@ namespace AnyVR.UserControlSystem.PC
     ///     Represents a PC interaction system that extends XRBaseInteractor.
     ///     This class handles the interaction logic for PC input modality.
     /// </summary>
-    public class PCInteractionSystem : XRBaseInteractor
+    public class PCInteractionSystem : XRBaseInteractor, IXRActivateInteractor
     {
         /// <summary>
         ///     Represents the interaction mode for the PC interaction system.
@@ -43,20 +46,40 @@ namespace AnyVR.UserControlSystem.PC
         [SerializeField] private Transform _interactionRaycastOrigin;
 
         [SerializeField] [Tooltip("If interaction should be toggleable or only when button is pressed.")]
-        private InteractionMode _interactionMode;
+        private InteractionMode _selectionMode;
 
         [SerializeField]
         [Tooltip("The Input System Action that will be used to interaction an object. Expects a 'Button' action.")]
-        private InputActionProperty _interactionAction =
+        private InputActionProperty _selectionAction =
             new(new InputAction("Interaction", expectedControlType: "Button"));
+
+        [Header("Selection Interaction")]
+        [SerializeField, Tooltip("Primary interaction action, uses XRI Activated event.")]
+        private InputActionProperty _primaryInteractionAction =
+            new(new InputAction("Primary Interaction", expectedControlType: "Button"));
+
+        [SerializeField]
+        [Tooltip("Secondary interaction action, can be used to trigger secondary interactions that would otherwise be handled by VR affordances. " +
+            "Needs a PCSecondarySelectionAction Component on the interactable.")]
+        private InputActionProperty _secondaryInteractionAction =
+            new(new InputAction("Secondary Interaction", expectedControlType: "Button"));
+
+        public bool shouldActivate => (firstInteractableSelected != null) && (firstInteractableSelected is IXRActivateInteractable);
+
+        public bool shouldDeactivate => (firstInteractableSelected != null) && (firstInteractableSelected is IXRActivateInteractable);
 
         protected override void Start()
         {
             base.Start();
             allowHover = true;
             allowSelect = true;
-            _interactionAction.action.started += TryStartInteraction;
-            _interactionAction.action.canceled += TryEndInteraction;
+            _selectionAction.action.started += TryStartSelection;
+            _selectionAction.action.canceled += TryEndInteraction;
+            _primaryInteractionAction.action.started += StartPrimarySelectionAction;
+            _primaryInteractionAction.action.canceled += CancelPrimarySelectionAction;
+            _secondaryInteractionAction.action.started += StartSecondarySelectionAction;
+            _secondaryInteractionAction.action.canceled += CancelSecondarySelectionAction;
+            EnableSelectionInteractions(false);
         }
 
         protected void Update()
@@ -74,6 +97,8 @@ namespace AnyVR.UserControlSystem.PC
             }
         }
 
+
+
         private void UnhoverAll()
         {
             foreach (IXRHoverInteractable hovered in interactablesHovered)
@@ -82,7 +107,7 @@ namespace AnyVR.UserControlSystem.PC
             }
         }
 
-        private void UnselectAll()
+        private void DeselectAll()
         {
             foreach (IXRSelectInteractable selected in interactablesSelected)
             {
@@ -90,24 +115,24 @@ namespace AnyVR.UserControlSystem.PC
             }
         }
 
-        private void TryStartInteraction(InputAction.CallbackContext context)
+        private void TryStartSelection(InputAction.CallbackContext context)
         {
-            if (_interactionMode == InteractionMode.Toggle)
+            if (_selectionMode == InteractionMode.Toggle)
             {
-                ToggleInteraction(context);
+                ToggleSelection(context);
             }
-            else if (_interactionMode == InteractionMode.Hold)
+            else if (_selectionMode == InteractionMode.Hold)
             {
-                TryStartInteractionHolding(context);
+                TryStartSelecting(context);
             }
         }
 
 
-        private void ToggleInteraction(InputAction.CallbackContext context)
+        private void ToggleSelection(InputAction.CallbackContext context)
         {
             if (!hasSelection)
             {
-                TryInteractWithObject(context);
+                TrySelectObject(context);
             }
             else
             {
@@ -115,17 +140,17 @@ namespace AnyVR.UserControlSystem.PC
             }
         }
 
-        private void TryStartInteractionHolding(InputAction.CallbackContext context)
+        private void TryStartSelecting(InputAction.CallbackContext context)
         {
             if (hasSelection)
             {
                 return;
             }
 
-            TryInteractWithObject(context);
+            TrySelectObject(context);
         }
 
-        private void TryInteractWithObject(InputAction.CallbackContext context)
+        private void TrySelectObject(InputAction.CallbackContext context)
         {
             if (hasHover)
             {
@@ -170,7 +195,7 @@ namespace AnyVR.UserControlSystem.PC
 
         private void TryEndInteraction(InputAction.CallbackContext context)
         {
-            if (_interactionMode == InteractionMode.Toggle)
+            if (_selectionMode == InteractionMode.Toggle)
             {
                 return;
             }
@@ -191,11 +216,94 @@ namespace AnyVR.UserControlSystem.PC
         private void SelectHoveredObject()
         {
             interactionManager.SelectEnter(this, interactablesHovered[0].transform.GetComponent<IXRSelectInteractable>());
+            EnableSelectionInteractions(true);
         }
 
         private void ReleaseSelectedObject()
         {
             interactionManager.SelectExit(this, firstInteractableSelected);
+            EnableSelectionInteractions(false);
+        }
+
+        private void StartPrimarySelectionAction(InputAction.CallbackContext context)
+        {
+            if (firstInteractableSelected is IXRActivateInteractable activateInteractable)
+            {
+                ActivateEventArgs args = new()
+                {
+                    interactorObject = this,
+                    interactableObject = activateInteractable
+                };
+                activateInteractable.activated.Invoke(args);
+            }
+        }
+
+        private void CancelPrimarySelectionAction(InputAction.CallbackContext context)
+        {
+            if (firstInteractableSelected is IXRActivateInteractable activateInteractable)
+            {
+                DeactivateEventArgs args = new()
+                {
+                    interactorObject = this,
+                    interactableObject = activateInteractable
+                };
+                activateInteractable.deactivated.Invoke(args);
+            }
+        }
+
+        private void StartSecondarySelectionAction(InputAction.CallbackContext context)
+        {
+            if (firstInteractableSelected is IXRActivateInteractable activateInteractable)
+            {
+                if (firstInteractableSelected.transform.TryGetComponent(out PCSecondarySelectionAction secondarySelectionAction))
+                {
+                    ActivateEventArgs args = new()
+                    {
+                        interactorObject = this,
+                        interactableObject = activateInteractable
+                    };
+                    secondarySelectionAction.SecondarySelectActivated.Invoke(args);
+                }
+            }
+        }
+
+        private void CancelSecondarySelectionAction(InputAction.CallbackContext context)
+        {
+            if (firstInteractableSelected is IXRActivateInteractable activateInteractable)
+            {
+                if (firstInteractableSelected.transform.TryGetComponent(out PCSecondarySelectionAction secondarySelectionAction))
+                {
+                    DeactivateEventArgs args = new()
+                    {
+                        interactorObject = this,
+                        interactableObject = activateInteractable
+                    };
+                    secondarySelectionAction.SecondarySelectDeactivated.Invoke(args);
+                }
+            }
+        }
+
+        private void EnableSelectionInteractions(bool v)
+        {
+            if (v)
+            {
+                _primaryInteractionAction.action.Enable();
+                _secondaryInteractionAction.action.Enable();
+            }
+            else
+            {
+                _primaryInteractionAction.action.Disable();
+                _secondaryInteractionAction.action.Disable();
+            }
+        }
+
+        public void GetActivateTargets(List<IXRActivateInteractable> targets)
+        {
+            targets.Clear(); // As expected by Unity, cf. documentation.
+            if (firstInteractableSelected is IXRActivateInteractable activateInteractable)
+            {
+                targets.Add(activateInteractable);
+            }
         }
     }
 }

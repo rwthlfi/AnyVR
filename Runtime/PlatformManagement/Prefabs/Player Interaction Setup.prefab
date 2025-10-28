@@ -503,6 +503,70 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3844005973443047826}
     m_Modifications:
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionAction.m_Reference
+      value: 
+      objectReference: {fileID: -7565586953333158246, guid: 40eee974618b10508bf944a19ac75728, type: 3}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionInteractionMap.m_Id
+      value: ef8d16ad-c568-4c3d-a1a1-bbc7a14f6140
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionAction.m_UseReference
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionInteractionMap.m_Name
+      value: Selection Interaction Map
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _primaryInteractionAction.m_Reference
+      value: 
+      objectReference: {fileID: 2355568461387364877, guid: 40eee974618b10508bf944a19ac75728, type: 3}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _secondaryInteractionAction.m_Reference
+      value: 
+      objectReference: {fileID: -7251931430609792836, guid: 40eee974618b10508bf944a19ac75728, type: 3}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _primaryInteractionAction.m_UseReference
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _secondaryInteractionAction.m_UseReference
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionInteractionMap.m_Actions.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionInteractionMap.m_Bindings.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionInteractionMap.m_Actions.Array.data[0].m_Id
+      value: 0d02fd5a-fb43-413c-8318-3a0d89f2861a
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionInteractionMap.m_Bindings.Array.data[0].m_Id
+      value: 3c3e36c3-0528-4527-8b52-3ed84e1229fd
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionInteractionMap.m_Actions.Array.data[0].m_Name
+      value: New action
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionInteractionMap.m_Actions.Array.data[0].m_Type
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionInteractionMap.m_Bindings.Array.data[0].m_Action
+      value: New action
+      objectReference: {fileID: 0}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _selectionInteractionMap.m_Actions.Array.data[0].m_ExpectedControlType
+      value: Button
+      objectReference: {fileID: 0}
     - target: {fileID: 5298120571266275692, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
