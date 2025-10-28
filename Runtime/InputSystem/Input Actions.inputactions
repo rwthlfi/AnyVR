@@ -2687,6 +2687,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Throw",
+                    "type": "Button",
+                    "id": "e942a84c-6ef9-445d-91d4-c84db4675a90",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "Hold",
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -2755,6 +2764,17 @@
                     "action": "Unlock Cursor",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "be8ef2c6-165f-490a-a707-296c2050063f",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Throw",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },

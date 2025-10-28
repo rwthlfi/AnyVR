@@ -16,8 +16,10 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
@@ -48,6 +50,10 @@ namespace AnyVR.UserControlSystem.PC
         [SerializeField] [Tooltip("If interaction should be toggleable or only when button is pressed.")]
         private InteractionMode _selectionMode;
 
+        private Coroutine _selectionCoroutine = null;
+        private bool _isSelectionButtonPressed = false;
+        private IXRHoverInteractable HoveredObject => hasHover ? interactablesHovered[0] : null;
+
         [SerializeField]
         [Tooltip("The Input System Action that will be used to interaction an object. Expects a 'Button' action.")]
         private InputActionProperty _selectionAction =
@@ -64,17 +70,50 @@ namespace AnyVR.UserControlSystem.PC
         private InputActionProperty _secondaryInteractionAction =
             new(new InputAction("Secondary Interaction", expectedControlType: "Button"));
 
+        [Header("Throwing")]
+        [SerializeField]
+        private ThrowingSettings _throwingSettings = new ThrowingSettings
+        {
+            _throwDelay = 0.5f,
+            _animSpeed = 1f,
+            _maxThrowChargeDuration = 2f,
+            _maxThrowForce = 10f
+        };
+
+        private Coroutine _throwCoroutine = null;
+        private bool _isPreparingThrow = false;
+
+        [SerializeField]
+        private IPCThrowHandler _throwHandler = null;
+
+        private UnityEvent<float> _onThrow = new();
+        /// <summary>
+        ///    Event invoked when a throw action is performed, passing the throw force as a float parameter.
+        /// </summary>
+        public UnityEvent<float> OnThrow => _onThrow;
+
+        private UnityEvent<float> _onChargeThrow = new();
+        /// <summary>
+        ///   Event invoked when a throw is being charged, passing the current percentage of charge force as a float parameter.
+        ///   Can be used to update UI or animations.
+        /// </summary>
+        public UnityEvent<float> OnChargeThrow => _onChargeThrow;
+
+        public bool CanThrow => firstInteractableSelected is XRGrabInteractable;
+
         public bool shouldActivate => (firstInteractableSelected != null) && (firstInteractableSelected is IXRActivateInteractable);
 
         public bool shouldDeactivate => (firstInteractableSelected != null) && (firstInteractableSelected is IXRActivateInteractable);
+
+
 
         protected override void Start()
         {
             base.Start();
             allowHover = true;
             allowSelect = true;
-            _selectionAction.action.started += TryStartSelection;
-            _selectionAction.action.canceled += TryEndInteraction;
+            _selectionAction.action.started += HandleSelectionPress;
+            _selectionAction.action.canceled += HandleSelectionRelease;
             _primaryInteractionAction.action.started += StartPrimarySelectionAction;
             _primaryInteractionAction.action.canceled += CancelPrimarySelectionAction;
             _secondaryInteractionAction.action.started += StartSecondarySelectionAction;
@@ -115,18 +154,71 @@ namespace AnyVR.UserControlSystem.PC
             }
         }
 
-        private void TryStartSelection(InputAction.CallbackContext context)
+        private void HandleSelectionPress(InputAction.CallbackContext context)
         {
-            if (_selectionMode == InteractionMode.Toggle)
+            _isSelectionButtonPressed = true;
+            if (hasSelection || HoveredObject is XRGrabInteractable)
             {
-                ToggleSelection(context);
+                _selectionCoroutine = StartCoroutine(Co_HandleSelectionPress(context, OnComplete));
             }
-            else if (_selectionMode == InteractionMode.Hold)
+            else
             {
                 TryStartSelecting(context);
             }
+
+            void OnComplete(float pressDuration)
+            {
+                if (pressDuration < _throwingSettings._throwDelay)
+                {
+                    if (_selectionMode == InteractionMode.Toggle)
+                    {
+                        ToggleSelection(context);
+                    }
+                    else if (_selectionMode == InteractionMode.Hold)
+                    {
+                        TryStartSelecting(context);
+                    }
+                }
+            }
         }
 
+        private IEnumerator Co_HandleSelectionPress(InputAction.CallbackContext context, Action<float> callback)
+        {
+            float elapsedTime = 0f;
+            while (_isSelectionButtonPressed)
+            {
+                elapsedTime += Time.deltaTime;
+                yield return null;
+                if (elapsedTime >= _throwingSettings._throwDelay && CanThrow)
+                {
+                    StartThrowing(context);
+                }
+            }
+            callback.Invoke(elapsedTime);
+            _selectionCoroutine = null;
+        }
+
+        private void HandleSelectionRelease(InputAction.CallbackContext context)
+        {
+            _isSelectionButtonPressed = false;
+            if (_isPreparingThrow)
+            {
+                StopThrowing(context);
+            }
+            else
+            {
+                if (_selectionMode == InteractionMode.Toggle)
+                {
+                    if (firstInteractableSelected is not XRGrabInteractable)
+                    { 
+                        TryReleaseObject(context);
+                    }
+                    return;
+                }
+
+                TryReleaseObject(context);
+            }
+        }
 
         private void ToggleSelection(InputAction.CallbackContext context)
         {
@@ -191,16 +283,6 @@ namespace AnyVR.UserControlSystem.PC
             }
 
             return false;
-        }
-
-        private void TryEndInteraction(InputAction.CallbackContext context)
-        {
-            if (_selectionMode == InteractionMode.Toggle)
-            {
-                return;
-            }
-
-            TryReleaseObject(context);
         }
 
         private void TryReleaseObject(InputAction.CallbackContext context)
@@ -304,6 +386,62 @@ namespace AnyVR.UserControlSystem.PC
             {
                 targets.Add(activateInteractable);
             }
+        }
+
+        private void StartThrowing(InputAction.CallbackContext context)
+        {
+            if (_isPreparingThrow || !CanThrow)
+            {
+                return;
+            }
+            _isPreparingThrow = true;
+            _throwCoroutine = StartCoroutine(Co_PrepareThrow((force) =>
+            {
+                ReleaseSelectedObject();
+                _onThrow.Invoke(force);
+                _throwHandler?.HandleThrowEvent(force);
+                _onChargeThrow.Invoke(0f);
+                _isPreparingThrow = false;
+                _throwCoroutine = null;
+            }));
+        }
+
+        private void StopThrowing(InputAction.CallbackContext context)
+        {
+            _isPreparingThrow = false;
+        }
+
+        private IEnumerator Co_PrepareThrow(Action<float> callback)
+        {
+            float elapsedTime = 0f;
+            float force = 0f;
+            while (_isPreparingThrow && elapsedTime < _throwingSettings._maxThrowChargeDuration)
+            {
+                elapsedTime += Time.deltaTime;
+                float normalizedTime = Mathf.Clamp01(elapsedTime / _throwingSettings._maxThrowChargeDuration);
+                _onChargeThrow.Invoke(normalizedTime);
+                force = normalizedTime * _throwingSettings._maxThrowForce;
+                yield return null;
+            }
+            callback.Invoke(force);
+        }
+
+
+
+        [Serializable]
+        private struct ThrowingSettings
+        {
+            [SerializeField]
+            internal float _throwDelay;
+
+            [SerializeField]
+            internal float _animSpeed;
+
+            [SerializeField] 
+            internal float _maxThrowChargeDuration;
+
+            [SerializeField]
+            internal float _maxThrowForce;
         }
     }
 }

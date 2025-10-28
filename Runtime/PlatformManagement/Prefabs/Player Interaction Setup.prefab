@@ -269,7 +269,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 2f8349570a152884fb6cf7ebdc8c18b3, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -503,6 +503,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3844005973443047826}
     m_Modifications:
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _throwAction.m_Reference
+      value: 
+      objectReference: {fileID: 6212362011315975592, guid: 40eee974618b10508bf944a19ac75728, type: 3}
+    - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
+      propertyPath: _throwAction.m_UseReference
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2345993578947860347, guid: 50bc5486250ee69aa884daa63c36ff59, type: 3}
       propertyPath: _selectionAction.m_Reference
       value: 
