@@ -52,7 +52,9 @@ namespace AnyVR.UserControlSystem.PC
 
         private Coroutine _selectionCoroutine = null;
         private bool _isSelectionButtonPressed = false;
-        private IXRHoverInteractable HoveredObject => hasHover ? interactablesHovered[0] : null;
+        
+        public IXRHoverInteractable HoveredObject => hasHover ? interactablesHovered[0] : null;
+        public IXRSelectInteractable SelectedObject => hasSelection ? interactablesSelected[0] : null;
 
         [SerializeField]
         [Tooltip("The Input System Action that will be used to interaction an object. Expects a 'Button' action.")]
@@ -81,6 +83,7 @@ namespace AnyVR.UserControlSystem.PC
         };
 
         private Coroutine _throwCoroutine = null;
+
         private bool _isPreparingThrow = false;
 
         private UnityEvent<float> _onThrow = new();
@@ -135,7 +138,7 @@ namespace AnyVR.UserControlSystem.PC
         {
             XRBaseInteractable interactable;
 
-            if (!hasHover && IsThereObject(out interactable))
+            if (!hasHover && !hasSelection && IsThereObject(out interactable))
             {
                 interactionManager.HoverEnter((IXRHoverInteractor)this, interactable);
             }
@@ -307,7 +310,9 @@ namespace AnyVR.UserControlSystem.PC
 
         private void SelectHoveredObject()
         {
-            interactionManager.SelectEnter(this, interactablesHovered[0].transform.GetComponent<IXRSelectInteractable>());
+            IXRSelectInteractable hovered = HoveredObject as IXRSelectInteractable;
+            interactionManager.HoverExit(this, HoveredObject);
+            interactionManager.SelectEnter(this, hovered);
             EnableSelectionInteractions(true);
         }
 
@@ -375,9 +380,9 @@ namespace AnyVR.UserControlSystem.PC
             }
         }
 
-        private void EnableSelectionInteractions(bool v)
+        private void EnableSelectionInteractions(bool value)
         {
-            if (v)
+            if (value)
             {
                 _primaryInteractionAction.action.Enable();
                 _secondaryInteractionAction.action.Enable();
@@ -411,6 +416,7 @@ namespace AnyVR.UserControlSystem.PC
                 _onThrow.Invoke(force);
                 _onChargeThrow.Invoke(0f);
                 _isPreparingThrow = false;
+                StopCoroutine(_throwCoroutine);
                 _throwCoroutine = null;
             }));
         }
