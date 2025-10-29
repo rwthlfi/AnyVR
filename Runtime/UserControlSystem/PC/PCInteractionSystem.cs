@@ -84,7 +84,7 @@ namespace AnyVR.UserControlSystem.PC
         private bool _isPreparingThrow = false;
 
         [SerializeField]
-        private IPCThrowHandler _throwHandler = null;
+        private List<PCBaseThrowHandler> _throwHandlers;
 
         private UnityEvent<float> _onThrow = new();
         /// <summary>
@@ -110,6 +110,7 @@ namespace AnyVR.UserControlSystem.PC
         protected override void Start()
         {
             base.Start();
+            _throwHandlers = new();
             allowHover = true;
             allowSelect = true;
             _selectionAction.action.started += HandleSelectionPress;
@@ -399,7 +400,10 @@ namespace AnyVR.UserControlSystem.PC
             {
                 ReleaseSelectedObject();
                 _onThrow.Invoke(force);
-                _throwHandler?.HandleThrowEvent(force);
+                foreach (PCBaseThrowHandler throwHandler in _throwHandlers)
+                {
+                    throwHandler.HandleThrowEvent(force);
+                }
                 _onChargeThrow.Invoke(0f);
                 _isPreparingThrow = false;
                 _throwCoroutine = null;

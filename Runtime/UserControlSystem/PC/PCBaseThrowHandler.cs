@@ -19,24 +19,11 @@ using UnityEngine;
 
 namespace AnyVR.UserControlSystem.PC
 {
-    public class SampleThrowHandler : PCBaseThrowHandler
+    /// <summary>
+    /// Base class for PC throw handlers.
+    /// </summary>
+    public abstract class PCBaseThrowHandler : MonoBehaviour, IPCThrowHandler
     {
-        [SerializeField]
-        private PCInteractionSystem _pCInteractionSystem;
-
-        private void Start()
-        {
-            _pCInteractionSystem.OnChargeThrow.AddListener(LogCharge);
-        }
-
-        private void LogCharge(float charge)
-        {
-            Debug.Log("[SampleThrowHandler] Charge event received with charge: " + charge, gameObject);
-        }
-
-        public override void HandleThrowEvent(float force)
-        {
-            Debug.Log("[SampleThrowHandler] Throw event received with force: " + force, gameObject);
-        }
+        public abstract void HandleThrowEvent(float force);
     }
 }
