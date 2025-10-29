@@ -83,9 +83,6 @@ namespace AnyVR.UserControlSystem.PC
         private Coroutine _throwCoroutine = null;
         private bool _isPreparingThrow = false;
 
-        [SerializeField]
-        private List<PCBaseThrowHandler> _throwHandlers;
-
         private UnityEvent<float> _onThrow = new();
         /// <summary>
         ///    Event invoked when a throw action is performed, passing the throw force as a float parameter.
@@ -107,10 +104,22 @@ namespace AnyVR.UserControlSystem.PC
 
 
 
+        protected override void Awake()
+        {
+            base.Awake();
+            if (s_instance == null)
+            {
+                s_instance = this;
+            }
+            else
+            {
+                Destroy(this);
+            }
+        }
+
         protected override void Start()
         {
             base.Start();
-            _throwHandlers = new();
             allowHover = true;
             allowSelect = true;
             _selectionAction.action.started += HandleSelectionPress;
@@ -400,10 +409,6 @@ namespace AnyVR.UserControlSystem.PC
             {
                 ReleaseSelectedObject();
                 _onThrow.Invoke(force);
-                foreach (PCBaseThrowHandler throwHandler in _throwHandlers)
-                {
-                    throwHandler.HandleThrowEvent(force);
-                }
                 _onChargeThrow.Invoke(0f);
                 _isPreparingThrow = false;
                 _throwCoroutine = null;
@@ -447,5 +452,24 @@ namespace AnyVR.UserControlSystem.PC
             [SerializeField]
             internal float _maxThrowForce;
         }
+
+        #region Singleton
+        private static PCInteractionSystem s_instance;
+        public static PCInteractionSystem Instance
+        {
+            get
+            {
+                if (s_instance == null)
+                {
+                    s_instance = FindAnyObjectByType<PCInteractionSystem>();
+                    if (s_instance == null)
+                    {
+                        Debug.LogError("No PCInteractionSystem instance found in the scene.");
+                    }
+                }
+                return s_instance;
+            }
+        }
+        #endregion
     }
 }
