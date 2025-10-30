@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using AnyVR.Logging;
 using AnyVR.Voicechat;
-using AnyVR.WebRequests;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;

@@ -1,8 +1,6 @@
 using System;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AnyVR.Logging;
-using AnyVR.WebRequests;
 using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Managing.Timing;
@@ -25,32 +23,6 @@ namespace AnyVR.LobbySystem
 
 #endregion
 
-        private static bool TryParseAddress(string address, out (string, ushort) res)
-        {
-            res = (null, 0);
-            if (address == null)
-            {
-                return false;
-            }
-
-            const string pattern = @"^(?:\[(.+)\]|(.+)):(\d+)$";
-            Match m = Regex.Match(address, pattern);
-            if (!m.Success)
-            {
-                return false;
-            }
-
-            if (!ushort.TryParse(m.Groups[3].Value, out ushort port))
-            {
-                return false;
-            }
-
-            string ip = m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value;
-            res = (ip, port);
-            return true;
-        }
-
-
         private async Task<ServerAddressResponse> RequestServerIp(Uri tokenServerUri, int timeoutSeconds = 10)
         {
             const string tokenURL = "{0}://{1}/requestServerIp";
@@ -58,29 +30,6 @@ namespace AnyVR.LobbySystem
 
             Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Requesting server ip from '{url}'");
             ServerAddressResponse res = await WebRequestHandler.GetAsync<ServerAddressResponse>(url, timeoutSeconds);
-
-            if (!res.Success)
-            {
-                return res;
-            }
-
-            if (!TryParseAddress(res.fishnet_server_address, out (string host, ushort port) fishnetAddress))
-            {
-                res.Success = false;
-                res.Error = $"Could not connect to server. Failed to parse FishNet server address ('{res.fishnet_server_address}').";
-                return res;
-            }
-            res.FishnetHost = fishnetAddress.host;
-            res.FishnetPort = fishnetAddress.port;
-
-            if (!TryParseAddress(res.livekit_server_address, out (string host, ushort port) liveKitAddress))
-            {
-                res.Success = false;
-                res.Error = $"Could not connect to server. Failed to parse LiveKit server address ('{res.livekit_server_address}').";
-                return res;
-            }
-            res.LiveKitHost = liveKitAddress.host;
-            res.LiveKitPort = liveKitAddress.port;
 
             return res;
         }
@@ -154,6 +103,8 @@ namespace AnyVR.LobbySystem
         public Uri LiveKitTokenServer { get; private set; }
 
         public Uri LiveKitVoiceServer { get; private set; }
+
+        public Uri FishnetServer { get; private set; }
 
         public event Action OnClientTimeout;
 
@@ -244,11 +195,15 @@ namespace AnyVR.LobbySystem
                 return new ConnectionResult(ConnectionStatus.ServerIpRequestFailed, null);
             }
 
+            LiveKitTokenServer = tokenServerUri;
+            LiveKitVoiceServer = new Uri(response.livekit_server_address);
+            FishnetServer = new Uri(response.fishnet_server_address);
+
             Assert.IsTrue(_networkManager.TransportManager.Transport is Multipass);
             Multipass m = (Multipass)_networkManager.TransportManager.Transport;
 
-            m.SetClientAddress(response.FishnetHost);
-            m.SetPort(response.FishnetPort);
+            m.SetClientAddress(FishnetServer.Host);
+            m.SetPort((ushort)FishnetServer.Port);
             m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol);
 
             Task<ConnectionStatus> task = _connectionAwaiter.WaitForResult(timeout);
@@ -263,9 +218,7 @@ namespace AnyVR.LobbySystem
             Assert.IsNotNull(GlobalGameState.Instance);
             Assert.IsNotNull(GlobalPlayerState.LocalPlayer);
 
-            LiveKitTokenServer = tokenServerUri;
-            LiveKitVoiceServer = new Uri(response.livekit_server_address);
-
+            // The server will kick the player if the name is already taken.
             PlayerNameUpdateResult nameResult = await GlobalPlayerState.LocalPlayer.SetName(userName);
 
             return new ConnectionResult(connectionStatus, nameResult);
