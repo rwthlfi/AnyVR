@@ -2,6 +2,7 @@ using AnyVR.LobbySystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using LobbyPlayerState = AnyVR.LobbySystem.LobbyPlayerState;
 
 namespace AnyVR.Sample
 {

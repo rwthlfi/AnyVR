@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Threading.Tasks;
+using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using AnyVR.Voicechat;
 using FishNet.Connection;

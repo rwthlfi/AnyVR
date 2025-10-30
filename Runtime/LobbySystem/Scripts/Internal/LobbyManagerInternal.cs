@@ -4,7 +4,7 @@ using FishNet.Object;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     [RequireComponent(typeof(LobbyRegistry))]
     internal partial class LobbyManagerInternal : NetworkBehaviour

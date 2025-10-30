@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     internal class RpcAwaiter<T>
     {

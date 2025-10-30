@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using FishNet.Managing;
 using FishNet.Managing.Scened;

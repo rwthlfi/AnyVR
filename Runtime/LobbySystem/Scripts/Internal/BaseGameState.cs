@@ -6,7 +6,7 @@ using FishNet.Object.Synchronizing;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     /// <summary>
     /// </summary>

@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     public class LobbyHandler : NetworkBehaviour
     {

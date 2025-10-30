@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Assertions;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     internal class QuickConnectHandler
     {

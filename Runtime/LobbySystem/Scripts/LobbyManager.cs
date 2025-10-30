@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using UnityEngine;
 using UnityEngine.Assertions;

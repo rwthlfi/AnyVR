@@ -1,4 +1,4 @@
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     internal enum SceneLoadParam
     {

@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using AnyVR.LobbySystem;
+using AnyVR.LobbySystem.Internal;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
+using LobbyPlayerState = AnyVR.LobbySystem.LobbyPlayerState;
 
 namespace AnyVR.Sample
 {

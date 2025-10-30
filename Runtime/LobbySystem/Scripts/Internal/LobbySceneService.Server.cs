@@ -10,7 +10,7 @@ using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using Logger = AnyVR.Logging.Logger;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     internal partial class LobbySceneService
     {

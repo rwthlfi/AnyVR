@@ -2,7 +2,7 @@
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     public class GlobalLobbyState : NetworkBehaviour, ILobbyInfo
     {

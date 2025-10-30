@@ -9,7 +9,7 @@ using FishNet.Object.Synchronizing;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     internal class LobbyRegistry : NetworkBehaviour
     {

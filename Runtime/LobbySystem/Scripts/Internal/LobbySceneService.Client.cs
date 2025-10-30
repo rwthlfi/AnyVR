@@ -5,7 +5,7 @@ using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
-namespace AnyVR.LobbySystem
+namespace AnyVR.LobbySystem.Internal
 {
     internal partial class LobbySceneService
     {
