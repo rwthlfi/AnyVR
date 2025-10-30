@@ -191,7 +191,7 @@ namespace AnyVR.LobbySystem
 
         protected virtual void OnClientBeginPlay()
         {
-            ConnectToLiveKitRoom(GetLobbyState().Global.Name.Value, GetPlayerState().Global.GetName()).ContinueWith(task =>
+            ConnectToLiveKitRoom(GetLobbyState().Info.Name.Value, GetPlayerState().Global.GetName()).ContinueWith(task =>
             {
                 if (task.Result != Voicechat.ConnectionResult.Connected)
                 {

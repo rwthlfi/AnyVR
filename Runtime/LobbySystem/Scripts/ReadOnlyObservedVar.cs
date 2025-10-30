@@ -1,16 +1,16 @@
 using System;
 using FishNet.Object.Synchronizing;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
-    public interface IReadOnlyObservedVar<T>
+    public interface IReadOnlyReplicatedProperty<T>
     {
         T Value { get; }
         event Action<T> OnValueChanged;
     }
 
     [Serializable]
-    internal class ObservedSyncVar<T> : SyncVar<T>, IReadOnlyObservedVar<T>
+    internal class ObservedSyncVar<T> : SyncVar<T>, IReadOnlyReplicatedProperty<T>
     {
         public ObservedSyncVar()
         {

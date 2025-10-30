@@ -150,7 +150,7 @@ namespace AnyVR.LobbySystem.Internal
 
             SceneLookupData sld = new()
             {
-                Handle = handler.gameObject.scene.handle, Name = handler.State.Global.Scene.ScenePath
+                Handle = handler.gameObject.scene.handle, Name = handler.State.Info.Scene.ScenePath
             };
 
             object[] unloadParams =

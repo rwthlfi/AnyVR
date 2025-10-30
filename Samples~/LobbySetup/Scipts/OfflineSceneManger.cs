@@ -123,7 +123,7 @@ namespace AnyVR.Sample
                 return;
             }
 
-            if (LobbyManager.Instance.TryGetLobby(id, out GlobalLobbyState lobby))
+            if (LobbyManager.Instance.TryGetLobby(id, out ILobbyInfo lobby))
             {
                 _ = lobbyManager.JoinLobby(lobby);
             }

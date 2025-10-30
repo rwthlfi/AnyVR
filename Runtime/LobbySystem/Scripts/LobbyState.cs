@@ -9,6 +9,7 @@ namespace AnyVR.LobbySystem
 {
     public class LobbyState : BaseGameState<LobbyPlayerState>
     {
+
 #region Replicated Properties
 
         private readonly SyncVar<Guid> _lobbyId = new();
@@ -28,11 +29,11 @@ namespace AnyVR.LobbySystem
 
             OnPlayerJoin += _ =>
             {
-                Global.SetPlayerNum((ushort)GetPlayerStates().Count());
+                ((GlobalLobbyState)Info).SetPlayerNum((ushort)GetPlayerStates().Count());
             };
             OnPlayerLeave += _ =>
             {
-                Global.SetPlayerNum((ushort)GetPlayerStates().Count());
+                ((GlobalLobbyState)Info).SetPlayerNum((ushort)GetPlayerStates().Count());
             };
 
             AddPlayerState(conn);
@@ -49,7 +50,7 @@ namespace AnyVR.LobbySystem
 
         public Guid LobbyId => _lobbyId.Value;
 
-        public GlobalLobbyState Global => LobbyManager.Instance.TryGetLobby(LobbyId, out GlobalLobbyState lobby) ? lobby : null;
+        public ILobbyInfo Info => LobbyManager.Instance.TryGetLobby(LobbyId, out ILobbyInfo lobby) ? lobby : null;
 
 #endregion
 

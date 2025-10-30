@@ -73,7 +73,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             float timeUntilExpiration = (float)(expirationDate - DateTime.UtcNow).TotalSeconds;
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyHandler), $"Expire lobby {State.Global.ExpirationDate.Value} in {timeUntilExpiration} seconds");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyHandler), $"Expire lobby {State.Info.ExpirationDate.Value} in {timeUntilExpiration} seconds");
             if (timeUntilExpiration > 0)
             {
                 yield return new WaitForSeconds(timeUntilExpiration);

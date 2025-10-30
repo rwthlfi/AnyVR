@@ -10,13 +10,13 @@ namespace AnyVR.LobbySystem
         /// </summary>
         Guid LobbyId { get; }
 
-        IReadOnlyObservedVar<string> Name { get; }
+        IReadOnlyReplicatedProperty<string> Name { get; }
 
-        IReadOnlyObservedVar<bool> IsPasswordProtected { get; }
+        IReadOnlyReplicatedProperty<bool> IsPasswordProtected { get; }
 
-        IReadOnlyObservedVar<ushort> NumPlayers { get; }
+        IReadOnlyReplicatedProperty<ushort> NumPlayers { get; }
 
-        IReadOnlyObservedVar<DateTime?> ExpirationDate { get; }
+        IReadOnlyReplicatedProperty<DateTime?> ExpirationDate { get; }
 
         /// <summary>
         ///     The creator of the lobby.

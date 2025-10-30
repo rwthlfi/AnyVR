@@ -127,7 +127,7 @@ namespace AnyVR.LobbySystem
             return Internal.QuickConnect(quickConnectCode);
         }
 
-        public bool TryGetLobby(Guid lobbyId, out GlobalLobbyState lobbyInfo)
+        public bool TryGetLobby(Guid lobbyId, out ILobbyInfo lobbyInfo)
         {
             lobbyInfo = Internal.GetLobbyState(lobbyId);
             return lobbyInfo != null;
