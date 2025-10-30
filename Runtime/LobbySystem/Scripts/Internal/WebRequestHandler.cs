@@ -5,21 +5,21 @@ using UnityEngine.Networking;
 
 namespace AnyVR.LobbySystem
 {
-    public abstract class Response
+    internal abstract class Response
     {
         [NonSerialized]
-        public string Error;
+        internal string Error;
         [NonSerialized]
-        public bool Success;
+        internal bool Success;
     }
 
     [Serializable]
-    public class ServerAddressResponse : Response
+    internal class ServerAddressResponse : Response
     {
         // ReSharper disable once InconsistentNaming
-        public string fishnet_server_address;
+        internal string fishnet_server_address;
         // ReSharper disable once InconsistentNaming
-        public string livekit_server_address;
+        internal string livekit_server_address;
 
         public ServerAddressResponse() { Success = false; }
 
@@ -32,10 +32,10 @@ namespace AnyVR.LobbySystem
     }
 
     [Serializable]
-    public class TokenResponse : Response
+    internal class TokenResponse : Response
     {
         // ReSharper disable once InconsistentNaming
-        public string token;
+        internal string token;
     }
 
     internal static class WebRequestHandler
