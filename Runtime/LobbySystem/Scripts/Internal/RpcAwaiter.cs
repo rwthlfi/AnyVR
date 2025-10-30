@@ -26,7 +26,7 @@ namespace AnyVR.LobbySystem.Internal
 
             _tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            Task delay = Task.Delay(timeout ?? TimeSpan.FromSeconds(10));
+            Task delay = Task.Delay(timeout ?? TimeSpan.FromSeconds(5));
 
             _ = Task.WhenAny(_tcs.Task, delay).ContinueWith(t =>
             {

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using AnyVR.LobbySystem;
-using AnyVR.LobbySystem.Internal;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -210,7 +209,6 @@ namespace AnyVR.Sample
 
         private async void ConnectToServer()
         {
-            _connectionManager.UseSecureProtocol = false;
             await _connectionManager.ConnectToServer(new Uri(_serverAddressInputField.text), _usernameInputField.text);
         }
 

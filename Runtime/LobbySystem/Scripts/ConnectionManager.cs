@@ -62,6 +62,9 @@ namespace AnyVR.LobbySystem
 
 #region Public Fields
 
+        /// <summary>
+        /// Current connection state
+        /// </summary>
         public ConnectionState State
         {
             get
@@ -87,7 +90,10 @@ namespace AnyVR.LobbySystem
         }
 
 
-        public uint Latency
+        /// <summary>
+        /// Current round-trip time of the connection in milliseconds.
+        /// </summary>
+        public uint Ping
         {
             get
             {
@@ -101,17 +107,36 @@ namespace AnyVR.LobbySystem
             }
         }
 
+        /// <summary>
+        /// The uri of the (LiveKit) tokenserver.
+        /// </summary>
         public Uri LiveKitTokenServer { get; private set; }
 
+        /// <summary>
+        /// The uri of the LiveKit server.
+        /// </summary>
         public Uri LiveKitVoiceServer { get; private set; }
 
+        /// <summary>
+        /// The uri of the Fishnet server.
+        /// </summary>
         public Uri FishnetServer { get; private set; }
 
+        /// <summary>
+        /// Called when the local client connection to the server has timed out.
+        /// </summary>
         public event Action OnClientTimeout;
 
+        /// <summary>
+        /// Called after the local client connection state changes.
+        /// </summary>
         public event Action<ConnectionState> OnClientConnectionState;
 
-        public bool UseSecureProtocol { get; set; } = true;
+        /// <summary>
+        /// If <c>true</c>/<c>false</c>, use <c>https</c>/<c>http</c> and <c>wss</c>/<c>ws</c> internally.
+        /// This is set when connecting to the server in <see cref="ConnectToServer"/>.
+        /// </summary>
+        public bool UseSecureProtocol { get; private set; }
 
 #endregion
 
@@ -174,10 +199,21 @@ namespace AnyVR.LobbySystem
 #endregion
 
 #region Public API
-
-        public async Task<ConnectionResult> ConnectToServer(Uri tokenServerUri, string userName, TimeSpan? timeout = null)
+        
+        //TODO: Hide token server from user. Connect using fishnet address instead.
+        /// <summary>
+        /// Connect to the server.
+        /// If the passed username is null, whitespace or already taken, the server will kick the local player immediately.
+        /// </summary>
+        /// <param name="tokenServerUri">The uri of the token server. The uri of the fishnet server is fetched from the token server internally.</param> 
+        /// <param name="userName">The desired username.</param>
+        /// <param name="useSecureProtocol">If <c>true</c>/<c>false</c>, use <c>https</c>/<c>http</c> and <c>wss</c>/<c>ws</c> internally.</param>
+        /// <param name="timeout">Optionally, specify a timeout. If <c>null</c> the timeout defaults to 5 seconds.</param>
+        /// <returns>An asynchronous <see cref="ConnectionResult"/> indicating whether the connection attempt succeeded or failed.</returns>
+        public async Task<ConnectionResult> ConnectToServer(Uri tokenServerUri, string userName, bool useSecureProtocol = true, TimeSpan? timeout = null)
         {
             Assert.IsNotNull(_networkManager);
+            UseSecureProtocol = useSecureProtocol;
 
             if (State.HasFlag(ConnectionState.Client))
             {
@@ -225,16 +261,20 @@ namespace AnyVR.LobbySystem
             return new ConnectionResult(connectionStatus, nameResult);
         }
 
-        public void LeaveServer()
+        /// <summary>
+        /// Stops the connection to the server.
+        /// </summary>
+        /// <returns><c>False</c>, if not connected to the server. Otherwise, <c>true</c>.</returns>
+        public bool LeaveServer()
         {
             if (!State.HasFlag(ConnectionState.Client))
             {
                 Logger.Log(LogLevel.Warning, nameof(ConnectionManager), "Not connected to a server");
-                return;
+                return false;
             }
 
             Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), "Stopping server.");
-            _networkManager.ClientManager.StopConnection();
+            return _networkManager.ClientManager.StopConnection();
         }
 
 #endregion

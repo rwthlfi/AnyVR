@@ -87,7 +87,7 @@ namespace AnyVR.Sample
 
             while (_lobbyState != null)
             {
-                _pingLabel.text = $"{connectionManager.Latency.ToString()} ms";
+                _pingLabel.text = $"{connectionManager.Ping.ToString()} ms";
                 yield return new WaitForSeconds(pingInterval);
             }
         }
