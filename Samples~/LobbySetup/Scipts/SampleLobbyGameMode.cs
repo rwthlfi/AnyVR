@@ -3,7 +3,7 @@ using AnyVR.LobbySystem.Internal;
 
 namespace AnyVR.Sample
 {
-    public class SampleLobbyHandler : LobbyHandler
+    public class SampleLobbyGameMode : LobbyGameMode
     {
     }
 }

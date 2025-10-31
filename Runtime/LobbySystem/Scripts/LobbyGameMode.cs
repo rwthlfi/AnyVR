@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using FishNet.Connection;
 using FishNet.Managing.Scened;
@@ -10,15 +11,15 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
-namespace AnyVR.LobbySystem.Internal
+namespace AnyVR.LobbySystem
 {
-    public class LobbyHandler : NetworkBehaviour
+    public class LobbyGameMode : NetworkBehaviour
     {
         private LobbyState _state;
 
         internal void Init(GlobalLobbyState state)
         {
-            Logger.Log(LogLevel.Verbose, nameof(LobbyHandler), $"Initializing LobbyHandler: {state.LobbyId}");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyGameMode), $"Initializing LobbyGameMode: {state.LobbyId}");
             Assert.IsFalse(state.LobbyId == Guid.Empty);
 
             SpawnLobbyState(state);
@@ -101,13 +102,13 @@ namespace AnyVR.LobbySystem.Internal
         {
             float timeUntilExpiration = (float)(expirationDate - DateTime.UtcNow).TotalSeconds;
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyHandler), $"Expire lobby {_state.LobbyInfo.ExpirationDate.Value} in {timeUntilExpiration} seconds");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyGameMode), $"Expire lobby {_state.LobbyInfo.ExpirationDate.Value} in {timeUntilExpiration} seconds");
             if (timeUntilExpiration > 0)
             {
                 yield return new WaitForSeconds(timeUntilExpiration);
             }
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyHandler), $"Lobby {_state.LobbyId} expired");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyGameMode), $"Lobby {_state.LobbyId} expired");
             LobbyManager.Instance.Internal.Server_CloseLobby(_state.LobbyId);
         }
 
@@ -129,7 +130,7 @@ namespace AnyVR.LobbySystem.Internal
                 yield break;
             }
 
-            Logger.Log(LogLevel.Warning, nameof(LobbyHandler), $"Closing lobby {_state.LobbyId} due to inactivity.");
+            Logger.Log(LogLevel.Warning, nameof(LobbyGameMode), $"Closing lobby {_state.LobbyId} due to inactivity.");
             LobbyManager.Instance.Internal.Server_CloseLobby(_state.LobbyId);
         }
 

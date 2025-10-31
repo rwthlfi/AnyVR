@@ -33,12 +33,12 @@ namespace AnyVR.LobbySystem.Internal
 
             Assert.IsNotNull(globalLobbyState);
 
-            LobbyHandler handler = await _sceneService.StartLobbyScene(globalLobbyState);
-            Assert.IsNotNull(handler, "Failed to load lobby scene");
-            handler.Init(globalLobbyState);
+            LobbyGameMode gameMode = await _sceneService.StartLobbyScene(globalLobbyState);
+            Assert.IsNotNull(gameMode, "Failed to load lobby scene");
+            gameMode.Init(globalLobbyState);
 
             // Lobby scene successfully loaded.
-            bool success = _lobbyRegistry.RegisterLobby(globalLobbyState, handler, password);
+            bool success = _lobbyRegistry.RegisterLobby(globalLobbyState, gameMode, password);
             Assert.IsTrue(success);
 
             TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.Success, globalLobbyState.LobbyId);
@@ -78,18 +78,18 @@ namespace AnyVR.LobbySystem.Internal
 
             TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.Success, lobbyId);
 
-            LobbyHandler lobbyHandler = _lobbyRegistry.GetLobbyHandler(lobbyId);
-            Assert.IsNotNull(lobbyHandler);
-            _sceneService.LoadLobbySceneForPlayer(conn, lobbyHandler);
+            LobbyGameMode lobbyGameMode = _lobbyRegistry.GetLobbyGameMode(lobbyId);
+            Assert.IsNotNull(lobbyGameMode);
+            _sceneService.LoadLobbySceneForPlayer(conn, lobbyGameMode);
         }
 
         [Server]
         public void RemovePlayerFromLobby(LobbyPlayerState player)
         {
-            LobbyHandler lobbyHandler = _lobbyRegistry.GetLobbyHandler(player.GetLobbyId());
-            Assert.IsNotNull(lobbyHandler);
+            LobbyGameMode lobbyGameMode = _lobbyRegistry.GetLobbyGameMode(player.GetLobbyId());
+            Assert.IsNotNull(lobbyGameMode);
 
-            _sceneService.UnloadLobbySceneForPlayer(player.Owner, lobbyHandler);
+            _sceneService.UnloadLobbySceneForPlayer(player.Owner, lobbyGameMode);
         }
 
         [Server]
@@ -101,17 +101,17 @@ namespace AnyVR.LobbySystem.Internal
             _lobbyRegistry.UnregisterLobby(state);
             Despawn(state.NetworkObject, DespawnType.Destroy);
 
-            LobbyHandler handler = _lobbyRegistry.GetLobbyHandler(lobbyId);
-            Assert.IsNotNull(handler);
-            _sceneService.UnloadLobby(handler);
+            LobbyGameMode gameMode = _lobbyRegistry.GetLobbyGameMode(lobbyId);
+            Assert.IsNotNull(gameMode);
+            _sceneService.UnloadLobby(gameMode);
 
             Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal), $"Lobby with id '{lobbyId}' is closed");
         }
 
         [Server]
-        internal LobbyHandler GetLobbyHandler(Guid lobbyId)
+        internal LobbyGameMode GetLobbyGameMode(Guid lobbyId)
         {
-            return _lobbyRegistry.GetLobbyHandler(lobbyId);
+            return _lobbyRegistry.GetLobbyGameMode(lobbyId);
         }
 
 #region RPCs

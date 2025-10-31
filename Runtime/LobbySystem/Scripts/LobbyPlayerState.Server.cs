@@ -1,5 +1,4 @@
 using System.Linq;
-using AnyVR.LobbySystem.Internal;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine.Assertions;
@@ -13,15 +12,15 @@ namespace AnyVR.LobbySystem
             base.OnStartServer();
 
             // Initialize replicated fields
-            LobbyHandler lobbyHandler =
+            LobbyGameMode lobbyGameMode =
                 gameObject.scene.GetRootGameObjects()
-                    .Select(root => root.GetComponent<LobbyHandler>())
+                    .Select(root => root.GetComponent<LobbyGameMode>())
                     .FirstOrDefault(comp => comp != null);
 
-            Assert.IsNotNull(lobbyHandler, "LobbyHandler not found. Ensure there is one LobbyHandler placed in the lobby scene.");
+            Assert.IsNotNull(lobbyGameMode, "LobbyHandler not found. Ensure there is one LobbyHandler placed in the lobby scene.");
 
-            _lobbyId.Value = lobbyHandler.GetGameState().LobbyId;
-            _isAdmin.Value = lobbyHandler.GetGameState().LobbyInfo.CreatorId == OwnerId;
+            _lobbyId.Value = lobbyGameMode.GetGameState().LobbyId;
+            _isAdmin.Value = lobbyGameMode.GetGameState().LobbyInfo.CreatorId == OwnerId;
         }
 
         public override void OnDespawnServer(NetworkConnection conn)

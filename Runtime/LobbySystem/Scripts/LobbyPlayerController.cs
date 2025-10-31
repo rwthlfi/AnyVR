@@ -126,7 +126,7 @@ namespace AnyVR.LobbySystem
 
             if (!response.Success)
             {
-                Logger.Log(LogLevel.Debug, nameof(LobbyHandler), "LiveKit token retrieval failed!");
+                Logger.Log(LogLevel.Debug, nameof(LobbyGameMode), "LiveKit token retrieval failed!");
                 return Voicechat.ConnectionResult.Error;
             }
 

@@ -23,7 +23,7 @@ namespace AnyVR.LobbySystem.Internal
 
         private QuickConnectHandler _quickConnectHandler;
 
-        private Dictionary<Guid, LobbyHandler> _handlers;
+        private Dictionary<Guid, LobbyGameMode> _lobbyGameModes;
 
         private Dictionary<Guid, byte[]> _passwordHashes;
 
@@ -64,7 +64,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             base.OnStartServer();
             _quickConnectHandler = new QuickConnectHandler();
-            _handlers = new Dictionary<Guid, LobbyHandler>();
+            _lobbyGameModes = new Dictionary<Guid, LobbyGameMode>();
             _passwordHashes = new Dictionary<Guid, byte[]>();
         }
 
@@ -73,7 +73,7 @@ namespace AnyVR.LobbySystem.Internal
 #region Server Methods
 
         [Server]
-        internal bool RegisterLobby(GlobalLobbyState globalLobbyState, LobbyHandler handler, string password = null)
+        internal bool RegisterLobby(GlobalLobbyState globalLobbyState, LobbyGameMode gameMode, string password = null)
         {
             if (_lobbyStates.ContainsKey(globalLobbyState.LobbyId))
             {
@@ -81,11 +81,11 @@ namespace AnyVR.LobbySystem.Internal
                 return false;
             }
 
-            Assert.IsFalse(_handlers.ContainsKey(globalLobbyState.LobbyId));
+            Assert.IsFalse(_lobbyGameModes.ContainsKey(globalLobbyState.LobbyId));
             Assert.IsFalse(_passwordHashes.ContainsKey(globalLobbyState.LobbyId));
 
             _lobbyStates.Add(globalLobbyState.LobbyId, globalLobbyState);
-            _handlers[globalLobbyState.LobbyId] = handler;
+            _lobbyGameModes[globalLobbyState.LobbyId] = gameMode;
 
             if (!string.IsNullOrWhiteSpace(password))
             {
@@ -105,7 +105,7 @@ namespace AnyVR.LobbySystem.Internal
             if (!_lobbyStates.Remove(globalLobby.LobbyId))
                 return;
 
-            bool handlerRemoved = _handlers.Remove(globalLobby.LobbyId);
+            bool handlerRemoved = _lobbyGameModes.Remove(globalLobby.LobbyId);
             Assert.IsTrue(handlerRemoved);
 
             bool success = _quickConnectHandler.UnregisterLobby(globalLobby);
@@ -148,9 +148,9 @@ namespace AnyVR.LobbySystem.Internal
         }
 
         [Server]
-        internal LobbyHandler GetLobbyHandler(Guid lobbyId)
+        internal LobbyGameMode GetLobbyGameMode(Guid lobbyId)
         {
-            return _handlers.GetValueOrDefault(lobbyId);
+            return _lobbyGameModes.GetValueOrDefault(lobbyId);
         }
 
 #endregion
