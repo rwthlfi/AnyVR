@@ -135,8 +135,7 @@ namespace AnyVR.LobbySystem
                 return GetLobbyState().GetPlayerStates().First(state => state.Global.GetName() == identity).gameObject;
             });
 
-            string scheme = ConnectionManager.Instance.UseSecureProtocol ? "https" : "http";
-            return await LiveKitClient.Connect($"{scheme}://{ConnectionManager.Instance.LiveKitVoiceServer}", response.token);
+            return await LiveKitClient.Connect(ConnectionManager.Instance.LiveKitVoiceServer.ToString(), response.token);
         }
 
 #region Private Fields

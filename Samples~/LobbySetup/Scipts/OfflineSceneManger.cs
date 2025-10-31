@@ -209,7 +209,8 @@ namespace AnyVR.Sample
 
         private async void ConnectToServer()
         {
-            await _connectionManager.ConnectToServer(new Uri(_serverAddressInputField.text), _usernameInputField.text);
+            Uri tokenServerUri = new($"http://{_serverAddressInputField.text}");
+            await _connectionManager.ConnectToServer(tokenServerUri, _usernameInputField.text);
         }
 
         private void SetActivePanel(RectTransform activePanel)

@@ -24,17 +24,6 @@ namespace AnyVR.LobbySystem
     [RequireComponent(typeof(NetworkManager))]
     public class ConnectionManager : MonoBehaviour
     {
-        private async Task<ServerAddressResponse> RequestServerIp(Uri tokenServerUri, int timeoutSeconds = 10)
-        {
-            const string tokenURL = "{0}://{1}/requestServerIp";
-            string url = string.Format(tokenURL, UseSecureProtocol ? "https" : "http", tokenServerUri);
-
-            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Requesting server ip from '{url}'");
-            ServerAddressResponse res = await WebRequestHandler.GetAsync<ServerAddressResponse>(url, timeoutSeconds);
-
-            return res;
-        }
-
         private static async Task WaitUntilGameStateInitialized()
         {
             TimeSpan timeout = TimeSpan.FromSeconds(3);
@@ -118,9 +107,9 @@ namespace AnyVR.LobbySystem
         public Uri LiveKitVoiceServer { get; private set; }
 
         /// <summary>
-        ///     The uri of the Fishnet server.
+        ///     The host and port of the Fishnet server.
         /// </summary>
-        public Uri FishnetServer { get; private set; }
+        public (string Host, ushort Port) FishnetServer { get; private set; }
 
         /// <summary>
         ///     Called when the local client connection to the server has timed out.
@@ -218,16 +207,11 @@ namespace AnyVR.LobbySystem
         ///     server internally.
         /// </param>
         /// <param name="userName">The desired username.</param>
-        /// <param name="useSecureProtocol">
-        ///     If <c>true</c>/<c>false</c>, use <c>https</c>/<c>http</c> and <c>wss</c>/<c>ws</c>
-        ///     internally.
-        /// </param>
         /// <param name="timeout">Optionally, specify a timeout. If <c>null</c> the timeout defaults to 5 seconds.</param>
         /// <returns>An asynchronous <see cref="ConnectionResult" /> indicating whether the connection attempt succeeded or failed.</returns>
-        public async Task<ConnectionResult> ConnectToServer(Uri tokenServerUri, string userName, bool useSecureProtocol = true, TimeSpan? timeout = null)
+        public async Task<ConnectionResult> ConnectToServer(Uri tokenServerUri, string userName, TimeSpan? timeout = null)
         {
             Assert.IsNotNull(_networkManager);
-            UseSecureProtocol = useSecureProtocol;
 
             if (State.HasFlag(ConnectionState.Client))
             {
@@ -235,26 +219,20 @@ namespace AnyVR.LobbySystem
                 return new ConnectionResult(ConnectionStatus.AlreadyConnected, null);
             }
 
-            ServerAddressResponse response = await RequestServerIp(tokenServerUri);
-            if (response.Success)
+            LiveKitTokenServer = tokenServerUri;
+            ((string host, ushort port), Uri liveKitVoiceServer)? res = await FetchServerAddresses(tokenServerUri);
+
+            if (!res.HasValue)
             {
-                Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Received server ip: {{FishNet: {response.fishnet_server_address}, LiveKit: {response.livekit_server_address}}}");
-            }
-            else
-            {
-                Logger.Log(LogLevel.Warning, nameof(ConnectionManager), response.Error);
                 return new ConnectionResult(ConnectionStatus.ServerIpRequestFailed, null);
             }
+            FishnetServer = res.Value.Item1;
+            LiveKitVoiceServer = res.Value.Item2;
 
-            LiveKitTokenServer = tokenServerUri;
-            LiveKitVoiceServer = new Uri(response.livekit_server_address);
-            FishnetServer = new Uri(response.fishnet_server_address);
-
-            Assert.IsTrue(_networkManager.TransportManager.Transport is Multipass);
             Multipass m = (Multipass)_networkManager.TransportManager.Transport;
 
             m.SetClientAddress(FishnetServer.Host);
-            m.SetPort((ushort)FishnetServer.Port);
+            m.SetPort(FishnetServer.Port);
             m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol);
 
             Task<ConnectionStatus> task = _connectionAwaiter.WaitForResult(timeout);
@@ -273,6 +251,43 @@ namespace AnyVR.LobbySystem
             PlayerNameUpdateResult nameResult = await GlobalPlayerState.LocalPlayer.SetName(userName);
 
             return new ConnectionResult(connectionStatus, nameResult);
+        }
+
+        private async Task<((string host, ushort port), Uri liveKitVoiceServer)?> FetchServerAddresses(Uri tokenServerUri)
+        {
+            UseSecureProtocol = tokenServerUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
+
+
+            Uri requestUri = new(tokenServerUri, "requestServerIp");
+            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Requesting server ip from '{requestUri}'");
+
+            ServerAddressResponse response = await WebRequestHandler.GetAsync<ServerAddressResponse>(requestUri.ToString());
+            if (response.Success)
+            {
+                Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Received server ip: {{FishNet: {response.fishnet_server_address}, LiveKit: {response.livekit_server_address}}}");
+            }
+            else
+            {
+                Logger.Log(LogLevel.Warning, nameof(ConnectionManager), response.Error);
+                return null;
+            }
+
+            Uri liveKitVoiceServer = new($"{(UseSecureProtocol ? Uri.UriSchemeHttps : Uri.UriSchemeHttp)}://{response.livekit_server_address}");
+
+            string[] parts = response.fishnet_server_address.Split(':');
+            if (parts.Length != 2)
+            {
+                Logger.Log(LogLevel.Warning, nameof(ConnectionManager), $"Invalid FishNet server address: '{response.fishnet_server_address}'");
+                return null;
+            }
+
+
+            string host = parts[0];
+            if (ushort.TryParse(parts[1], out ushort port))
+                return ((host, port), liveKitVoiceServer);
+
+            Logger.Log(LogLevel.Warning, nameof(ConnectionManager), $"Invalid port in FishNet server address: '{response.fishnet_server_address}'");
+            return null;
         }
 
         /// <summary>
