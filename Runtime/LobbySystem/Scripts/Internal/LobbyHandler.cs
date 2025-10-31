@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AnyVR.Logging;
 using FishNet.Connection;
+using FishNet.Managing.Scened;
 using FishNet.Object;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -13,7 +14,7 @@ namespace AnyVR.LobbySystem.Internal
 {
     public class LobbyHandler : NetworkBehaviour
     {
-        internal LobbyState State;
+        private LobbyState _state;
 
         internal void Init(GlobalLobbyState state)
         {
@@ -22,13 +23,7 @@ namespace AnyVR.LobbySystem.Internal
 
             SpawnLobbyState(state);
 
-            SceneManager.OnClientPresenceChangeEnd += args =>
-            {
-                if (args.Added && args.Scene == gameObject.scene)
-                {
-                    SpawnPlayerController(args.Connection);
-                }
-            };
+            SceneManager.OnClientPresenceChangeEnd += OnClientPresenceChangeEnd;
 
             DateTime? expiration = state.ExpirationDate.Value;
             if (expiration.HasValue)
@@ -36,6 +31,39 @@ namespace AnyVR.LobbySystem.Internal
                 StartCoroutine(ExpireLobby(expiration.Value));
             }
         }
+
+        private void OnClientPresenceChangeEnd(ClientPresenceChangeEventArgs args)
+        {
+            if (args.Scene != gameObject.scene)
+                return;
+
+            if (args.Added)
+            {
+                SpawnPlayerState(args.Connection);
+                SpawnPlayerController(args.Connection);
+            }
+            else
+            {
+                Assert.IsNotNull(GetGameState().GetPlayerState(args.Connection.ClientId));
+
+                // Despawn player state
+                LobbyPlayerState playerState = GetGameState().RemovePlayerState(args.Connection);
+                Despawn(playerState.NetworkObject, DespawnType.Destroy);
+
+                // Despawn player controller
+                bool success = _playerControllers.TryGetValue(args.Connection, out LobbyPlayerController playerController);
+                Assert.IsTrue(success);
+                Despawn(playerController.NetworkObject, DespawnType.Destroy);
+            }
+        }
+
+        private void SpawnPlayerState(NetworkConnection conn)
+        {
+            LobbyPlayerState ps = Instantiate(GetGameState().PlayerStatePrefab).GetComponent<LobbyPlayerState>();
+            Spawn(ps.gameObject, conn, gameObject.scene);
+            GetGameState().AddPlayerState(ps);
+        }
+
         private void SpawnPlayerController(NetworkConnection conn)
         {
             LobbyPlayerController playerController = Instantiate(_playerControllerPrefab);
@@ -48,11 +76,11 @@ namespace AnyVR.LobbySystem.Internal
 
         private void SpawnLobbyState(GlobalLobbyState globalState)
         {
-            State = Instantiate(_lobbyStatePrefab);
-            Spawn(State.NetworkObject, null, gameObject.scene);
-            State.Init(globalState);
+            _state = Instantiate(_lobbyStatePrefab);
+            Spawn(_state.NetworkObject, null, gameObject.scene);
+            _state.Init(globalState);
 
-            State.OnPlayerJoin += _ =>
+            _state.OnPlayerJoin += _ =>
             {
                 if (_inactiveCoroutine != null)
                 {
@@ -60,9 +88,9 @@ namespace AnyVR.LobbySystem.Internal
                 }
             };
 
-            State.OnPlayerLeave += _ =>
+            _state.OnPlayerLeave += _ =>
             {
-                if (!State.GetPlayerStates().Any())
+                if (!_state.GetPlayerStates().Any())
                 {
                     _inactiveCoroutine = StartCoroutine(CloseInactiveLobby());
                 }
@@ -73,14 +101,14 @@ namespace AnyVR.LobbySystem.Internal
         {
             float timeUntilExpiration = (float)(expirationDate - DateTime.UtcNow).TotalSeconds;
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyHandler), $"Expire lobby {State.Info.ExpirationDate.Value} in {timeUntilExpiration} seconds");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyHandler), $"Expire lobby {_state.LobbyInfo.ExpirationDate.Value} in {timeUntilExpiration} seconds");
             if (timeUntilExpiration > 0)
             {
                 yield return new WaitForSeconds(timeUntilExpiration);
             }
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyHandler), $"Lobby {State.LobbyId} expired");
-            LobbyManager.Instance.Internal.Server_CloseLobby(State.LobbyId);
+            Logger.Log(LogLevel.Verbose, nameof(LobbyHandler), $"Lobby {_state.LobbyId} expired");
+            LobbyManager.Instance.Internal.Server_CloseLobby(_state.LobbyId);
         }
 
         /// <summary>
@@ -89,20 +117,30 @@ namespace AnyVR.LobbySystem.Internal
         /// <param name="duration">Duration in seconds until expiration</param>
         private IEnumerator CloseInactiveLobby(ushort duration = 10)
         {
-            if (State.GetPlayerStates().Any())
+            if (_state.GetPlayerStates().Any())
             {
                 yield break;
             }
 
             yield return new WaitForSeconds(duration);
 
-            if (State.GetPlayerStates().Any())
+            if (_state.GetPlayerStates().Any())
             {
                 yield break;
             }
 
-            Logger.Log(LogLevel.Warning, nameof(LobbyHandler), $"Closing lobby {State.LobbyId} due to inactivity.");
-            LobbyManager.Instance.Internal.Server_CloseLobby(State.LobbyId);
+            Logger.Log(LogLevel.Warning, nameof(LobbyHandler), $"Closing lobby {_state.LobbyId} due to inactivity.");
+            LobbyManager.Instance.Internal.Server_CloseLobby(_state.LobbyId);
+        }
+
+        public LobbyState GetGameState()
+        {
+            return _state;
+        }
+
+        public T GetGameState<T>() where T : LobbyState
+        {
+            return _state as T;
         }
 
 #region Serialized Fields

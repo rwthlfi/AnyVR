@@ -9,13 +9,17 @@ using UnityEngine.Assertions;
 namespace AnyVR.LobbySystem.Internal
 {
     /// <summary>
+    ///     Provides a base implementation of the game state.
+    ///     The *Game State* is responsible for enabling the clients to monitor the state of the game.
+    ///     Maintains a synchronized collection of player states indexed by client ID.
+    ///     <seealso cref="GlobalGameState" />
+    ///     <seealso cref="LobbyState" />
     /// </summary>
-    /// <typeparam name="T">The player state class</typeparam>
     public abstract class BaseGameState<T> : NetworkBehaviour where T : NetworkBehaviour
     {
 #region Serialized Fields
 
-        [SerializeField] protected T _playerStatePrefab;
+        [SerializeField] private T _playerStatePrefab;
 
 #endregion
 
@@ -27,9 +31,11 @@ namespace AnyVR.LobbySystem.Internal
 
 #region Lifecycle Overrides
 
-        public override void OnStartNetwork()
+        private void Start()
         {
-            base.OnStartNetwork();
+            Assert.IsNotNull(_playerStatePrefab);
+            Assert.IsNotNull(_playerStatePrefab.GetComponent<GlobalPlayerState>());
+
             _playerStates.OnChange += PlayerStatesOnChange;
         }
 
@@ -58,10 +64,20 @@ namespace AnyVR.LobbySystem.Internal
 
 #region Public API
 
+        /// <summary>
+        ///     Invoked after a player joins the game.
+        /// </summary>
         public event Action<T> OnPlayerJoin;
 
+        /// <summary>
+        ///     Invoked after a player leaves the game.
+        /// </summary>
         public event Action<int> OnPlayerLeave;
 
+        /// <summary>
+        ///     Returns an enumeration containing all player states with a specific type.
+        /// </summary>
+        /// <typeparam name="TDerived">A derived type of <typeparamref name="T" />.</typeparam>
         public IEnumerable<T> GetPlayerStates<TDerived>() where TDerived : T
         {
             if (!_playerStates.IsInitialized)
@@ -74,11 +90,19 @@ namespace AnyVR.LobbySystem.Internal
             }
         }
 
+        /// <summary>
+        ///     Returns an enumeration containing all player states.
+        /// </summary>
         public IEnumerable<T> GetPlayerStates()
         {
             return GetPlayerStates<T>();
         }
 
+        /// <summary>
+        ///     Returns the player state of the specified player.
+        /// </summary>
+        /// <param name="clientId">The corresponding player's id.</param>
+        /// <typeparam name="TDerived">A derived type of <typeparamref name="T" /> to cast the player state to.</typeparam>
         public TDerived GetPlayerState<TDerived>(int clientId) where TDerived : T
         {
             if (!_playerStates.TryGetValue(clientId, out NetworkBehaviour ps) || ps == null)
@@ -89,36 +113,35 @@ namespace AnyVR.LobbySystem.Internal
             return null;
         }
 
+        /// <summary>
+        ///     Returns the player state of the specified player.
+        /// </summary>
+        /// <param name="clientId">The corresponding player's id.</param>
+        /// <returns></returns>
         public T GetPlayerState(int clientId)
         {
             return GetPlayerState<T>(clientId);
         }
+
+        public T PlayerStatePrefab => _playerStatePrefab;
 
 #endregion
 
 #region Server Methods
 
         [Server]
-        protected T AddPlayerState(NetworkConnection conn, bool global = false)
+        internal void AddPlayerState(T playerState)
         {
-            //TODO: Spawn/Despawn the player states somewhere else?
-            T ps = Instantiate(_playerStatePrefab).GetComponent<T>();
-            ps.NetworkObject.SetIsGlobal(global);
-            Spawn(ps.gameObject, conn, gameObject.scene);
-
-            _playerStates.Add(conn.ClientId, ps);
-            return ps;
+            _playerStates.Add(playerState.OwnerId, playerState);
         }
 
         [Server]
-        protected void RemovePlayerState(NetworkConnection conn)
+        internal T RemovePlayerState(NetworkConnection conn)
         {
-            Assert.IsTrue(_playerStates.ContainsKey(conn.ClientId));
-            if (_playerStates.TryGetValue(conn.ClientId, out NetworkBehaviour ps))
-            {
-                Despawn(ps.NetworkObject);
-            }
+            bool success = _playerStates.TryGetValue(conn.ClientId, out NetworkBehaviour ps);
+            Assert.IsTrue(success);
             _playerStates.Remove(conn.ClientId);
+            return ps as T;
         }
 
   #endregion

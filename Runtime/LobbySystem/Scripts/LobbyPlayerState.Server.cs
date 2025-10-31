@@ -20,8 +20,8 @@ namespace AnyVR.LobbySystem
 
             Assert.IsNotNull(lobbyHandler, "LobbyHandler not found. Ensure there is one LobbyHandler placed in the lobby scene.");
 
-            _lobbyId.Value = lobbyHandler.State.LobbyId;
-            _isAdmin.Value = lobbyHandler.State.Info.CreatorId == OwnerId;
+            _lobbyId.Value = lobbyHandler.GetGameState().LobbyId;
+            _isAdmin.Value = lobbyHandler.GetGameState().LobbyInfo.CreatorId == OwnerId;
         }
 
         public override void OnDespawnServer(NetworkConnection conn)

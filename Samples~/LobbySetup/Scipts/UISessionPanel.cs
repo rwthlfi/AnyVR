@@ -63,7 +63,7 @@ namespace AnyVR.Sample
             }
 
             float playerCount = _lobbyState.GetPlayerStates().Count();
-            float capacity = _lobbyState.Info.LobbyCapacity;
+            float capacity = _lobbyState.LobbyInfo.LobbyCapacity;
 
             _capacityLabel.text = $"({playerCount} / {capacity})";
         }
@@ -94,11 +94,11 @@ namespace AnyVR.Sample
 
         private void UpdateSessionInfo()
         {
-            _lobbyNameLabel.text = _lobbyState.Info.Name.Value;
-            _locationLabel.text = _lobbyState.Info.Scene.Name;
-            _quickConnectLabel.text = _lobbyState.Info.QuickConnectCode.ToString();
+            _lobbyNameLabel.text = _lobbyState.LobbyInfo.Name.Value;
+            _locationLabel.text = _lobbyState.LobbyInfo.Scene.Name;
+            _quickConnectLabel.text = _lobbyState.LobbyInfo.QuickConnectCode.ToString();
 
-            GlobalPlayerState owner = _lobbyState.Info.Creator;
+            GlobalPlayerState owner = _lobbyState.LobbyInfo.Creator;
             _ownerLabel.text = owner != null ? owner.GetName() : "N/A (disconnected)";
         }
 

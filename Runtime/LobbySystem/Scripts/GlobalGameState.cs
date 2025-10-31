@@ -1,7 +1,7 @@
 using AnyVR.LobbySystem.Internal;
 using FishNet.Connection;
+using FishNet.Object;
 using FishNet.Transporting;
-using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
 {
@@ -16,23 +16,22 @@ namespace AnyVR.LobbySystem
         {
             base.OnStartServer();
 
-            Assert.IsNotNull(_playerStatePrefab);
-            Assert.IsNotNull(_playerStatePrefab.GetComponent<GlobalPlayerState>());
-
             SceneManager.OnClientLoadedStartScenes += OnClientLoadedStartScenes;
             ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
         }
 
         private void OnClientLoadedStartScenes(NetworkConnection conn, bool asServer)
         {
-            AddPlayerState(conn, true);
+            GlobalPlayerState ps = Instantiate(PlayerStatePrefab).GetComponent<GlobalPlayerState>();
+            Spawn(ps.gameObject, conn, gameObject.scene);
+            AddPlayerState(ps);
         }
 
         private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
         {
             if (args.ConnectionState == RemoteConnectionState.Stopped)
             {
-                RemovePlayerState(conn);
+                Despawn(RemovePlayerState(conn).NetworkObject, DespawnType.Destroy);
             }
         }
 

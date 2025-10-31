@@ -116,7 +116,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             return CreateSceneLoadDataInternal(
                 handler.gameObject.scene.handle,
-                handler.State.LobbyId
+                handler.GetGameState().LobbyId
             );
         }
 
@@ -150,12 +150,12 @@ namespace AnyVR.LobbySystem.Internal
 
             SceneLookupData sld = new()
             {
-                Handle = handler.gameObject.scene.handle, Name = handler.State.Info.Scene.ScenePath
+                Handle = handler.gameObject.scene.handle, Name = handler.GetGameState().LobbyInfo.Scene.ScenePath
             };
 
             object[] unloadParams =
             {
-                SceneLoadParam.Lobby, handler.State.LobbyId
+                SceneLoadParam.Lobby, handler.GetGameState().LobbyId
             };
             SceneUnloadData sud = new(new[]
             {

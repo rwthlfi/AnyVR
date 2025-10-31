@@ -6,5 +6,6 @@ namespace AnyVR.Sample
 {
     public class SamplePlayerState : LobbySystem_LobbyPlayerState
     {
+        
     }
 }
