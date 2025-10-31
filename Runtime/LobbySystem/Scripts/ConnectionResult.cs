@@ -39,13 +39,14 @@ namespace AnyVR.LobbySystem
 
         /// <summary>
         ///     The result of initializing the player's name after connecting.
-        ///     Is <c>null</c> if <see cref="ConnectionStatus"/> != <see cref="ConnectionStatus.Connected"/>
+        ///     Is <c>null</c> if <see cref="ConnectionStatus" /> != <see cref="ConnectionStatus.Connected" />
         /// </summary>
         public readonly PlayerNameUpdateResult? PlayerNameResult;
 
         /// <summary>
         ///     <c>True</c>, if the local client successfully connected to the server **and** the desired username was accepted.
-        ///     If the username is invalid or already assigned to another client, the local player will be kicked immediately by the server.
+        ///     If the username is invalid or already assigned to another client, the local player will be kicked immediately by
+        ///     the server.
         /// </summary>
         public bool IsSuccess => ConnectionStatus == ConnectionStatus.Connected && PlayerNameResult == PlayerNameUpdateResult.Success;
 

@@ -9,7 +9,6 @@ namespace AnyVR.LobbySystem
 {
     public class LobbyState : BaseGameState<LobbyPlayerState>
     {
-
 #region Replicated Properties
 
         private readonly SyncVar<Guid> _lobbyId = new();

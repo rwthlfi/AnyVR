@@ -8,22 +8,22 @@ using FishNet.Managing.Timing;
 using FishNet.Transporting;
 using FishNet.Transporting.Bayou;
 using FishNet.Transporting.Multipass;
-using GameKit.Dependencies.Utilities.Types;
+using FishNet.Transporting.Tugboat;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    ///     Responsible for managing the network connection for the client and server.
+    ///     On the client side, it sets up the transportation layer (<c>Tugboat</c> or <c>Bayou</c>) and is primarily used to
+    ///     start and stop a connection to a server.
+    ///     On the server, it is responsible for loading the global scene after startup.
+    /// </summary>
     [RequireComponent(typeof(NetworkManager))]
     public class ConnectionManager : MonoBehaviour
     {
-#region Serialized Fields
-
-        [SerializeField] [Scene] private string _welcomeScene;
-
-#endregion
-
         private async Task<ServerAddressResponse> RequestServerIp(Uri tokenServerUri, int timeoutSeconds = 10)
         {
             const string tokenURL = "{0}://{1}/requestServerIp";
@@ -63,7 +63,7 @@ namespace AnyVR.LobbySystem
 #region Public Fields
 
         /// <summary>
-        /// Current connection state
+        ///     Current connection state
         /// </summary>
         public ConnectionState State
         {
@@ -91,7 +91,7 @@ namespace AnyVR.LobbySystem
 
 
         /// <summary>
-        /// Current round-trip time of the connection in milliseconds.
+        ///     Current round-trip time of the connection in milliseconds.
         /// </summary>
         public uint Ping
         {
@@ -108,33 +108,33 @@ namespace AnyVR.LobbySystem
         }
 
         /// <summary>
-        /// The uri of the (LiveKit) tokenserver.
+        ///     The uri of the (LiveKit) tokenserver.
         /// </summary>
         public Uri LiveKitTokenServer { get; private set; }
 
         /// <summary>
-        /// The uri of the LiveKit server.
+        ///     The uri of the LiveKit server.
         /// </summary>
         public Uri LiveKitVoiceServer { get; private set; }
 
         /// <summary>
-        /// The uri of the Fishnet server.
+        ///     The uri of the Fishnet server.
         /// </summary>
         public Uri FishnetServer { get; private set; }
 
         /// <summary>
-        /// Called when the local client connection to the server has timed out.
+        ///     Called when the local client connection to the server has timed out.
         /// </summary>
         public event Action OnClientTimeout;
 
         /// <summary>
-        /// Called after the local client connection state changes.
+        ///     Called after the local client connection state changes.
         /// </summary>
         public event Action<ConnectionState> OnClientConnectionState;
 
         /// <summary>
-        /// If <c>true</c>/<c>false</c>, use <c>https</c>/<c>http</c> and <c>wss</c>/<c>ws</c> internally.
-        /// This is set when connecting to the server in <see cref="ConnectToServer"/>.
+        ///     If <c>true</c>/<c>false</c>, use <c>https</c>/<c>http</c> and <c>wss</c>/<c>ws</c> internally.
+        ///     This is set when connecting to the server in <see cref="ConnectToServer" />.
         /// </summary>
         public bool UseSecureProtocol { get; private set; }
 
@@ -157,6 +157,13 @@ namespace AnyVR.LobbySystem
             _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
             _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
             _networkManager.ClientManager.OnClientTimeOut += OnClientTimeout;
+
+            Multipass mp = GetComponent<Multipass>();
+#if UNITY_WEBGL
+            mp.SetClientTransport<Bayou>();
+#else
+            mp.SetClientTransport<Tugboat>();
+#endif
 
 #if UNITY_EDITOR && UNITY_SERVER
             Debug.Log("starting server");
@@ -199,17 +206,24 @@ namespace AnyVR.LobbySystem
 #endregion
 
 #region Public API
-        
+
         //TODO: Hide token server from user. Connect using fishnet address instead.
         /// <summary>
-        /// Connect to the server.
-        /// If the passed username is null, whitespace or already taken, the server will kick the local player immediately.
+        ///     Starts a connection to a server.
+        ///     After awaiting the asynchronous result, the active <see cref="GlobalGameState" /> is replicated and safe to use.
+        ///     If the passed username is null, whitespace or already taken, the server will kick the local player immediately.
         /// </summary>
-        /// <param name="tokenServerUri">The uri of the token server. The uri of the fishnet server is fetched from the token server internally.</param> 
+        /// <param name="tokenServerUri">
+        ///     The uri of the token server. The uri of the fishnet server is fetched from the token
+        ///     server internally.
+        /// </param>
         /// <param name="userName">The desired username.</param>
-        /// <param name="useSecureProtocol">If <c>true</c>/<c>false</c>, use <c>https</c>/<c>http</c> and <c>wss</c>/<c>ws</c> internally.</param>
+        /// <param name="useSecureProtocol">
+        ///     If <c>true</c>/<c>false</c>, use <c>https</c>/<c>http</c> and <c>wss</c>/<c>ws</c>
+        ///     internally.
+        /// </param>
         /// <param name="timeout">Optionally, specify a timeout. If <c>null</c> the timeout defaults to 5 seconds.</param>
-        /// <returns>An asynchronous <see cref="ConnectionResult"/> indicating whether the connection attempt succeeded or failed.</returns>
+        /// <returns>An asynchronous <see cref="ConnectionResult" /> indicating whether the connection attempt succeeded or failed.</returns>
         public async Task<ConnectionResult> ConnectToServer(Uri tokenServerUri, string userName, bool useSecureProtocol = true, TimeSpan? timeout = null)
         {
             Assert.IsNotNull(_networkManager);
@@ -262,7 +276,7 @@ namespace AnyVR.LobbySystem
         }
 
         /// <summary>
-        /// Stops the connection to the server.
+        ///     Stops the connection to the server.
         /// </summary>
         /// <returns><c>False</c>, if not connected to the server. Otherwise, <c>true</c>.</returns>
         public bool LeaveServer()

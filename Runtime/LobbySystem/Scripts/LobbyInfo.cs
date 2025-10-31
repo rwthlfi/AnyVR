@@ -1,5 +1,4 @@
 using System;
-using AnyVR.LobbySystem.Internal;
 
 namespace AnyVR.LobbySystem
 {
