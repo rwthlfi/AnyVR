@@ -136,11 +136,12 @@ namespace AnyVR.UserControlSystem.PC
 
         protected void Update()
         {
-            XRBaseInteractable interactable;
-
-            if (!hasHover && !hasSelection && IsThereObject(out interactable))
+            if (!hasHover && !hasSelection && IsThereObject(out IXRHoverInteractable interactable))
             {
-                interactionManager.HoverEnter((IXRHoverInteractor)this, interactable);
+                if (CanHover(interactable))
+                {
+                    interactionManager.HoverEnter(this, interactable);
+                }
             }
 
             else if (hasHover && !IsThereObject(out interactable))
@@ -263,7 +264,7 @@ namespace AnyVR.UserControlSystem.PC
             }
         }
 
-        private bool IsThereObject(out XRBaseInteractable target)
+        private bool IsThereObject(out IXRHoverInteractable target)
         {
             target = null;
 
@@ -272,21 +273,18 @@ namespace AnyVR.UserControlSystem.PC
                 return false;
             }
 
-            RaycastHit hit;
-
-            if (Physics.Raycast(_interactionRaycastOrigin.position, _interactionRaycastOrigin.forward, out hit,
+            if (Physics.Raycast(_interactionRaycastOrigin.position, _interactionRaycastOrigin.forward, out RaycastHit hit,
                     _maxInteractionDistance))
             {
-                XRBaseInteractable interactionInteractable = hit.collider.gameObject.GetComponent<XRBaseInteractable>();
-
-                if (interactionInteractable != null)
+                
+                if (hit.collider.gameObject.TryGetComponent(out IXRHoverInteractable interactionInteractable))
                 {
                     target = interactionInteractable;
                     return true;
                 }
 
-                // Also tries parent object
-                interactionInteractable = hit.collider.gameObject.GetComponentInParent<XRBaseInteractable>();
+                // Also tries parent object.
+                interactionInteractable = hit.collider.gameObject.GetComponentInParent<IXRHoverInteractable>();
 
                 if (interactionInteractable != null)
                 {
@@ -310,10 +308,19 @@ namespace AnyVR.UserControlSystem.PC
 
         private void SelectHoveredObject()
         {
-            IXRSelectInteractable hovered = HoveredObject as IXRSelectInteractable;
-            interactionManager.HoverExit(this, HoveredObject);
-            interactionManager.SelectEnter(this, hovered);
-            EnableSelectionInteractions(true);
+            if (HoveredObject is IXRSelectInteractable selectableObject)
+            {
+                if (CanSelect(selectableObject) && ProcessSelectFilters(selectableObject))
+                {
+                    interactionManager.HoverExit(this, HoveredObject);
+                    interactionManager.SelectEnter(this, selectableObject);
+                    EnableSelectionInteractions(true);
+                }
+            }
+            else 
+            {
+                Debug.LogWarning("[PCInteractionSystem] Hovered object is not selectable.", HoveredObject.transform);
+            }
         }
 
         private void ReleaseSelectedObject()
