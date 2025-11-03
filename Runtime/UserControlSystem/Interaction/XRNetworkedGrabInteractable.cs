@@ -30,7 +30,6 @@ namespace AnyVR.UserControlSystem.Interaction
     /// A networked grab interactable for XR interactions.
     /// </summary>
     [RequireComponent(typeof(NetworkObject))]
-    [RequireComponent(typeof(PredictedOwner))]
     [RequireComponent(typeof(NetworkTransform))]
     [RequireComponent(typeof(NetworkObserver))]
     [RequireComponent(typeof(Collider))]

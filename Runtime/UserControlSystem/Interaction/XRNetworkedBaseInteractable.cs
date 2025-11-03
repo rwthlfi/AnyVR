@@ -22,6 +22,7 @@ using UnityEngine;
 
 namespace AnyVR.UserControlSystem.Interaction
 {
+    [RequireComponent(typeof(PredictedOwner))]
     public abstract class XRNetworkedBaseInteractable : NetworkBehaviour, INetworkOwnableInteractable
     {
         private PredictedOwner _predictedOwner;
