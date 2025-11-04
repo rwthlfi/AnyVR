@@ -61,7 +61,7 @@ namespace AnyVR.LobbySystem.Internal
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal),
                     $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Lobby was not found.");
-                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.LobbyDoesNotExist);
+                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyResult.LobbyDoesNotExist);
                 return;
             }
 
@@ -69,7 +69,7 @@ namespace AnyVR.LobbySystem.Internal
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal),
                     $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Lobby is full.");
-                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.LobbyIsFull);
+                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyResult.LobbyIsFull);
                 return;
             }
 
@@ -77,13 +77,13 @@ namespace AnyVR.LobbySystem.Internal
             {
                 Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal),
                     $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Password mismatch.");
-                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.PasswordMismatch);
+                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyResult.PasswordMismatch);
                 return;
             }
 
             Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal), $"Client '{conn.ClientId}' joined lobby '{lobbyId}'.");
 
-            TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.Success, lobbyId);
+            TargetRPC_OnJoinLobbyResult(conn, JoinLobbyResult.Success);
 
             LobbyGameMode lobbyGameMode = _lobbyRegistry.GetLobbyGameMode(lobbyId);
             Assert.IsNotNull(lobbyGameMode);
@@ -138,7 +138,7 @@ namespace AnyVR.LobbySystem.Internal
             GlobalLobbyState state = _lobbyRegistry.GetLobbyState(quickConnect);
             if (state == null)
             {
-                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyStatus.LobbyDoesNotExist);
+                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyResult.LobbyDoesNotExist);
                 return;
             }
 

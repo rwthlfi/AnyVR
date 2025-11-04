@@ -145,17 +145,17 @@ namespace AnyVR.LobbySystem
         [Conditional("ANY_VR_LOG")]
         private static void LogJoinLobbyResult(JoinLobbyResult result)
         {
-            string message = result.Status switch
+            string message = result switch
             {
-                JoinLobbyStatus.Success => "Successfully joined lobby.",
-                JoinLobbyStatus.AlreadyConnected => "Failed to Join Lobby. You are already connected.",
-                JoinLobbyStatus.LobbyDoesNotExist => "Failed to Join Lobby. The lobby does not exist.",
-                JoinLobbyStatus.LobbyIsFull => "Failed to Join Lobby. The lobby is full.",
-                JoinLobbyStatus.PasswordMismatch => "Failed to Join Lobby. Incorrect lobby password.",
-                JoinLobbyStatus.AlreadyJoining => "Failed to Join Lobby. Already attempting to join a lobby.",
-                JoinLobbyStatus.Timeout => "Failed to Join Lobby. Server did not handle join request (timeout).",
-                JoinLobbyStatus.InvalidFormat => "Failed to Join Lobby. Quick connect code has an invalid format.",
-                JoinLobbyStatus.OutOfRange => "Failed to Join Lobby. Quick connect code is out of range.",
+                JoinLobbyResult.Success => "Successfully joined lobby.",
+                JoinLobbyResult.AlreadyConnected => "Failed to Join Lobby. You are already connected.",
+                JoinLobbyResult.LobbyDoesNotExist => "Failed to Join Lobby. The lobby does not exist.",
+                JoinLobbyResult.LobbyIsFull => "Failed to Join Lobby. The lobby is full.",
+                JoinLobbyResult.PasswordMismatch => "Failed to Join Lobby. Incorrect lobby password.",
+                JoinLobbyResult.AlreadyJoining => "Failed to Join Lobby. Already attempting to join a lobby.",
+                JoinLobbyResult.Timeout => "Failed to Join Lobby. Server did not handle join request (timeout).",
+                JoinLobbyResult.InvalidFormat => "Failed to Join Lobby. Quick connect code has an invalid format.",
+                JoinLobbyResult.OutOfRange => "Failed to Join Lobby. Quick connect code is out of range.",
                 _ => throw new ArgumentOutOfRangeException()
             };
 

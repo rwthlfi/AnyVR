@@ -68,7 +68,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             if (_joinLobbyTcs != null && !_joinLobbyTcs.Task.IsCompleted)
             {
-                return new JoinLobbyResult(JoinLobbyStatus.AlreadyJoining);
+                return JoinLobbyResult.AlreadyJoining;
             }
 
             _joinLobbyTcs = new TaskCompletionSource<JoinLobbyResult>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -81,7 +81,7 @@ namespace AnyVR.LobbySystem.Internal
             if (ReferenceEquals(completed, delay))
             {
                 _joinLobbyTcs = null;
-                return new JoinLobbyResult(JoinLobbyStatus.Timeout);
+                return JoinLobbyResult.Timeout;
             }
 
             JoinLobbyResult result = await _joinLobbyTcs.Task;
@@ -104,13 +104,13 @@ namespace AnyVR.LobbySystem.Internal
             if (!uint.TryParse(quickConnectCode, out uint code))
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal), $"QuickConnect failed: invalid code '{quickConnectCode}'");
-                return Task.FromResult(new JoinLobbyResult(JoinLobbyStatus.InvalidFormat));
+                return Task.FromResult(JoinLobbyResult.InvalidFormat);
             }
 
             if (code >= 99999)
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal), $"QuickConnect failed: code out of range '{code}'");
-                return Task.FromResult(new JoinLobbyResult(JoinLobbyStatus.OutOfRange));
+                return Task.FromResult(JoinLobbyResult.OutOfRange);
             }
 
             return Client_JoinLobbyInternal(() => ServerRPC_QuickConnect(code, LocalConnection), timeout);
@@ -119,11 +119,9 @@ namespace AnyVR.LobbySystem.Internal
 #region RPCs
 
         [TargetRpc]
-        private void TargetRPC_OnJoinLobbyResult(NetworkConnection _, JoinLobbyStatus status, Guid? lobbyId = null)
+        private void TargetRPC_OnJoinLobbyResult(NetworkConnection _, JoinLobbyResult result)
         {
-            _joinLobbyTcs?.TrySetResult(new JoinLobbyResult(status, lobbyId));
-
-            Assert.IsTrue(status != JoinLobbyStatus.Success || lobbyId.HasValue); // Success => HasValue
+            _joinLobbyTcs?.TrySetResult(result);
         }
 
         [TargetRpc]
