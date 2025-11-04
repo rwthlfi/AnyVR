@@ -1,11 +1,17 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
+[assembly: InternalsVisibleTo("AnyVR.Lobbysystem")]
+[assembly: InternalsVisibleTo("AnyVR.Voicechat")]
+[assembly: InternalsVisibleTo("AnyVR.PlatformManagement")]
+[assembly: InternalsVisibleTo("AnyVR.UserControlSystem")]
+
 namespace AnyVR.Logging
 {
-    public enum LogLevel
+    internal enum LogLevel
     {
         Error = 0,
         Warning = 1,
@@ -13,7 +19,7 @@ namespace AnyVR.Logging
         Verbose = 3
     }
 
-    public class Logger : MonoBehaviour
+    internal class Logger : MonoBehaviour
     {
         [SerializeField] private LogLevel _currentLevel = LogLevel.Warning;
 
@@ -33,7 +39,7 @@ namespace AnyVR.Logging
         }
 
         [Conditional("ANY_VR_LOG")]
-        public static void Log(LogLevel level, string tag, object message)
+        internal static void Log(LogLevel level, string tag, object message)
         {
             if (!_instance.ShouldLog(level))
             {
