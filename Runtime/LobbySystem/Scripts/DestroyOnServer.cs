@@ -19,7 +19,7 @@ using UnityEngine;
 
 namespace AnyVR.LobbySystem
 {
-    public class DestroyOnServer : MonoBehaviour
+    internal class DestroyOnServer : MonoBehaviour
     {
         private void Awake()
         {

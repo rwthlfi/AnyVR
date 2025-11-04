@@ -5,6 +5,12 @@ using FishNet.Transporting;
 
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    ///     Represents the global game state that is replicated to all clients.
+    ///     Maintains a synchronized collection of <see cref="GlobalPlayerState" /> instances indexed by client ID.
+    ///     Inherit from this class to add additional synchronized properties as needed.
+    ///     <seealso cref="LobbyState" />
+    /// </summary>
     public class GlobalGameState : BaseGameState<GlobalPlayerState>
     {
         private void Awake()
@@ -37,6 +43,10 @@ namespace AnyVR.LobbySystem
 
 #region Singleton
 
+        /// <summary>
+        ///     The singleton instance of the <see cref="GlobalGameState" />.
+        ///     Is not null if the local client is connected to a server.
+        /// </summary>
         public static GlobalGameState Instance { get; private set; }
 
         private void InitSingleton()

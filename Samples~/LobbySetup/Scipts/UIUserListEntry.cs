@@ -27,7 +27,7 @@ namespace AnyVR.Sample
         public void SetPlayerInfo(LobbyPlayerState playerState)
         {
             _userNameText.text = playerState.Global.GetName();
-            _adminIcon.enabled = playerState.IsAdmin();
+            _adminIcon.enabled = playerState.IsAdmin;
 
             bool isLocalPlayer = playerState.IsLocalPlayer;
             _promoteButton.interactable = !isLocalPlayer;

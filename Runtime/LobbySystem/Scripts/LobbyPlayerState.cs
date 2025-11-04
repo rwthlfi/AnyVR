@@ -5,6 +5,13 @@ using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    ///     Represents the state of a player inside a lobby.
+    ///     Only replicated to players in the same lobby.
+    ///     Inherit from this class to add additional synchronized properties as needed.
+    ///     By default, contains a field with the id of the lobby and if the player is an admin in the lobby.
+    ///     Also holds a reference to the player's <see cref="GlobalPlayerState" />.
+    /// </summary>
     public partial class LobbyPlayerState : NetworkBehaviour
     {
 #region Lifecycle Overrides
@@ -46,15 +53,16 @@ namespace AnyVR.LobbySystem
         /// </summary>
         public GlobalPlayerState Global { get; private set; }
 
-        public bool IsAdmin()
-        {
-            return _isAdmin.Value;
-        }
+        /// <summary>
+        ///     If the player is an admin in the lobby.
+        /// </summary>
+        public bool IsAdmin => _isAdmin.Value;
 
-        public Guid GetLobbyId()
-        {
-            return _lobbyId.Value;
-        }
+        /// <summary>
+        ///     The id of the corresponding lobby.
+        ///     Mainly used on the server as this always equals the local player's lobby id.
+        /// </summary>
+        public Guid LobbyId => _lobbyId.Value;
 
 #endregion
     }

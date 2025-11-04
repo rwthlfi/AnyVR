@@ -33,7 +33,7 @@ namespace AnyVR.LobbySystem
         }
 
         [Server]
-        public void SetIsAdmin(bool b)
+        internal void SetIsAdmin(bool b)
         {
             _isAdmin.Value = b;
         }

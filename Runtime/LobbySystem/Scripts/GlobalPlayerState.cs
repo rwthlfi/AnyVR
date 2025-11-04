@@ -14,6 +14,13 @@ using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    ///     Represents the global state of a player.
+    ///     Is always replicated to all players on the server.
+    ///     Inherit from this class to add additional synchronized properties as needed.
+    ///     By default, contains the player's id, name and platform type.
+    ///     <seealso cref="LobbyPlayerState" />
+    /// </summary>
     public class GlobalPlayerState : NetworkBehaviour
     {
 #region Private Fields

@@ -73,13 +73,13 @@ namespace AnyVR.LobbySystem
         [ServerRpc]
         private void ServerRPC_PromoteToAdmin(LobbyPlayerState other)
         {
-            if (other.IsAdmin())
+            if (other.IsAdmin)
             {
                 TargetRPC_OnPromotionResult(Owner, PlayerPromotionResult.AlreadyAdmin);
                 return;
             }
 
-            if (!GetPlayerState().IsAdmin())
+            if (!GetPlayerState().IsAdmin)
             {
                 TargetRPC_OnPromotionResult(Owner, PlayerPromotionResult.InsufficientPermissions);
                 return;
@@ -93,7 +93,7 @@ namespace AnyVR.LobbySystem
         [ServerRpc]
         private void ServerRPC_KickPlayer(LobbyPlayerState other)
         {
-            if (!GetPlayerState().IsAdmin())
+            if (!GetPlayerState().IsAdmin)
             {
                 TargetRPC_OnKickResult(Owner, PlayerKickResult.InsufficientPermissions);
                 return;

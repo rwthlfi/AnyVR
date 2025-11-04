@@ -30,6 +30,9 @@ namespace AnyVR.LobbySystem
         Cancelled
     }
 
+    /// <summary>
+    ///     Represents the result returned by the <see cref="ConnectionManager.ConnectToServer" /> method.
+    /// </summary>
     public readonly struct ConnectionResult
     {
         /// <summary>

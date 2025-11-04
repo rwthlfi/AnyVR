@@ -36,7 +36,7 @@ namespace AnyVR.LobbySystem.Internal
 
             if (string.IsNullOrWhiteSpace(lobbyName))
             {
-                return new CreateLobbyResult(CreateLobbyStatus.InvalidParameters);
+                return new CreateLobbyResult(CreateLobbyStatus.InvalidLobbyName);
             }
 
             if (!sceneMetaData.IsValid())

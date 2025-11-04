@@ -15,6 +15,13 @@ namespace AnyVR.LobbySystem.Internal
         [Server]
         private async void Server_CreateLobby(string lobbyName, string password, int sceneId, ushort maxClients, DateTime? expirationDate, NetworkConnection creator)
         {
+            if (string.IsNullOrWhiteSpace(lobbyName))
+            {
+                TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.InvalidLobbyName);
+            }
+
+            // TODO: check lobby name against a blacklist?
+
             if (GetLobbyStates().Any(lobbyState => lobbyState.Name.Value == lobbyName))
             {
                 TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.LobbyNameTaken);
@@ -86,7 +93,7 @@ namespace AnyVR.LobbySystem.Internal
         [Server]
         public void RemovePlayerFromLobby(LobbyPlayerState player)
         {
-            LobbyGameMode lobbyGameMode = _lobbyRegistry.GetLobbyGameMode(player.GetLobbyId());
+            LobbyGameMode lobbyGameMode = _lobbyRegistry.GetLobbyGameMode(player.LobbyId);
             Assert.IsNotNull(lobbyGameMode);
 
             _sceneService.UnloadLobbySceneForPlayer(player.Owner, lobbyGameMode);

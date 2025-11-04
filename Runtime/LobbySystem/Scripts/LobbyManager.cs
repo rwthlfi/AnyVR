@@ -147,7 +147,7 @@ namespace AnyVR.LobbySystem
         {
             string message = result.Status switch
             {
-                JoinLobbyStatus.Success => $"Successfully joined lobby {result.LobbyId.GetValueOrDefault()}.",
+                JoinLobbyStatus.Success => "Successfully joined lobby.",
                 JoinLobbyStatus.AlreadyConnected => "Failed to Join Lobby. You are already connected.",
                 JoinLobbyStatus.LobbyDoesNotExist => "Failed to Join Lobby. The lobby does not exist.",
                 JoinLobbyStatus.LobbyIsFull => "Failed to Join Lobby. The lobby is full.",
@@ -172,7 +172,7 @@ namespace AnyVR.LobbySystem
                 CreateLobbyStatus.InvalidScene => "Lobby Creation Failed. Invalid scene.",
                 CreateLobbyStatus.Timeout => "Lobby Creation Failed. Timeout occured.",
                 CreateLobbyStatus.CreationInProgress => "Lobby Creation Failed. Creation is in progress.",
-                CreateLobbyStatus.InvalidParameters => "Lobby Creation Failed. Invalid Parameters.",
+                CreateLobbyStatus.InvalidLobbyName => "Lobby Creation Failed. Invalid Parameters.",
                 _ => throw new ArgumentOutOfRangeException()
             };
 
