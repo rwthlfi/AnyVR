@@ -138,7 +138,8 @@ namespace AnyVR.UserControlSystem.PC
         {
             if (!hasHover && !hasSelection && IsThereObject(out IXRHoverInteractable interactable))
             {
-                if (CanHover(interactable))
+                Debug.Log($"[PCInteractionSystem] Hovering over object: {interactable.transform.name} ({CanHover(interactable)} && {ProcessHoverFilters(interactable)})", interactable.transform);
+                if (interactionManager.IsHoverPossible(this, interactable))
                 {
                     interactionManager.HoverEnter(this, interactable);
                 }
@@ -310,7 +311,7 @@ namespace AnyVR.UserControlSystem.PC
         {
             if (HoveredObject is IXRSelectInteractable selectableObject)
             {
-                if (CanSelect(selectableObject) && ProcessSelectFilters(selectableObject))
+                if (interactionManager.IsSelectPossible(this, selectableObject))
                 {
                     interactionManager.HoverExit(this, HoveredObject);
                     interactionManager.SelectEnter(this, selectableObject);
