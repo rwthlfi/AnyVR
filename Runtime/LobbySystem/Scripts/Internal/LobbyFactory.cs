@@ -14,7 +14,7 @@ namespace AnyVR.LobbySystem.Internal
         private bool _isPasswordProtected;
         private ushort _lobbyCapacity = 16;
         private string _name;
-        private int _sceneId;
+        private LobbySceneMetaData _scene;
 
         public LobbyFactory WithName(string name)
         {
@@ -24,13 +24,7 @@ namespace AnyVR.LobbySystem.Internal
 
         public LobbyFactory WithScene(LobbySceneMetaData scene)
         {
-            _sceneId = scene.ID;
-            return this;
-        }
-
-        public LobbyFactory WithSceneID(int sceneId)
-        {
-            _sceneId = sceneId;
+            _scene = scene;
             return this;
         }
 
@@ -60,7 +54,7 @@ namespace AnyVR.LobbySystem.Internal
 
         private static uint GenerateQuickConnectCode()
         {
-            Assert.IsNotNull(LobbyManager.Instance);
+            Assert.IsNotNull(GlobalGameState.Instance);
 
             const uint maxRetries = 100;
             const int maxCode = 99999;
@@ -68,7 +62,7 @@ namespace AnyVR.LobbySystem.Internal
             for (int i = 0; i < maxRetries; i++)
             {
                 uint candidate = (uint)Random.Next(0, maxCode + 1);
-                if (LobbyManager.Instance.GetLobbies().All(lobby => lobby.QuickConnectCode != candidate))
+                if (GlobalGameState.Instance.GetLobbies().All(lobby => lobby.QuickConnectCode != candidate))
                 {
                     return candidate;
                 }
@@ -79,16 +73,13 @@ namespace AnyVR.LobbySystem.Internal
 
         public GlobalLobbyState Create()
         {
-            LobbyManagerInternal @internal = LobbyManager.Instance.Internal;
-            LobbySceneMetaData sceneMetaData = LobbyManager.LobbyConfiguration.LobbyScenes.First(s => s.ID == _sceneId);
-
-            Assert.IsNotNull(sceneMetaData);
+            LobbyManagerInternal @internal = LobbyManagerInternal.Instance;
 
             // Spawning GlobalLobbyState
             GlobalLobbyState gls = Object.Instantiate(@internal._globalLobbyStatePrefab);
             Assert.IsNotNull(gls);
             @internal.Spawn(gls.NetworkObject, null, @internal.gameObject.scene);
-            gls.Init(Guid.NewGuid(), GenerateQuickConnectCode(), _name, _creatorId, (ushort)_sceneId, _lobbyCapacity, _isPasswordProtected, _expirationDate);
+            gls.Init(Guid.NewGuid(), GenerateQuickConnectCode(), _name, _creatorId, (ushort)_scene.ID, _lobbyCapacity, _isPasswordProtected, _expirationDate);
 
             return gls;
         }

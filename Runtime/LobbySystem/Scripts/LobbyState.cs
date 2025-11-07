@@ -79,7 +79,7 @@ namespace AnyVR.LobbySystem
 
         public Guid LobbyId => _lobbyId.Value;
 
-        public ILobbyInfo LobbyInfo => LobbyManager.Instance.TryGetLobby(LobbyId, out ILobbyInfo lobby) ? lobby : null;
+        public ILobbyInfo LobbyInfo => GlobalGameState.Instance.GetLobbyInfo(LobbyId);
 
 #endregion
 

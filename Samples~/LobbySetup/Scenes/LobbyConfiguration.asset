@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8bcc4b79ca44d81ebb7c3b9b1bea4dfa, type: 3}
   m_Name: LobbyConfiguration
   m_EditorClassIdentifier: 
-  OfflineScene: Assets/LobbySetup/Scenes/OfflineScene.unity
-  LobbyScenes:
+  _offlineScene: Assets/LobbySetup/Scenes/OfflineScene.unity
+  _lobbyScenes:
   - {fileID: 11400000, guid: 2c08e8844fa3005fa912625d44f7f9f3, type: 2}

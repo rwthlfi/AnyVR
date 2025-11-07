@@ -53,9 +53,21 @@ PrefabInstance:
       value: SampleLobbyHandler
       objectReference: {fileID: 0}
     - target: {fileID: 9052915785183046015, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
-      propertyPath: <AssetPathHash>k__BackingField
-      value: 13281557468310643411
+      propertyPath: <PrefabId>k__BackingField
+      value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 9052915785183046015, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
+      propertyPath: NetworkBehaviours.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9052915785183046015, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
+      propertyPath: <AssetPathHash>k__BackingField
+      value: 11699954222485233320
+      objectReference: {fileID: 0}
+    - target: {fileID: 9052915785183046015, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
+      propertyPath: 'NetworkBehaviours.Array.data[0]'
+      value: 
+      objectReference: {fileID: 5259840073338232275}
     m_RemovedComponents:
     - {fileID: 4205554363637461314, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
     m_RemovedGameObjects: []
@@ -93,9 +105,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81ae7f87ba184d10eaa7046a7de1333c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 2964378093126406274}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 2964378093126406274}
   _gameStatePrefab: {fileID: 0}
   _playerStatePrefab: {fileID: 0}
   _playerControllerPrefab: {fileID: 8759174644159321255, guid: ec0acb6b4b9c67189b170d5585b1cdc6, type: 3}

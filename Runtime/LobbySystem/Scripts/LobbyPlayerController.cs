@@ -99,7 +99,7 @@ namespace AnyVR.LobbySystem
                 return;
             }
 
-            LobbyManager.Instance.Internal.RemovePlayerFromLobby(other);
+            LobbyManagerInternal.Instance.RemovePlayerFromLobby(other);
             Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({other.Global.Name}) kicked.");
             TargetRPC_OnKickResult(Owner, PlayerKickResult.Success);
         }

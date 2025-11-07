@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using AnyVR.Logging;
-using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -13,18 +12,27 @@ namespace AnyVR.LobbySystem.Internal
     internal partial class LobbyManagerInternal
     {
         [Server]
-        private async void Server_CreateLobby(string lobbyName, string password, int sceneId, ushort maxClients, DateTime? expirationDate, NetworkConnection creator)
+        internal async void Server_CreateLobby(string lobbyName, string password, int sceneId, ushort maxClients, DateTime? expirationDate, GlobalPlayerController creator)
         {
             if (string.IsNullOrWhiteSpace(lobbyName))
             {
-                TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.InvalidLobbyName);
+                creator.ObserverRPC_OnCreateLobbyResult(CreateLobbyStatus.InvalidLobbyName);
             }
 
             // TODO: check lobby name against a blacklist?
 
-            if (GetLobbyStates().Any(lobbyState => lobbyState.Name.Value == lobbyName))
+            Assert.IsNotNull(GlobalGameState.Instance);
+
+            if (GlobalGameState.Instance.GetLobbies().Any(lobbyState => lobbyState.Name.Value == lobbyName))
             {
-                TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.LobbyNameTaken);
+                creator.ObserverRPC_OnCreateLobbyResult(CreateLobbyStatus.LobbyNameTaken);
+                return;
+            }
+
+            LobbySceneMetaData scene = GlobalGameState.Instance.LobbyConfiguration.LobbyScenes.FirstOrDefault(s => s.ID == sceneId);
+            if (scene == null)
+            {
+                creator.ObserverRPC_OnCreateLobbyResult(CreateLobbyStatus.InvalidScene);
                 return;
             }
 
@@ -32,8 +40,8 @@ namespace AnyVR.LobbySystem.Internal
 
             GlobalLobbyState gls = new LobbyFactory()
                 .WithName(lobbyName)
-                .WithCreator(creator.ClientId)
-                .WithSceneID(sceneId)
+                .WithCreator(creator.OwnerId)
+                .WithScene(scene)
                 .WithCapacity(maxClients)
                 .WithPasswordProtection(!string.IsNullOrWhiteSpace(password))
                 .WithExpiration(expirationDate)
@@ -50,46 +58,46 @@ namespace AnyVR.LobbySystem.Internal
             gameMode.SetLobbyId(gls.LobbyId);
             gameMode.OnBeginPlay();
 
-            TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.Success, gls.LobbyId);
+            creator.ObserverRPC_OnCreateLobbyResult(CreateLobbyStatus.Success, gls.LobbyId);
         }
 
         [Server]
-        private void Server_JoinLobby(Guid lobbyId, string password, NetworkConnection conn)
+        internal void Server_JoinLobby(Guid lobbyId, string password, GlobalPlayerController player)
         {
-            Assert.IsNotNull(conn);
+            Assert.IsNotNull(player);
 
-            GlobalLobbyState state = _lobbyRegistry.GetLobbyState(lobbyId);
-            if (state == null)
+            ILobbyInfo lobbyInfo = GlobalGameState.Instance.GetLobbyInfo(lobbyId);
+            if (lobbyInfo == null)
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal),
-                    $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Lobby was not found.");
-                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyResult.LobbyDoesNotExist);
+                    $"Client '{player.OwnerId}' could not be added to lobby '{lobbyId}'. Lobby was not found.");
+                player.ObserverRPC_OnJoinLobbyResult(JoinLobbyResult.LobbyDoesNotExist);
                 return;
             }
 
-            if (state.NumPlayers.Value >= state.LobbyCapacity)
+            if (lobbyInfo.NumPlayers.Value >= lobbyInfo.LobbyCapacity)
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal),
-                    $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Lobby is full.");
-                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyResult.LobbyIsFull);
+                    $"Client '{player.OwnerId}' could not be added to lobby '{lobbyId}'. Lobby is full.");
+                player.ObserverRPC_OnJoinLobbyResult(JoinLobbyResult.LobbyIsFull);
                 return;
             }
 
             if (!_lobbyRegistry.ValidatePassword(lobbyId, password))
             {
                 Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal),
-                    $"Client '{conn.ClientId}' could not be added to lobby '{lobbyId}'. Password mismatch.");
-                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyResult.PasswordMismatch);
+                    $"Client '{player.OwnerId}' could not be added to lobby '{lobbyId}'. Password mismatch.");
+                player.ObserverRPC_OnJoinLobbyResult(JoinLobbyResult.PasswordMismatch);
                 return;
             }
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal), $"Client '{conn.ClientId}' joined lobby '{lobbyId}'.");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal), $"Client '{player.OwnerId}' joined lobby '{lobbyId}'.");
 
-            TargetRPC_OnJoinLobbyResult(conn, JoinLobbyResult.Success);
+            player.ObserverRPC_OnJoinLobbyResult(JoinLobbyResult.Success);
 
             LobbyGameMode lobbyGameMode = _lobbyRegistry.GetLobbyGameMode(lobbyId);
             Assert.IsNotNull(lobbyGameMode);
-            _sceneService.LoadLobbySceneForPlayer(conn, lobbyGameMode);
+            _sceneService.LoadLobbySceneForPlayer(player.Owner, lobbyGameMode);
         }
 
         [Server]
@@ -104,7 +112,7 @@ namespace AnyVR.LobbySystem.Internal
         [Server]
         internal void Server_CloseLobby(Guid lobbyId)
         {
-            GlobalLobbyState state = _lobbyRegistry.GetLobbyState(lobbyId);
+            GlobalLobbyState state = (GlobalLobbyState)GlobalGameState.Instance.GetLobbyInfo(lobbyId);
             Assert.IsNotNull(state);
 
             _lobbyRegistry.UnregisterLobby(state);
@@ -122,39 +130,5 @@ namespace AnyVR.LobbySystem.Internal
         {
             return _lobbyRegistry.GetLobbyGameMode(lobbyId);
         }
-
-#region RPCs
-
-        /// <summary>
-        ///     Server Rpc to create a new lobby on the server.
-        /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void ServerRPC_CreateLobby(string lobbyName, string password, int sceneId, ushort maxClients, DateTime? expirationDate, NetworkConnection conn = null)
-        {
-            Server_CreateLobby(lobbyName, password, sceneId, maxClients, expirationDate, conn);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void ServerRPC_QuickConnect(uint quickConnect, NetworkConnection conn)
-        {
-            GlobalLobbyState state = _lobbyRegistry.GetLobbyState(quickConnect);
-            if (state == null)
-            {
-                TargetRPC_OnJoinLobbyResult(conn, JoinLobbyResult.LobbyDoesNotExist);
-                return;
-            }
-
-            Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal), $"{conn.ClientId} connecting to lobby '{state.LobbyId} via quickConnect");
-            // TODO: handle password protected lobbies
-            Server_JoinLobby(state.LobbyId, string.Empty, conn);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void ServerRPC_JoinLobby(Guid lobbyId, string password, NetworkConnection conn)
-        {
-            Server_JoinLobby(lobbyId, password, conn);
-        }
-
-#endregion
     }
 }

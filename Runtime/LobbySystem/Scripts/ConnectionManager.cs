@@ -24,11 +24,12 @@ namespace AnyVR.LobbySystem
     [RequireComponent(typeof(NetworkManager))]
     public class ConnectionManager : MonoBehaviour
     {
-        private static async Task WaitUntilGameStateInitialized()
+        private static async Task WaitUntilClientStarted()
         {
             TimeSpan timeout = TimeSpan.FromSeconds(3);
             DateTime start = DateTime.UtcNow;
-            while (GlobalGameState.Instance == null || GlobalPlayerState.LocalPlayer == null)
+            while (GlobalPlayerController.Instance == null || !GlobalPlayerController.Instance.IsClientStarted ||
+                   GlobalPlayerState.LocalPlayer == null || !GlobalPlayerState.LocalPlayer.IsClientStarted)
             {
                 if (DateTime.UtcNow - start > timeout)
                 {
@@ -245,7 +246,7 @@ namespace AnyVR.LobbySystem
             if (connectionStatus != ConnectionStatus.Connected)
                 return new ConnectionResult(connectionStatus, null);
 
-            await WaitUntilGameStateInitialized();
+            await WaitUntilClientStarted();
 
             Assert.IsNotNull(GlobalGameState.Instance);
             Assert.IsNotNull(GlobalPlayerState.LocalPlayer);

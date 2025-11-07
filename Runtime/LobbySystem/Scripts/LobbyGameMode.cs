@@ -15,8 +15,7 @@ namespace AnyVR.LobbySystem
     {
         private readonly SyncVar<Guid> _lobbyId = new();
 
-        // TODO: null in OnStartServer
-        internal GlobalLobbyState GlobalState => GlobalGameState.Instance.GetLobbyInfo(_lobbyId.Value);
+        internal ILobbyInfo LobbyInfo => GlobalGameState.Instance.GetLobbyInfo(_lobbyId.Value);
 
         internal void SetLobbyId(Guid lobbyId)
         {
@@ -44,7 +43,7 @@ namespace AnyVR.LobbySystem
                 }
             };
 
-            DateTime? expiration = GlobalState.ExpirationDate.Value;
+            DateTime? expiration = LobbyInfo.ExpirationDate.Value;
             if (expiration.HasValue)
             {
                 StartCoroutine(ExpireLobby(expiration.Value));
@@ -79,7 +78,7 @@ namespace AnyVR.LobbySystem
             }
 
             Logger.Log(LogLevel.Verbose, nameof(LobbyGameMode), $"Lobby {GetGameState<LobbyState>().LobbyId} expired");
-            LobbyManager.Instance.Internal.Server_CloseLobby(GetGameState<LobbyState>().LobbyId);
+            LobbyManagerInternal.Instance.Server_CloseLobby(GetGameState<LobbyState>().LobbyId);
         }
 
         /// <summary>
@@ -101,7 +100,7 @@ namespace AnyVR.LobbySystem
             }
 
             Logger.Log(LogLevel.Warning, nameof(LobbyGameMode), $"Closing lobby {GetGameState<LobbyState>().LobbyId} due to inactivity.");
-            LobbyManager.Instance.Internal.Server_CloseLobby(GetGameState<LobbyState>().LobbyId);
+            LobbyManagerInternal.Instance.Server_CloseLobby(GetGameState<LobbyState>().LobbyId);
         }
 
 

@@ -1,9 +1,12 @@
+using System;
 using System.Collections;
 using System.Text.RegularExpressions;
 using AnyVR.LobbySystem.Internal;
+using AnyVR.Logging;
 using FishNet.Managing.Server;
 using FishNet.Object;
 using UnityEngine;
+using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
@@ -65,5 +68,36 @@ namespace AnyVR.LobbySystem
 
             return result;
         }
+
+#region RPCs
+
+        [ServerRpc]
+        private void ServerRPC_CreateLobby(string lobbyName, string password, int sceneId, ushort maxClients, DateTime? expirationDate)
+        {
+            LobbyManagerInternal.Instance.Server_CreateLobby(lobbyName, password, sceneId, maxClients, expirationDate, this);
+        }
+
+        [ServerRpc]
+        private void ServerRPC_QuickConnect(uint quickConnect)
+        {
+            ILobbyInfo state = GlobalGameState.Instance.GetLobbyInfo(quickConnect);
+            if (state == null)
+            {
+                ObserverRPC_OnJoinLobbyResult(JoinLobbyResult.LobbyDoesNotExist);
+                return;
+            }
+
+            Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal), $"{OwnerId} connecting to lobby '{state.LobbyId} via quickConnect");
+            // TODO: handle password protected lobbies
+            LobbyManagerInternal.Instance.Server_JoinLobby(state.LobbyId, string.Empty, this);
+        }
+
+        [ServerRpc]
+        private void ServerRPC_JoinLobby(Guid lobbyId, string password)
+        {
+            LobbyManagerInternal.Instance.Server_JoinLobby(lobbyId, password, this);
+        }
+
+#endregion
     }
 }

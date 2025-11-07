@@ -56,7 +56,7 @@ namespace AnyVR.LobbySystem.Internal
         public int CreatorId => _creatorId.Value;
         public GlobalPlayerState Creator => GlobalGameState.Instance.GetPlayerState<GlobalPlayerState>(CreatorId);
         public ushort LobbyCapacity => _lobbyCapacity.Value;
-        public LobbySceneMetaData Scene => LobbyManager.LobbyConfiguration.LobbyScenes[_sceneId.Value];
+        public LobbySceneMetaData Scene => GlobalGameState.Instance.LobbyConfiguration.LobbyScenes[_sceneId.Value];
         public uint QuickConnectCode => _quickConnectCode.Value;
 
 #endregion

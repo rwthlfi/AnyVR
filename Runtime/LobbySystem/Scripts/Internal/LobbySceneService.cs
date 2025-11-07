@@ -15,18 +15,13 @@ namespace AnyVR.LobbySystem.Internal
         {
             _internal = @internal;
 
-            if (_internal.ClientManager.Started)
-            {
-                Client_Constructor();
-            }
-
             if (_internal.ServerManager.Started)
             {
                 Server_Constructor();
             }
         }
 
-        private static bool IsUnloadingLobby(UnloadQueueData queueData, bool asServer)
+        internal static bool IsUnloadingLobby(UnloadQueueData queueData, bool asServer)
         {
             object[] loadParams = asServer
                 ? queueData.SceneUnloadData.Params.ServerParams
@@ -46,7 +41,7 @@ namespace AnyVR.LobbySystem.Internal
             return loadParams[1] is Guid;
         }
 
-        private static bool IsLoadingLobby(LoadQueueData queueData, bool asServer)
+        internal static bool IsLoadingLobby(LoadQueueData queueData, bool asServer)
         {
             object[] loadParams = asServer
                 ? queueData.SceneLoadData.Params.ServerParams

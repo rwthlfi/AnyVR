@@ -30,8 +30,8 @@ namespace AnyVR.LobbySystem
 
             if (args.Added)
             {
-                SpawnPlayerState(args.Connection);
-                SpawnPlayerController(args.Connection);
+                PlayerStateBase ps = SpawnPlayerState(args.Connection);
+                SpawnPlayerController(args.Connection, ps);
             }
             else
             {
@@ -58,10 +58,10 @@ namespace AnyVR.LobbySystem
             return ps;
         }
 
-        private void SpawnPlayerController(NetworkConnection conn)
+        protected void SpawnPlayerController(NetworkConnection conn, PlayerStateBase playerState)
         {
             PlayerController playerController = Instantiate(_playerControllerPrefab);
-            playerController.SetPlayerId(conn.ClientId);
+            playerController.SetPlayerState(playerState);
 
             bool res = _playerControllers.TryAdd(conn, playerController);
             Assert.IsTrue(res);

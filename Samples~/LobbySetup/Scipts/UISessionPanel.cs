@@ -26,7 +26,7 @@ namespace AnyVR.Sample
 
         [SerializeField] private TextMeshProUGUI _capacityLabel;
 
-        private readonly Dictionary<int, UIUserListEntry> _players = new();
+        private Dictionary<int, UIUserListEntry> _players;
 
         private LobbyState _lobbyState;
 
@@ -40,6 +40,8 @@ namespace AnyVR.Sample
                 Debug.LogWarning("LobbyHandler not found. Disabling UISessionPanel.");
                 return;
             }
+            
+            _players = new Dictionary<int, UIUserListEntry>();
 
             _lobbyState.OnPlayerJoin += AddPlayerEntry;
             _lobbyState.OnPlayerLeave += RemovePlayerEntry;

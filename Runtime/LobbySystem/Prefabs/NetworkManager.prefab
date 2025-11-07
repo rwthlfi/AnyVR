@@ -13,8 +13,6 @@ GameObject:
   - component: {fileID: 5009998975569126252}
   - component: {fileID: 4520142844469642319}
   - component: {fileID: 4796949022164278234}
-  - component: {fileID: 1134836361371865964}
-  - component: {fileID: 2423351291345961283}
   - component: {fileID: 5021902473138039828}
   - component: {fileID: 6287520840629278902}
   - component: {fileID: 3804329797783330967}
@@ -53,7 +51,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _logging: {fileID: 0}
-  _spawnablePrefabs: {fileID: 0}
+  _spawnablePrefabs: {fileID: 11400000, guid: 87635f9ffdf5efdaaaffe11b9d7cf17f, type: 2}
   _refreshDefaultPrefabs: 1
   _runInBackground: 1
   _dontDestroyOnLoad: 1
@@ -93,7 +91,6 @@ MonoBehaviour:
   GlobalServerActions: 1
   _transports:
   - {fileID: 4796949022164278234}
-  - {fileID: 1134836361371865964}
 --- !u!114 &4796949022164278234
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -111,45 +108,11 @@ MonoBehaviour:
   _reuseAddress: 0
   _unreliableMtu: 1023
   _ipv4BindAddress: 
-  _enableIpv6: 0
+  _enableIpv6: 1
   _ipv6BindAddress: 
   _port: 7777
   _maximumClients: 4095
   _clientAddress: 
---- !u!114 &1134836361371865964
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1087981268889951963}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 362dfd7e6009fb44c90beec3df0ad853, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _useWss: 0
-  _sslConfiguration:
-    Enabled: 0
-    CertificatePath: 
-    CertificatePassword: 
-    SslProtocol: 0
-  _mtu: 1023
-  _port: 7777
-  _maximumClients: 2000
-  _clientAddress: 
---- !u!114 &2423351291345961283
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1087981268889951963}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88f4b7262a4465849ba5297c06084d16, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &5021902473138039828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -162,7 +125,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e838fcb1542f77b4aace907895a68966, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _welcomeScene: 
 --- !u!114 &6287520840629278902
 MonoBehaviour:
   m_ObjectHideFlags: 0

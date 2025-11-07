@@ -32,7 +32,7 @@ namespace AnyVR.LobbySystem
         {
             get
             {
-                return Array.FindIndex(LobbyManager.LobbyConfiguration.LobbyScenes, lmd => lmd == this);
+                return Array.FindIndex(GlobalGameState.Instance.LobbyConfiguration.LobbyScenes, lmd => lmd == this);
             }
         }
 
@@ -45,7 +45,7 @@ namespace AnyVR.LobbySystem
 
         public bool IsValid()
         {
-            return LobbyManager.LobbyConfiguration.LobbyScenes.Contains(this);
+            return GlobalGameState.Instance.LobbyConfiguration.LobbyScenes.Contains(this);
         }
 
         [Serializable]

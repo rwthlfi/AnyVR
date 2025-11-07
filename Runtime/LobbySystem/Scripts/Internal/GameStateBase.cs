@@ -27,8 +27,10 @@ namespace AnyVR.LobbySystem.Internal
 
 #region Lifecycle Overrides
 
-        protected void Start()
+        public override void OnStartNetwork()
         {
+            base.OnStartNetwork();
+
             _playerStates.OnChange += PlayerStatesOnChange;
 
             Assert.IsFalse(Instances.ContainsKey(gameObject.scene));

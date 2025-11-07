@@ -5,27 +5,21 @@ namespace AnyVR.LobbySystem
 {
     public class PlayerController : NetworkBehaviour
     {
-        private readonly SyncVar<int> _playerId = new();
+        private readonly SyncVar<PlayerStateBase> _playerState = new();
 
-        internal void SetPlayerId(int playerId)
+        internal void SetPlayerState(PlayerStateBase playerState)
         {
-            _playerId.Value = playerId;
+            _playerState.Value = playerState;
         }
 
-#region Public API
-
-        [Server]
         public PlayerStateBase GetPlayerState()
         {
-            return this.GetGameState().GetPlayerState(_playerId.Value);
+            return _playerState.Value;
         }
 
-        [Server]
         public T GetPlayerState<T>() where T : PlayerStateBase
         {
-            return this.GetGameState().GetPlayerState(_playerId.Value) as T;
+            return _playerState.Value as T;
         }
-
-#endregion
     }
 }

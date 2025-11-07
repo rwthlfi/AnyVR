@@ -48,7 +48,7 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 7308729464564602820}
   _networkObjectCache: {fileID: 7308729464564602820}
-  _playerStatePrefab: {fileID: 555325396295775035, guid: 8abde327d0837ae898daebf3ee88b3b1, type: 3}
+  _lobbyConfiguration: {fileID: 11400000, guid: fd75de8b3e25a333a8d3a74c750e6577, type: 2}
 --- !u!114 &7308729464564602820
 MonoBehaviour:
   m_ObjectHideFlags: 0

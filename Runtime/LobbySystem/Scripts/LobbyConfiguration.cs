@@ -6,10 +6,14 @@ namespace AnyVR.LobbySystem
     [CreateAssetMenu(fileName = "LobbyConfiguration", menuName = "AnyVR/LobbyConfiguration")]
     public class LobbyConfiguration : ScriptableObject
     {
-        [Tooltip("The scene to load when leaving a lobby")]
-        [Scene]
-        public string OfflineScene;
+        [SerializeField] [Scene] [Tooltip("The scene to load when leaving a lobby")]
+        private string _offlineScene;
 
-        public LobbySceneMetaData[] LobbyScenes;
+        [SerializeField]
+        private LobbySceneMetaData[] _lobbyScenes;
+
+        public string OfflineScene => _offlineScene;
+
+        public LobbySceneMetaData[] LobbyScenes => _lobbyScenes;
     }
 }

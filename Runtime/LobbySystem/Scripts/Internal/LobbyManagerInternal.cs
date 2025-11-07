@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
 using FishNet.Object;
 using UnityEngine;
-using UnityEngine.Serialization;
+using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem.Internal
 {
@@ -11,31 +9,24 @@ namespace AnyVR.LobbySystem.Internal
     {
 #region Serialized Fields
 
-        [FormerlySerializedAs("_lobbyStatePrefab")]
         [SerializeField] internal GlobalLobbyState _globalLobbyStatePrefab;
 
 #endregion
 
+        public static LobbyManagerInternal Instance { get; private set; }
+
 #region Lifecycle Overrides
 
-        public override void OnStartNetwork()
+        private void Awake()
+        {
+            Assert.IsTrue(Instance == null);
+            Instance = this;
+        }
+
+        public void Start()
         {
             _lobbyRegistry = GetComponent<LobbyRegistry>();
             _sceneService = new LobbySceneService(this);
-        }
-
-#endregion
-
-#region Lobby Accessors
-
-        internal GlobalLobbyState GetLobbyState(Guid lobbyId)
-        {
-            return _lobbyRegistry.GetLobbyState(lobbyId);
-        }
-
-        internal IEnumerable<GlobalLobbyState> GetLobbyStates()
-        {
-            return _lobbyRegistry.GetLobbyStates();
         }
 
 #endregion
@@ -45,16 +36,6 @@ namespace AnyVR.LobbySystem.Internal
         private LobbyRegistry _lobbyRegistry;
 
         private LobbySceneService _sceneService;
-
-#endregion
-
-#region Internal Callbacks
-
-        internal event Action OnClientInitialized;
-
-        internal event Action<Guid> OnLobbyOpened;
-
-        internal event Action<Guid> OnLobbyClosed;
 
 #endregion
     }

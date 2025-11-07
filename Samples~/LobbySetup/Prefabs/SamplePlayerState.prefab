@@ -18,16 +18,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
       propertyPath: <PrefabId>k__BackingField
-      value: 3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
       propertyPath: <AssetPathHash>k__BackingField
-      value: 6928069949996599539
+      value: 15644773036151393224
       objectReference: {fileID: 0}
     - target: {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
       propertyPath: 'NetworkBehaviours.Array.data[0]'
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2634219359356300278}
     - target: {fileID: 1183095803115659666, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
       propertyPath: m_Name
       value: SamplePlayerState
@@ -98,9 +98,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c925b93a17e801df9f32b4bdb4fae39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 4297447859890604620}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 4297447859890604620}
 --- !u!114 &4297447859890604620 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}

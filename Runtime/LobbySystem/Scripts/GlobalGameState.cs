@@ -1,6 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AnyVR.LobbySystem.Internal;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
 {
@@ -12,9 +17,83 @@ namespace AnyVR.LobbySystem
     /// </summary>
     public class GlobalGameState : GameStateBase
     {
-        protected void Awake()
+        private readonly SyncDictionary<Guid, GlobalLobbyState> _globalLobbyStates = new();
+
+        public override void OnStartNetwork()
         {
-            InitSingleton();
+            base.OnStartNetwork();
+
+            _globalLobbyStates.OnChange += GlobalLobbyStatesOnOnChange;
+        }
+
+        private void GlobalLobbyStatesOnOnChange(SyncDictionaryOperation op, Guid key, GlobalLobbyState value, bool _)
+        {
+            switch (op)
+            {
+                case SyncDictionaryOperation.Add:
+                    OnLobbyOpened?.Invoke(value);
+                    break;
+                case SyncDictionaryOperation.Clear:
+                    break;
+                case SyncDictionaryOperation.Remove:
+                    OnLobbyClosed?.Invoke(key);
+                    break;
+                case SyncDictionaryOperation.Set:
+                    break;
+                case SyncDictionaryOperation.Complete:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(op), op, null);
+            }
+        }
+
+        [Server]
+        internal void AddGlobalLobbyState(GlobalLobbyState globalLobbyState)
+        {
+            Assert.IsFalse(_globalLobbyStates.ContainsKey(globalLobbyState.LobbyId));
+            _globalLobbyStates.Add(globalLobbyState.LobbyId, globalLobbyState);
+        }
+
+        [Server]
+        public void RemoveGlobalLobbyState(Guid globalLobbyLobbyId)
+        {
+            Assert.IsTrue(_globalLobbyStates.ContainsKey(globalLobbyLobbyId));
+            _globalLobbyStates.Remove(globalLobbyLobbyId);
+        }
+
+#region Serialized Fields
+
+        [SerializeField]
+        private LobbyConfiguration _lobbyConfiguration;
+        public LobbyConfiguration LobbyConfiguration => _lobbyConfiguration;
+
+#endregion
+
+#region Public API
+
+        /// <summary>
+        ///     Invoked when a remote client opened a new lobby.
+        /// </summary>
+        public event Action<ILobbyInfo> OnLobbyOpened;
+
+        /// <summary>
+        ///     Invoked when a remote client closed a lobby.
+        /// </summary>
+        public event Action<Guid> OnLobbyClosed;
+
+        public IEnumerable<ILobbyInfo> GetLobbies()
+        {
+            return _globalLobbyStates.Values;
+        }
+
+        public ILobbyInfo GetLobbyInfo(Guid lobbyId)
+        {
+            return _globalLobbyStates.GetValueOrDefault(lobbyId);
+        }
+
+        internal ILobbyInfo GetLobbyInfo(uint quickConnect)
+        {
+            return _globalLobbyStates.First(l => l.Value.QuickConnectCode == quickConnect).Value;
         }
 
         /// <summary>
@@ -54,12 +133,7 @@ namespace AnyVR.LobbySystem
             return GetPlayerState<GlobalPlayerState>(clientId);
         }
 
-        // TODO
-        internal GlobalLobbyState GetLobbyInfo(Guid lobbyId)
-        {
-            return LobbyManager.Instance.TryGetLobby(lobbyId, out ILobbyInfo lobby) ? (GlobalLobbyState)lobby : null;
-        }
-
+#endregion
 
 #region Singleton
 
@@ -68,6 +142,11 @@ namespace AnyVR.LobbySystem
         ///     Is not null if the local client is connected to a server.
         /// </summary>
         public static GlobalGameState Instance { get; private set; }
+
+        protected void Awake()
+        {
+            InitSingleton();
+        }
 
         private void InitSingleton()
         {

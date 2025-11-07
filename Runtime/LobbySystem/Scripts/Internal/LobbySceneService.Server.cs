@@ -81,7 +81,7 @@ namespace AnyVR.LobbySystem.Internal
 
             Guid lobbyId = (Guid)serverParams[1];
 
-            Assert.IsFalse(_internal.GetLobbyState(lobbyId) != null);
+            Assert.IsFalse(GlobalGameState.Instance.GetLobbyInfo(lobbyId) != null);
 
             GameObject[] rootObjects = loadArgs.LoadedScenes[0].GetRootGameObjects();
 

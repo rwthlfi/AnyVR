@@ -28,14 +28,14 @@ namespace AnyVR.LobbySystem.Internal
             return _quickConnectToId.Remove(globalLobby.QuickConnectCode);
         }
 
-        internal GlobalLobbyState GetLobbyState(uint code)
+        internal ILobbyInfo GetLobbyState(uint code)
         {
             if (!_quickConnectToId.TryGetValue(code, out Guid lobbyId))
                 return null;
 
-            GlobalLobbyState globalLobby = LobbyManager.Instance.Internal.GetLobbyState(lobbyId);
-            Assert.IsNotNull(globalLobby);
-            return globalLobby;
+            ILobbyInfo lobbyInfo = GlobalGameState.Instance.GetLobbyInfo(lobbyId);
+            Assert.IsNotNull(lobbyInfo);
+            return lobbyInfo;
         }
     }
 }

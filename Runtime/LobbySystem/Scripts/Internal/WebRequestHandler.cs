@@ -54,7 +54,7 @@ namespace AnyVR.LobbySystem.Internal
             {
                 JsonUtility.FromJsonOverwrite(webRequest.downloadHandler.text, response);
             }
-            catch (Exception _)
+            catch (Exception)
             {
                 response.Success = false;
                 response.Error = "JSON Parsing Failed";

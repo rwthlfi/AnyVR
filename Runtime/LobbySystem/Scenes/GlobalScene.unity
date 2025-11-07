@@ -127,18 +127,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1168844752113347140, guid: bdad48eb54e861d4f89df35bcdbbd2af, type: 3}
+    - target: {fileID: 1849379123444741063, guid: bdad48eb54e861d4f89df35bcdbbd2af, type: 3}
       propertyPath: WasActiveDuringEdit
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 1168844752113347140, guid: bdad48eb54e861d4f89df35bcdbbd2af, type: 3}
+    - target: {fileID: 1849379123444741063, guid: bdad48eb54e861d4f89df35bcdbbd2af, type: 3}
       propertyPath: <SceneId>k__BackingField
-      value: 2866452213
+      value: 3204307627
       objectReference: {fileID: 0}
-    - target: {fileID: 2206940483197309176, guid: bdad48eb54e861d4f89df35bcdbbd2af, type: 3}
-      propertyPath: _playerStatePrefab
-      value: 
-      objectReference: {fileID: 555325396295775035, guid: 8abde327d0837ae898daebf3ee88b3b1, type: 3}
     - target: {fileID: 3575298472487038814, guid: bdad48eb54e861d4f89df35bcdbbd2af, type: 3}
       propertyPath: m_Name
       value: GlobalGameMode
