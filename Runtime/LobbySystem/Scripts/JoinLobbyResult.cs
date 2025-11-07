@@ -22,5 +22,6 @@ namespace AnyVR.LobbySystem
         ///     If provided quick connect code is out of range.
         /// </summary>
         OutOfRange
+        //TODO: Add lobby configuration mismatch value
     }
 }

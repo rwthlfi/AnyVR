@@ -96,5 +96,6 @@ MonoBehaviour:
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 2964378093126406274}
   _networkObjectCache: {fileID: 0}
-  _lobbyStatePrefab: {fileID: 5453082942033962944, guid: 6e6479a9ba502c354b129a82ccf5af6b, type: 3}
+  _gameStatePrefab: {fileID: 0}
+  _playerStatePrefab: {fileID: 0}
   _playerControllerPrefab: {fileID: 8759174644159321255, guid: ec0acb6b4b9c67189b170d5585b1cdc6, type: 3}

@@ -14,7 +14,7 @@ using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
-    public class LobbyPlayerController : NetworkBehaviour
+    public class LobbyPlayerController : PlayerController
     {
 #region Serialized Properties
 
@@ -29,14 +29,14 @@ namespace AnyVR.LobbySystem
         [Server]
         private void SpawnAvatar()
         {
-            if (GetPlayerState().GetAvatar() != null)
+            if (GetPlayerState<LobbyPlayerState>().GetAvatar() != null)
                 return;
 
             if (_playerAvatarPrefab == null)
                 return;
 
             NetworkObject nob = Instantiate(_playerAvatarPrefab);
-            GetPlayerState().SetAvatar(nob);
+            GetPlayerState<LobbyPlayerState>().SetAvatar(nob);
             Spawn(nob, Owner, gameObject.scene);
         }
 
@@ -79,33 +79,33 @@ namespace AnyVR.LobbySystem
                 return;
             }
 
-            if (!GetPlayerState().IsAdmin)
+            if (!GetPlayerState<LobbyPlayerState>().IsAdmin)
             {
                 TargetRPC_OnPromotionResult(Owner, PlayerPromotionResult.InsufficientPermissions);
                 return;
             }
 
             other.SetIsAdmin(true);
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({other.Global.GetName()}) promoted to admin.");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({other.Global.Name}) promoted to admin.");
             TargetRPC_OnPromotionResult(Owner, PlayerPromotionResult.Success);
         }
 
         [ServerRpc]
         private void ServerRPC_KickPlayer(LobbyPlayerState other)
         {
-            if (!GetPlayerState().IsAdmin)
+            if (!GetPlayerState<LobbyPlayerState>().IsAdmin)
             {
                 TargetRPC_OnKickResult(Owner, PlayerKickResult.InsufficientPermissions);
                 return;
             }
 
             LobbyManager.Instance.Internal.RemovePlayerFromLobby(other);
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({other.Global.GetName()}) kicked.");
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerState), $"Player {OwnerId} ({other.Global.Name}) kicked.");
             TargetRPC_OnKickResult(Owner, PlayerKickResult.Success);
         }
 
         [Client]
-        private async Task<Voicechat.ConnectionResult> ConnectToLiveKitRoom(string roomName, string userName)
+        private async Task<Voicechat.ConnectionResult> ConnectToLiveKitRoom(string roomName, string userName) // TODO use client id instead of name
         {
             Assert.IsNotNull(userName);
 
@@ -132,7 +132,7 @@ namespace AnyVR.LobbySystem
 
             LiveKitClient.SetAudioObjectMapping(identity =>
             {
-                return GetLobbyState().GetPlayerStates().First(state => state.Global.GetName() == identity).gameObject;
+                return this.GetGameState().GetPlayerStates<LobbyPlayerState>().First(state => state.Global.Name == identity).gameObject;
             });
 
             return await LiveKitClient.Connect(ConnectionManager.Instance.LiveKitVoiceServer.ToString(), response.token);
@@ -146,8 +146,6 @@ namespace AnyVR.LobbySystem
 
         private readonly RpcAwaiter<PlayerPromotionResult> _playerPromoteUpdateAwaiter = new(PlayerPromotionResult.Timeout, PlayerPromotionResult.Cancelled);
 
-        private LobbyState _lobbyState;
-
 #endregion
 
 #region Livecycle Overrides
@@ -155,13 +153,6 @@ namespace AnyVR.LobbySystem
         public override void OnStartNetwork()
         {
             base.OnStartNetwork();
-
-            _lobbyState =
-                gameObject.scene.GetRootGameObjects()
-                    .Select(root => root.GetComponent<LobbyState>())
-                    .FirstOrDefault(comp => comp != null);
-
-            Assert.IsNotNull(_lobbyState, "LobbyState not found!");
 
             StartCoroutine(BeginPlay());
         }
@@ -190,7 +181,7 @@ namespace AnyVR.LobbySystem
 
         protected virtual void OnClientBeginPlay()
         {
-            ConnectToLiveKitRoom(GetLobbyState().LobbyInfo.Name.Value, GetPlayerState().Global.GetName()).ContinueWith(task =>
+            ConnectToLiveKitRoom(this.GetGameState<LobbyState>().LobbyInfo.Name.Value, GetPlayerState<LobbyPlayerState>().Global.Name).ContinueWith(task =>
             {
                 if (task.Result != Voicechat.ConnectionResult.Connected)
                 {
@@ -206,30 +197,6 @@ namespace AnyVR.LobbySystem
         }
 
 #endregion
-
-#region Public API
-
-        public T GetLobbyState<T>() where T : LobbyState
-        {
-            return _lobbyState as T;
-        }
-
-        public LobbyState GetLobbyState()
-        {
-            return _lobbyState;
-        }
-
-        public T GetPlayerState<T>() where T : LobbyPlayerState
-        {
-            return _lobbyState.GetPlayerState<T>(OwnerId);
-        }
-
-        public LobbyPlayerState GetPlayerState()
-        {
-            return _lobbyState.GetPlayerState(OwnerId);
-        }
-
-  #endregion
 
 #region Singleton
 

@@ -54,7 +54,7 @@ namespace AnyVR.LobbySystem.Internal
         public IReadOnlyReplicatedProperty<ushort> NumPlayers => _numPlayers;
         public IReadOnlyReplicatedProperty<DateTime?> ExpirationDate => _expirationDate;
         public int CreatorId => _creatorId.Value;
-        public GlobalPlayerState Creator => GlobalGameState.Instance.GetPlayerState(CreatorId);
+        public GlobalPlayerState Creator => GlobalGameState.Instance.GetPlayerState<GlobalPlayerState>(CreatorId);
         public ushort LobbyCapacity => _lobbyCapacity.Value;
         public LobbySceneMetaData Scene => LobbyManager.LobbyConfiguration.LobbyScenes[_sceneId.Value];
         public uint QuickConnectCode => _quickConnectCode.Value;

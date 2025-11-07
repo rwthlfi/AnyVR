@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.SceneManagement;
 
 namespace AnyVR.LobbySystem.Internal
 {
@@ -15,31 +15,32 @@ namespace AnyVR.LobbySystem.Internal
     ///     <seealso cref="GlobalGameState" />
     ///     <seealso cref="LobbyState" />
     /// </summary>
-    public abstract class BaseGameState<T> : NetworkBehaviour where T : NetworkBehaviour
+    public abstract class GameStateBase : NetworkBehaviour
     {
-#region Serialized Fields
-
-        [SerializeField] private T _playerStatePrefab;
-
-#endregion
+        private static readonly Dictionary<Scene, GameStateBase> Instances = new();
 
 #region Replicated Fields
 
-        private readonly SyncDictionary<int, NetworkBehaviour> _playerStates = new();
+        private readonly SyncDictionary<int, PlayerStateBase> _playerStates = new();
 
 #endregion
 
 #region Lifecycle Overrides
 
-        private void Start()
+        protected void Start()
         {
-            Assert.IsNotNull(_playerStatePrefab);
-            Assert.IsNotNull(_playerStatePrefab.GetComponent<GlobalPlayerState>());
-
             _playerStates.OnChange += PlayerStatesOnChange;
+
+            Assert.IsFalse(Instances.ContainsKey(gameObject.scene));
+            Instances.Add(gameObject.scene, this);
         }
 
 #endregion
+
+        internal static GameStateBase GetInstance(Scene scene)
+        {
+            return Instances.GetValueOrDefault(scene);
+        }
 
         private void PlayerStatesOnChange(SyncDictionaryOperation op, int playerId, NetworkBehaviour _, bool asServer)
         {
@@ -67,7 +68,7 @@ namespace AnyVR.LobbySystem.Internal
         /// <summary>
         ///     Invoked after a player joins the game.
         /// </summary>
-        public event Action<T> OnPlayerJoin;
+        public event Action<PlayerStateBase> OnPlayerJoin;
 
         /// <summary>
         ///     Invoked after a player leaves the game.
@@ -77,15 +78,15 @@ namespace AnyVR.LobbySystem.Internal
         /// <summary>
         ///     Returns an enumeration containing all player states with a specific type.
         /// </summary>
-        /// <typeparam name="TDerived">A derived type of <typeparamref name="T" />.</typeparam>
-        public IEnumerable<T> GetPlayerStates<TDerived>() where TDerived : T
+        /// <typeparam name="T">A derived type of <see cref="PlayerStateBase" />.</typeparam>
+        public IEnumerable<T> GetPlayerStates<T>() where T : PlayerStateBase
         {
             if (!_playerStates.IsInitialized)
                 yield break;
 
-            foreach (NetworkBehaviour playerState in _playerStates.Values)
+            foreach (PlayerStateBase playerState in _playerStates.Values)
             {
-                if (playerState is TDerived derived)
+                if (playerState is T derived)
                     yield return derived;
             }
         }
@@ -93,24 +94,19 @@ namespace AnyVR.LobbySystem.Internal
         /// <summary>
         ///     Returns an enumeration containing all player states.
         /// </summary>
-        public IEnumerable<T> GetPlayerStates()
+        public IEnumerable<PlayerStateBase> GetPlayerStates()
         {
-            return GetPlayerStates<T>();
+            return GetPlayerStates<PlayerStateBase>();
         }
 
         /// <summary>
         ///     Returns the player state of the specified player.
         /// </summary>
         /// <param name="clientId">The corresponding player's id.</param>
-        /// <typeparam name="TDerived">A derived type of <typeparamref name="T" /> to cast the player state to.</typeparam>
-        public TDerived GetPlayerState<TDerived>(int clientId) where TDerived : T
+        /// <typeparam name="T">A derived type of <see cref="PlayerStateBase" /> to cast the player state to.</typeparam>
+        public T GetPlayerState<T>(int clientId) where T : PlayerStateBase
         {
-            if (!_playerStates.TryGetValue(clientId, out NetworkBehaviour ps) || ps == null)
-                return null;
-
-            if (ps is TDerived derived)
-                return derived;
-            return null;
+            return _playerStates.GetValueOrDefault(clientId) as T;
         }
 
         /// <summary>
@@ -118,30 +114,28 @@ namespace AnyVR.LobbySystem.Internal
         /// </summary>
         /// <param name="clientId">The corresponding player's id.</param>
         /// <returns></returns>
-        public T GetPlayerState(int clientId)
+        public PlayerStateBase GetPlayerState(int clientId)
         {
-            return GetPlayerState<T>(clientId);
+            return _playerStates.GetValueOrDefault(clientId);
         }
-
-        public T PlayerStatePrefab => _playerStatePrefab;
 
 #endregion
 
 #region Server Methods
 
         [Server]
-        internal void AddPlayerState(T playerState)
+        internal void AddPlayerState(PlayerStateBase playerState)
         {
-            _playerStates.Add(playerState.OwnerId, playerState);
+            _playerStates.Add(playerState.ID, playerState);
         }
 
         [Server]
-        internal T RemovePlayerState(NetworkConnection conn)
+        internal PlayerStateBase RemovePlayerState(NetworkConnection conn)
         {
-            bool success = _playerStates.TryGetValue(conn.ClientId, out NetworkBehaviour ps);
+            bool success = _playerStates.TryGetValue(conn.ClientId, out PlayerStateBase ps);
             Assert.IsTrue(success);
             _playerStates.Remove(conn.ClientId);
-            return ps as T;
+            return ps;
         }
 
   #endregion

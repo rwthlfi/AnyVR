@@ -2,7 +2,6 @@ using AnyVR.LobbySystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using LobbyPlayerState = AnyVR.LobbySystem.LobbyPlayerState;
 
 namespace AnyVR.Sample
 {
@@ -26,7 +25,7 @@ namespace AnyVR.Sample
 
         public void SetPlayerInfo(LobbyPlayerState playerState)
         {
-            _userNameText.text = playerState.Global.GetName();
+            _userNameText.text = playerState.Global.Name;
             _adminIcon.enabled = playerState.IsAdmin;
 
             bool isLocalPlayer = playerState.IsLocalPlayer;

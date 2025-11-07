@@ -35,7 +35,7 @@ namespace AnyVR.Sample
 
             _lobbyNameText.text = lobby.Name.Value;
             _lobbySceneNameText.text = lobby.Scene.Name;
-            _lobbyCreatorText.text = lobby.Creator != null ? lobby.Creator.GetName() : "N/A";
+            _lobbyCreatorText.text = lobby.Creator != null ? lobby.Creator.Name : "N/A";
 
             UpdateCapacityLabel();
             lobby.NumPlayers.OnValueChanged += _ => UpdateCapacityLabel();

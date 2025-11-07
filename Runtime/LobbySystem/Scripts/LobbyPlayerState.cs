@@ -1,7 +1,6 @@
 using System;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
 {
@@ -11,20 +10,11 @@ namespace AnyVR.LobbySystem
     ///     Inherit from this class to add additional synchronized properties as needed.
     ///     By default, contains a field with the id of the lobby and if the player is an admin in the lobby.
     ///     Also holds a reference to the player's <see cref="GlobalPlayerState" />.
+    ///     The corresponding player does not own their player state and the replicated properties may only be updated by the
+    ///     server.
     /// </summary>
-    public partial class LobbyPlayerState : NetworkBehaviour
+    public partial class LobbyPlayerState : PlayerStateBase
     {
-#region Lifecycle Overrides
-
-        public override void OnStartNetwork()
-        {
-            base.OnStartNetwork();
-            Global = GlobalGameState.Instance.GetPlayerState(OwnerId);
-            Assert.IsNotNull(Global);
-        }
-
-#endregion
-
         internal NetworkObject GetAvatar()
         {
             return _playerAvatar;
@@ -37,9 +27,9 @@ namespace AnyVR.LobbySystem
 
 #region Replicated Properties
 
-        private readonly SyncVar<bool> _isAdmin = new(); // WritePermission is ServerOnly by default
-
         private readonly SyncVar<Guid> _lobbyId = new(Guid.Empty);
+
+        private readonly SyncVar<bool> _isAdmin = new();
 
         private NetworkObject _playerAvatar;
         // TODO add player avatar class
@@ -51,7 +41,7 @@ namespace AnyVR.LobbySystem
         /// <summary>
         ///     The global player state of the player.
         /// </summary>
-        public GlobalPlayerState Global { get; private set; }
+        public GlobalPlayerState Global => GlobalGameState.Instance.GetPlayerState<GlobalPlayerState>(ID);
 
         /// <summary>
         ///     If the player is an admin in the lobby.

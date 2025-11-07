@@ -8,11 +8,6 @@ namespace AnyVR.LobbySystem
 #region Public API
 
         /// <summary>
-        ///     If this is the local player's state.
-        /// </summary>
-        public bool IsLocalPlayer => IsController;
-
-        /// <summary>
         ///     Singleton instance to the local player's lobby state.
         ///     Is <c>null</c> on the server or if the local player is not a participant of a lobby.
         /// </summary>

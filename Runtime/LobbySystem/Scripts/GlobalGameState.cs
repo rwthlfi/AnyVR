@@ -1,7 +1,6 @@
+using System;
+using System.Collections.Generic;
 using AnyVR.LobbySystem.Internal;
-using FishNet.Connection;
-using FishNet.Object;
-using FishNet.Transporting;
 
 namespace AnyVR.LobbySystem
 {
@@ -11,35 +10,56 @@ namespace AnyVR.LobbySystem
     ///     Inherit from this class to add additional synchronized properties as needed.
     ///     <seealso cref="LobbyState" />
     /// </summary>
-    public class GlobalGameState : BaseGameState<GlobalPlayerState>
+    public class GlobalGameState : GameStateBase
     {
-        private void Awake()
+        protected void Awake()
         {
             InitSingleton();
         }
 
-        public override void OnStartServer()
+        /// <summary>
+        ///     Returns an enumeration containing all player states with a specific type.
+        /// </summary>
+        /// <typeparam name="T">A derived type of <see cref="GlobalPlayerState" />.</typeparam>
+        public new IEnumerable<T> GetPlayerStates<T>() where T : GlobalPlayerState
         {
-            base.OnStartServer();
-
-            SceneManager.OnClientLoadedStartScenes += OnClientLoadedStartScenes;
-            ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
+            return base.GetPlayerStates<T>();
         }
 
-        private void OnClientLoadedStartScenes(NetworkConnection conn, bool asServer)
+        /// <summary>
+        ///     Returns an enumeration containing all player states.
+        /// </summary>
+        public new IEnumerable<GlobalPlayerState> GetPlayerStates()
         {
-            GlobalPlayerState ps = Instantiate(PlayerStatePrefab).GetComponent<GlobalPlayerState>();
-            Spawn(ps.gameObject, conn, gameObject.scene);
-            AddPlayerState(ps);
+            return GetPlayerStates<GlobalPlayerState>();
         }
 
-        private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        /// <summary>
+        ///     Returns the player state of the specified player.
+        /// </summary>
+        /// <param name="clientId">The corresponding player's id.</param>
+        /// <typeparam name="T">A derived type of <see cref="GlobalPlayerState" /> to cast the player state to.</typeparam>
+        public new T GetPlayerState<T>(int clientId) where T : GlobalPlayerState
         {
-            if (args.ConnectionState == RemoteConnectionState.Stopped)
-            {
-                Despawn(RemovePlayerState(conn).NetworkObject, DespawnType.Destroy);
-            }
+            return base.GetPlayerState<T>(clientId);
         }
+
+        /// <summary>
+        ///     Returns the player state of the specified player.
+        /// </summary>
+        /// <param name="clientId">The corresponding player's id.</param>
+        /// <returns></returns>
+        public new GlobalPlayerState GetPlayerState(int clientId)
+        {
+            return GetPlayerState<GlobalPlayerState>(clientId);
+        }
+
+        // TODO
+        internal GlobalLobbyState GetLobbyInfo(Guid lobbyId)
+        {
+            return LobbyManager.Instance.TryGetLobby(lobbyId, out ILobbyInfo lobby) ? (GlobalLobbyState)lobby : null;
+        }
+
 
 #region Singleton
 

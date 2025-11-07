@@ -6,11 +6,11 @@ using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Managing.Timing;
 using FishNet.Transporting;
-using FishNet.Transporting.Bayou;
 using FishNet.Transporting.Multipass;
 using FishNet.Transporting.Tugboat;
 using UnityEngine;
 using UnityEngine.Assertions;
+// using FishNet.Transporting.Bayou;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
@@ -46,6 +46,8 @@ namespace AnyVR.LobbySystem
         private NetworkManager _networkManager;
 
         private TimeManager _tm;
+
+        private bool _isGlobalSceneLoaded;
 
 #endregion
 
@@ -155,7 +157,7 @@ namespace AnyVR.LobbySystem
 #endif
 
 #if UNITY_EDITOR && UNITY_SERVER
-            Debug.Log("starting server");
+            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), "Starting server ...");
             _networkManager.ServerManager.StartConnection();
 #endif
         }
@@ -170,16 +172,16 @@ namespace AnyVR.LobbySystem
             OnClientConnectionState?.Invoke(State);
         }
 
+        // The ServerManager_OnServerConnectionState will be called for each transport (Tugboat & Bayou). 
         private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs state)
         {
-            // The OnServerConnectionState will be called for each transport (Tugboat & Bayou). 
-            if (_networkManager.ServerManager.IsOnlyOneServerStarted())
+            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Server is {state.ConnectionState.ToString()}");
+            if (state.ConnectionState != LocalConnectionState.Started)
             {
                 return;
             }
 
-            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Server is {state.ConnectionState.ToString()}");
-            if (state.ConnectionState != LocalConnectionState.Started)
+            if (_isGlobalSceneLoaded)
             {
                 return;
             }
@@ -190,6 +192,7 @@ namespace AnyVR.LobbySystem
 
             Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), "Loading global scene...");
             _networkManager.SceneManager.LoadGlobalScenes(sld);
+            _isGlobalSceneLoaded = true;
         }
 
 #endregion
@@ -233,7 +236,7 @@ namespace AnyVR.LobbySystem
 
             m.SetClientAddress(FishnetServer.Host);
             m.SetPort(FishnetServer.Port);
-            m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol);
+            // m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol); //TODO
 
             Task<ConnectionStatus> task = _connectionAwaiter.WaitForResult(timeout);
             _networkManager.ClientManager.StartConnection();
@@ -248,7 +251,7 @@ namespace AnyVR.LobbySystem
             Assert.IsNotNull(GlobalPlayerState.LocalPlayer);
 
             // The server will kick the player if the name is already taken.
-            PlayerNameUpdateResult nameResult = await GlobalPlayerState.LocalPlayer.SetName(userName);
+            PlayerNameUpdateResult nameResult = await GlobalPlayerController.Instance.SetName(userName);
 
             return new ConnectionResult(connectionStatus, nameResult);
         }

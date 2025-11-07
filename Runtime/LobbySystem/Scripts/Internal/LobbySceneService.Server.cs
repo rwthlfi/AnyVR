@@ -27,7 +27,7 @@ namespace AnyVR.LobbySystem.Internal
         ///     failed.
         /// </summary>
         [Server]
-        internal async Task<LobbyGameMode> StartLobbyScene(GlobalLobbyState globalLobbyState)
+        internal async Task<LobbyGameMode> StartLobbyScene(GlobalLobbyState gls)
         {
             Assert.IsTrue(_internal.ServerManager.Started);
 
@@ -41,7 +41,7 @@ namespace AnyVR.LobbySystem.Internal
             _loadSceneTcs = new TaskCompletionSource<LobbyGameMode>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             Logger.Log(LogLevel.Verbose, nameof(LobbySceneService), "Loading lobby scene");
-            _internal.SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), CreateSceneLoadData(globalLobbyState));
+            _internal.SceneManager.LoadConnectionScenes(Array.Empty<NetworkConnection>(), CreateSceneLoadData(gls));
 
             Task delay = Task.Delay(TimeSpan.FromSeconds(10));
             Task completed = await Task.WhenAny(_loadSceneTcs.Task, delay);
@@ -116,7 +116,7 @@ namespace AnyVR.LobbySystem.Internal
         {
             return CreateSceneLoadDataInternal(
                 gameMode.gameObject.scene.handle,
-                gameMode.GetGameState().LobbyId
+                gameMode.GetGameState<LobbyState>().LobbyId
             );
         }
 
@@ -150,12 +150,12 @@ namespace AnyVR.LobbySystem.Internal
 
             SceneLookupData sld = new()
             {
-                Handle = gameMode.gameObject.scene.handle, Name = gameMode.GetGameState().LobbyInfo.Scene.ScenePath
+                Handle = gameMode.gameObject.scene.handle, Name = gameMode.GetGameState<LobbyState>().LobbyInfo.Scene.ScenePath
             };
 
             object[] unloadParams =
             {
-                SceneLoadParam.Lobby, gameMode.GetGameState().LobbyId
+                SceneLoadParam.Lobby, gameMode.GetGameState<LobbyState>().LobbyId
             };
             SceneUnloadData sud = new(new[]
             {

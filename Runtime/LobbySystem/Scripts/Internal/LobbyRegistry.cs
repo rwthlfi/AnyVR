@@ -75,6 +75,10 @@ namespace AnyVR.LobbySystem.Internal
         [Server]
         internal bool RegisterLobby(GlobalLobbyState globalLobbyState, LobbyGameMode gameMode, string password = null)
         {
+            Assert.IsNotNull(globalLobbyState);
+            Assert.IsNotNull(gameMode);
+            Assert.IsNotNull(_lobbyStates);
+
             if (_lobbyStates.ContainsKey(globalLobbyState.LobbyId))
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyRegistry), $"Lobby {globalLobbyState.LobbyId} already registered. Skipping.");

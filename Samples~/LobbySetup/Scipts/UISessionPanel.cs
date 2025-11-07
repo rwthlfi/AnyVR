@@ -2,11 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using AnyVR.LobbySystem;
-using AnyVR.LobbySystem.Internal;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
-using LobbyPlayerState = AnyVR.LobbySystem.LobbyPlayerState;
 
 namespace AnyVR.Sample
 {
@@ -99,7 +97,7 @@ namespace AnyVR.Sample
             _quickConnectLabel.text = _lobbyState.LobbyInfo.QuickConnectCode.ToString();
 
             GlobalPlayerState owner = _lobbyState.LobbyInfo.Creator;
-            _ownerLabel.text = owner != null ? owner.GetName() : "N/A (disconnected)";
+            _ownerLabel.text = owner != null ? owner.Name : "N/A (disconnected)";
         }
 
         private void RemoveAllEntries()
@@ -111,18 +109,19 @@ namespace AnyVR.Sample
             _players.Clear();
         }
 
-        private void AddPlayerEntry(LobbyPlayerState lobbyPlayerState)
+        private void AddPlayerEntry(PlayerStateBase playerState)
         {
-            if (_players.ContainsKey(lobbyPlayerState.Global.GetID()))
+            GlobalPlayerState globalPlayerState = ((LobbyPlayerState)playerState).Global;
+            if (_players.ContainsKey(globalPlayerState.ID))
                 return;
 
             UIUserListEntry entry = Instantiate(_entryPrefab, _entryParent);
-            entry.SetPlayerInfo(lobbyPlayerState);
+            entry.SetPlayerInfo((LobbyPlayerState)playerState);
 
             entry.OnKickButtonPressed += player => LobbyPlayerController.GetInstance().Kick(player);
             entry.OnPromoteToAdminButtonPressed += player => LobbyPlayerController.GetInstance().PromoteToAdmin(player);
 
-            _players.Add(lobbyPlayerState.Global.GetID(), entry);
+            _players.Add(globalPlayerState.ID, entry);
         }
 
         private void RemovePlayerEntry(int playerId)

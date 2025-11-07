@@ -29,7 +29,8 @@ namespace AnyVR.LobbySystem.Internal
             }
 
             maxClients = (ushort)Mathf.Max(1, maxClients);
-            GlobalLobbyState globalLobbyState = new LobbyFactory()
+
+            GlobalLobbyState gls = new LobbyFactory()
                 .WithName(lobbyName)
                 .WithCreator(creator.ClientId)
                 .WithSceneID(sceneId)
@@ -38,17 +39,18 @@ namespace AnyVR.LobbySystem.Internal
                 .WithExpiration(expirationDate)
                 .Create();
 
-            Assert.IsNotNull(globalLobbyState);
+            // Loading the lobby scene.
+            LobbyGameMode gameMode = await _sceneService.StartLobbyScene(gls);
 
-            LobbyGameMode gameMode = await _sceneService.StartLobbyScene(globalLobbyState);
             Assert.IsNotNull(gameMode, "Failed to load lobby scene");
-            gameMode.Init(globalLobbyState);
 
-            // Lobby scene successfully loaded.
-            bool success = _lobbyRegistry.RegisterLobby(globalLobbyState, gameMode, password);
+            bool success = _lobbyRegistry.RegisterLobby(gls, gameMode, password);
             Assert.IsTrue(success);
 
-            TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.Success, globalLobbyState.LobbyId);
+            gameMode.SetLobbyId(gls.LobbyId);
+            gameMode.OnBeginPlay();
+
+            TargetRPC_OnCreateLobbyResult(creator, CreateLobbyStatus.Success, gls.LobbyId);
         }
 
         [Server]

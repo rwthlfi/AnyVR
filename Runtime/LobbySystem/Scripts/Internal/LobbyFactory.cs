@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
 using UnityEngine.Assertions;
-using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
+using Random = System.Random;
 
 namespace AnyVR.LobbySystem.Internal
 {
@@ -80,11 +80,17 @@ namespace AnyVR.LobbySystem.Internal
         public GlobalLobbyState Create()
         {
             LobbyManagerInternal @internal = LobbyManager.Instance.Internal;
-            GlobalLobbyState lmd = Object.Instantiate(@internal._globalLobbyStatePrefab);
-            SceneManager.MoveGameObjectToScene(lmd.gameObject, @internal.gameObject.scene);
-            @internal.Spawn(lmd.NetworkObject);
-            lmd.Init(Guid.NewGuid(), GenerateQuickConnectCode(), _name, _creatorId, (ushort)_sceneId, _lobbyCapacity, _isPasswordProtected, _expirationDate);
-            return lmd;
+            LobbySceneMetaData sceneMetaData = LobbyManager.LobbyConfiguration.LobbyScenes.First(s => s.ID == _sceneId);
+
+            Assert.IsNotNull(sceneMetaData);
+
+            // Spawning GlobalLobbyState
+            GlobalLobbyState gls = Object.Instantiate(@internal._globalLobbyStatePrefab);
+            Assert.IsNotNull(gls);
+            @internal.Spawn(gls.NetworkObject, null, @internal.gameObject.scene);
+            gls.Init(Guid.NewGuid(), GenerateQuickConnectCode(), _name, _creatorId, (ushort)_sceneId, _lobbyCapacity, _isPasswordProtected, _expirationDate);
+
+            return gls;
         }
     }
 }

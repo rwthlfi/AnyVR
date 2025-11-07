@@ -40,7 +40,7 @@ namespace AnyVR.LobbySystem.Internal
 
             Assert.IsNotNull(GlobalGameState.Instance);
 
-            bool isUsernameTaken = GlobalGameState.Instance.GetPlayerStates().Any(player => player.GetName().ToLowerInvariant().Equals(playerName));
+            bool isUsernameTaken = GlobalGameState.Instance.GetPlayerStates<GlobalPlayerState>().Any(player => player.Name.ToLowerInvariant().Equals(playerName));
 
             return isUsernameTaken ? PlayerNameUpdateResult.NameTaken : PlayerNameUpdateResult.Success;
         }

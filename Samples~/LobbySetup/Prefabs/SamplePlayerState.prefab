@@ -17,6 +17,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
+      propertyPath: <PrefabId>k__BackingField
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
       propertyPath: <AssetPathHash>k__BackingField
       value: 6928069949996599539
       objectReference: {fileID: 0}
@@ -97,7 +101,6 @@ MonoBehaviour:
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 4297447859890604620}
   _networkObjectCache: {fileID: 0}
-  _playerPrefab: {fileID: 8505041916568804508, guid: adb8af0480e515c048510a165defe0ab, type: 3}
 --- !u!114 &4297447859890604620 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
