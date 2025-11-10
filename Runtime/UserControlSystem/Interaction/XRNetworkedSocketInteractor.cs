@@ -34,20 +34,22 @@ namespace AnyVR.UserControlSystem.Interaction
 
         [SerializeField]
         protected NetworkObject _objectInSocket;
+        public NetworkObject ObjectInSocket => _objectInSocket;
+        public bool HasObjectInSocket => _objectInSocket != null;
 
         [SerializeField]
-        protected UnityEvent _onSocketSelectOnClient;
+        protected UnityEvent<NetworkObject> _onSocketSelectOnClient;
         /// <summary>
         /// Event invoked on clients when an object is selected in the socket on the server.
         /// </summary>
-        public UnityEvent OnSocketSelectOnClient => _onSocketSelectOnClient;
+        public UnityEvent<NetworkObject> OnSocketSelectOnClient => _onSocketSelectOnClient;
 
         [SerializeField]
-        protected UnityEvent _onSocketSelectExitOnClient;
+        protected UnityEvent<NetworkObject> _onSocketSelectExitOnClient;
         /// <summary>
         /// Event invoked on clients when an object is released from the socket on the server.
         /// </summary>
-        public UnityEvent OnSocketSelectExitOnClient => _onSocketSelectExitOnClient;
+        public UnityEvent<NetworkObject> OnSocketSelectExitOnClient => _onSocketSelectExitOnClient;
 
         protected virtual void Awake()
         {
@@ -58,16 +60,16 @@ namespace AnyVR.UserControlSystem.Interaction
         {
             _socketInteractor.selectEntered.AddListener(OnSocketSelect);
 
-            _socketInteractor.selectEntered.AddListener((_) =>
+            _socketInteractor.selectEntered.AddListener((args) =>
             {
-                BroadCastSelectEnter();
+                BroadCastSelectEnter(args.interactableObject.transform.GetComponent<NetworkObject>());
             });
 
             _socketInteractor.selectExited.AddListener(OnSocketRelease);
 
-            _socketInteractor.selectExited.AddListener((_) =>
+            _socketInteractor.selectExited.AddListener((args) =>
             {
-                BroadCastSelectExit();
+                BroadCastSelectExit(args.interactableObject.transform.GetComponent<NetworkObject>());
             });
         }
 
@@ -119,27 +121,27 @@ namespace AnyVR.UserControlSystem.Interaction
         }
 
         [Server]
-        protected virtual void BroadCastSelectEnter()
+        protected virtual void BroadCastSelectEnter(NetworkObject selectedObject)
         {
-            NotifySelectEnterOnClients();
+            NotifySelectEnterOnClients(selectedObject);
         }
 
         [ObserversRpc]
-        protected virtual void NotifySelectEnterOnClients()
+        protected virtual void NotifySelectEnterOnClients(NetworkObject selectedObject)
         {
-            _onSocketSelectOnClient?.Invoke();
+            _onSocketSelectOnClient?.Invoke(selectedObject);
         }
 
         [Server]
-        protected virtual void BroadCastSelectExit()
+        protected virtual void BroadCastSelectExit(NetworkObject releasedObject)
         {
-            NotifySelectExitOnClients();
+            NotifySelectExitOnClients(releasedObject);
         }
 
         [ObserversRpc]
-        protected virtual void NotifySelectExitOnClients()
+        protected virtual void NotifySelectExitOnClients(NetworkObject releasedObject)
         {
-            _onSocketSelectExitOnClient?.Invoke();
+            _onSocketSelectExitOnClient?.Invoke(releasedObject);
         }
     }
 }
