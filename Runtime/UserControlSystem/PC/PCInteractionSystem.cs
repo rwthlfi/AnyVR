@@ -44,8 +44,11 @@ namespace AnyVR.UserControlSystem.PC
 
         [SerializeField] [Tooltip("Maximum range for interactable objects")]
         private float _maxInteractionDistance = 3f;
+        public float MaxInteractionDistance => _maxInteractionDistance;
 
         [SerializeField] private Transform _interactionRaycastOrigin;
+        public Vector3 InteractionOrigin => _interactionRaycastOrigin.position;
+        public Vector3 InteractionDirection => _interactionRaycastOrigin.forward;
 
         [SerializeField] [Tooltip("If interaction should be toggleable or only when button is pressed.")]
         private InteractionMode _selectionMode;
