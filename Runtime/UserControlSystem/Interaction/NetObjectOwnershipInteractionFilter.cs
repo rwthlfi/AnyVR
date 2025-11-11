@@ -46,7 +46,8 @@ namespace AnyVR.UserControlSystem.Interaction
                 // Checks if there is already an owner different from the local user.
                 if (networkOwnableInteractable.Owner.ClientId != -1)
                 {
-                    Debug.Log($"[NetObjectOwnershipInteractionFilter] Interactable already owned by other client.", interactable.transform);
+                    Debug.Log($"[NetObjectOwnershipInteractionFilter] Interactable {interactable} has owner with ClientId {networkOwnableInteractable.Owner.ClientId}. " +
+                        $"Local ownership status: {networkOwnableInteractable.NetworkObject.IsOwner}.", interactable.transform);
                     return networkOwnableInteractable.NetworkObject.IsOwner;
                 }
                 else
