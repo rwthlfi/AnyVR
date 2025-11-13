@@ -15,9 +15,7 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using FishNet.Component.Ownership;
 using FishNet.Component.Transforming;
-using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Observing;
 using UnityEngine;
@@ -27,7 +25,7 @@ using UnityEngine.XR.Interaction.Toolkit.Transformers;
 namespace AnyVR.UserControlSystem.Interaction
 {
     /// <summary>
-    /// A networked grab interactable for XR interactions.
+    ///     A networked grab interactable for XR interactions.
     /// </summary>
     [RequireComponent(typeof(NetworkObject))]
     [RequireComponent(typeof(NetworkTransform))]

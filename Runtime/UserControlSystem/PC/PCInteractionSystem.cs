@@ -44,20 +44,11 @@ namespace AnyVR.UserControlSystem.PC
 
         [SerializeField] [Tooltip("Maximum range for interactable objects")]
         private float _maxInteractionDistance = 3f;
-        public float MaxInteractionDistance => _maxInteractionDistance;
 
         [SerializeField] private Transform _interactionRaycastOrigin;
-        public Vector3 InteractionOrigin => _interactionRaycastOrigin.position;
-        public Vector3 InteractionDirection => _interactionRaycastOrigin.forward;
 
         [SerializeField] [Tooltip("If interaction should be toggleable or only when button is pressed.")]
         private InteractionMode _selectionMode;
-
-        private Coroutine _selectionCoroutine = null;
-        private bool _isSelectionButtonPressed = false;
-        
-        public IXRHoverInteractable HoveredObject => hasHover ? interactablesHovered[0] : null;
-        public IXRSelectInteractable SelectedObject => hasSelection ? interactablesSelected[0] : null;
 
         [SerializeField]
         [Tooltip("The Input System Action that will be used to interaction an object. Expects a 'Button' action.")]
@@ -65,7 +56,7 @@ namespace AnyVR.UserControlSystem.PC
             new(new InputAction("Interaction", expectedControlType: "Button"));
 
         [Header("Selection Interaction")]
-        [SerializeField, Tooltip("Primary interaction action, uses XRI Activated event.")]
+        [SerializeField] [Tooltip("Primary interaction action, uses XRI Activated event.")]
         private InputActionProperty _primaryInteractionAction =
             new(new InputAction("Primary Interaction", expectedControlType: "Button"));
 
@@ -77,36 +68,34 @@ namespace AnyVR.UserControlSystem.PC
 
         [Header("Throwing")]
         [SerializeField]
-        private ThrowingSettings _throwingSettings = new ThrowingSettings
+        private ThrowingSettings _throwingSettings = new()
         {
-            _throwDelay = 0.5f,
-            _animSpeed = 1f,
-            _maxThrowChargeDuration = 2f,
-            _maxThrowForce = 10f
+            _throwDelay = 0.5f, _animSpeed = 1f, _maxThrowChargeDuration = 2f, _maxThrowForce = 10f
         };
 
-        private Coroutine _throwCoroutine = null;
+        private bool _isPreparingThrow;
+        private bool _isSelectionButtonPressed;
 
-        private bool _isPreparingThrow = false;
+        private Coroutine _selectionCoroutine;
 
-        private UnityEvent<float> _onThrow = new();
+        private Coroutine _throwCoroutine;
+        public float MaxInteractionDistance => _maxInteractionDistance;
+        public Vector3 InteractionOrigin => _interactionRaycastOrigin.position;
+        public Vector3 InteractionDirection => _interactionRaycastOrigin.forward;
+
+        public IXRHoverInteractable HoveredObject => hasHover ? interactablesHovered[0] : null;
+        public IXRSelectInteractable SelectedObject => hasSelection ? interactablesSelected[0] : null;
         /// <summary>
-        ///    Event invoked when a throw action is performed, passing the throw force as a float parameter.
+        ///     Event invoked when a throw action is performed, passing the throw force as a float parameter.
         /// </summary>
-        public UnityEvent<float> OnThrow => _onThrow;
-
-        private UnityEvent<float> _onChargeThrow = new();
+        public UnityEvent<float> OnThrow { get; } = new();
         /// <summary>
-        ///   Event invoked when a throw is being charged, passing the current percentage of charge force as a float parameter.
-        ///   Can be used to update UI or animations.
+        ///     Event invoked when a throw is being charged, passing the current percentage of charge force as a float parameter.
+        ///     Can be used to update UI or animations.
         /// </summary>
-        public UnityEvent<float> OnChargeThrow => _onChargeThrow;
+        public UnityEvent<float> OnChargeThrow { get; } = new();
 
         public bool CanThrow => firstInteractableSelected is XRGrabInteractable;
-
-        public bool shouldActivate => (firstInteractableSelected != null) && (firstInteractableSelected is IXRActivateInteractable);
-
-        public bool shouldDeactivate => (firstInteractableSelected != null) && (firstInteractableSelected is IXRActivateInteractable);
 
 
 
@@ -150,6 +139,19 @@ namespace AnyVR.UserControlSystem.PC
             else if (hasHover && !IsThereObject(out interactable))
             {
                 UnhoverAll();
+            }
+        }
+
+        public bool shouldActivate => firstInteractableSelected != null && firstInteractableSelected is IXRActivateInteractable;
+
+        public bool shouldDeactivate => firstInteractableSelected != null && firstInteractableSelected is IXRActivateInteractable;
+
+        public void GetActivateTargets(List<IXRActivateInteractable> targets)
+        {
+            targets.Clear(); // As expected by Unity, cf. documentation.
+            if (firstInteractableSelected is IXRActivateInteractable activateInteractable)
+            {
+                targets.Add(activateInteractable);
             }
         }
 
@@ -227,7 +229,7 @@ namespace AnyVR.UserControlSystem.PC
                 if (_selectionMode == InteractionMode.Toggle)
                 {
                     if (firstInteractableSelected is not XRGrabInteractable)
-                    { 
+                    {
                         TryReleaseObject(context);
                     }
                     return;
@@ -279,7 +281,7 @@ namespace AnyVR.UserControlSystem.PC
             if (Physics.Raycast(_interactionRaycastOrigin.position, _interactionRaycastOrigin.forward, out RaycastHit hit,
                     _maxInteractionDistance))
             {
-                
+
                 if (hit.collider.gameObject.TryGetComponent(out IXRHoverInteractable interactionInteractable))
                 {
                     target = interactionInteractable;
@@ -320,7 +322,7 @@ namespace AnyVR.UserControlSystem.PC
                     EnableSelectionInteractions(true);
                 }
             }
-            else 
+            else
             {
                 Debug.LogWarning("[PCInteractionSystem] Hovered object is not selectable.", HoveredObject.transform);
             }
@@ -338,8 +340,7 @@ namespace AnyVR.UserControlSystem.PC
             {
                 ActivateEventArgs args = new()
                 {
-                    interactorObject = this,
-                    interactableObject = activateInteractable
+                    interactorObject = this, interactableObject = activateInteractable
                 };
                 activateInteractable.activated.Invoke(args);
             }
@@ -351,8 +352,7 @@ namespace AnyVR.UserControlSystem.PC
             {
                 DeactivateEventArgs args = new()
                 {
-                    interactorObject = this,
-                    interactableObject = activateInteractable
+                    interactorObject = this, interactableObject = activateInteractable
                 };
                 activateInteractable.deactivated.Invoke(args);
             }
@@ -366,8 +366,7 @@ namespace AnyVR.UserControlSystem.PC
                 {
                     ActivateEventArgs args = new()
                     {
-                        interactorObject = this,
-                        interactableObject = activateInteractable
+                        interactorObject = this, interactableObject = activateInteractable
                     };
                     secondarySelectionAction.SecondarySelectActivated.Invoke(args);
                 }
@@ -382,8 +381,7 @@ namespace AnyVR.UserControlSystem.PC
                 {
                     DeactivateEventArgs args = new()
                     {
-                        interactorObject = this,
-                        interactableObject = activateInteractable
+                        interactorObject = this, interactableObject = activateInteractable
                     };
                     secondarySelectionAction.SecondarySelectDeactivated.Invoke(args);
                 }
@@ -404,15 +402,6 @@ namespace AnyVR.UserControlSystem.PC
             }
         }
 
-        public void GetActivateTargets(List<IXRActivateInteractable> targets)
-        {
-            targets.Clear(); // As expected by Unity, cf. documentation.
-            if (firstInteractableSelected is IXRActivateInteractable activateInteractable)
-            {
-                targets.Add(activateInteractable);
-            }
-        }
-
         private void StartThrowing(InputAction.CallbackContext context)
         {
             if (_isPreparingThrow || !CanThrow)
@@ -420,11 +409,11 @@ namespace AnyVR.UserControlSystem.PC
                 return;
             }
             _isPreparingThrow = true;
-            _throwCoroutine = StartCoroutine(Co_PrepareThrow((force) =>
+            _throwCoroutine = StartCoroutine(Co_PrepareThrow(force =>
             {
                 ReleaseSelectedObject();
-                _onThrow.Invoke(force);
-                _onChargeThrow.Invoke(0f);
+                OnThrow.Invoke(force);
+                OnChargeThrow.Invoke(0f);
                 _isPreparingThrow = false;
                 StopCoroutine(_throwCoroutine);
                 _throwCoroutine = null;
@@ -444,7 +433,7 @@ namespace AnyVR.UserControlSystem.PC
             {
                 elapsedTime += Time.deltaTime;
                 float normalizedTime = Mathf.Clamp01(elapsedTime / _throwingSettings._maxThrowChargeDuration);
-                _onChargeThrow.Invoke(normalizedTime);
+                OnChargeThrow.Invoke(normalizedTime);
                 force = normalizedTime * _throwingSettings._maxThrowForce;
                 yield return null;
             }
@@ -462,7 +451,7 @@ namespace AnyVR.UserControlSystem.PC
             [SerializeField]
             internal float _animSpeed;
 
-            [SerializeField] 
+            [SerializeField]
             internal float _maxThrowChargeDuration;
 
             [SerializeField]
@@ -470,6 +459,7 @@ namespace AnyVR.UserControlSystem.PC
         }
 
         #region Singleton
+
         private static PCInteractionSystem s_instance;
         public static PCInteractionSystem Instance
         {
@@ -486,6 +476,7 @@ namespace AnyVR.UserControlSystem.PC
                 return s_instance;
             }
         }
+
         #endregion
     }
 }

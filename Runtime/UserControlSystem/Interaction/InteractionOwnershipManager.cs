@@ -22,8 +22,10 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 namespace AnyVR.UserControlSystem.Interaction
 {
     /// <summary>
-    /// Manages ownership requests for interactables which have a <see cref="XRNetworkedGrabInteractable"> component 
-    /// when they are selected or deselected by an interactor.
+    ///     Manages ownership requests for interactables which have a
+    ///     <see cref="XRNetworkedGrabInteractable">
+    ///         component
+    ///         when they are selected or deselected by an interactor.
     /// </summary>
     [RequireComponent(typeof(XRBaseInteractor))]
     public class InteractionOwnershipManager : MonoBehaviour
