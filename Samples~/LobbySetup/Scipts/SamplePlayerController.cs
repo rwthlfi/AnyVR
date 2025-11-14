@@ -1,4 +1,3 @@
-using System;
 using AnyVR.LobbySystem;
 using UnityEngine;
 
@@ -21,7 +20,7 @@ namespace AnyVR.Sample
 
             if (GUI.Button(buttonRect, "Leave"))
             {
-                Debug.Log("Button clicked!");
+                LeaveLobby();
             }
         }
     }

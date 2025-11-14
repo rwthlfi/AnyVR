@@ -95,6 +95,13 @@ namespace AnyVR.LobbySystem
             return await LiveKitClient.Connect(ConnectionManager.Instance.LiveKitVoiceServer.ToString(), response.token);
         }
 
+        [Client]
+        public void LeaveLobby()
+        {
+            LiveKitClient.Disconnect();
+            ServerRPC_LeaveLobby();
+        }
+
 #region RPCs
 
         [TargetRpc]

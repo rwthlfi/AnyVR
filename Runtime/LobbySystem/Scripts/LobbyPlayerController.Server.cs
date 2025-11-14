@@ -1,6 +1,8 @@
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using FishNet.Object;
+using UnityEngine;
+using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
@@ -9,6 +11,7 @@ namespace AnyVR.LobbySystem
         public override void OnStartServer()
         {
             base.OnStartServer();
+            Debug.Log("OnStartServer. Spawning Avatar");
             SpawnAvatar();
         }
 
@@ -61,6 +64,19 @@ namespace AnyVR.LobbySystem
             LobbyManagerInternal.Instance.RemovePlayerFromLobby(other);
             Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Player {OwnerId} ({other.Global.Name}) kicked.");
             TargetRPC_OnKickResult(Owner, PlayerKickResult.Success);
+        }
+
+        [ServerRpc]
+        private void ServerRPC_LeaveLobby()
+        {
+            LobbyManagerInternal.Instance.RemovePlayerFromLobby(GetPlayerState<LobbyPlayerState>());
+        }
+
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+            NetworkObject avatar = GetPlayerState<LobbyPlayerState>().GetAvatar();
+            Despawn(avatar, DespawnType.Destroy);
         }
 
   #endregion

@@ -76,7 +76,7 @@ MonoBehaviour:
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
-  - {fileID: 0}
+  - {fileID: 6219424973192695627}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -115,6 +115,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d0e392bba394336b70885b63ccc8d97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 4953228670959181866}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 4953228670959181866}

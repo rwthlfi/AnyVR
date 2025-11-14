@@ -3,6 +3,7 @@ using System.Collections;
 using System.Text.RegularExpressions;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
+using FishNet.Managing.Logging;
 using FishNet.Managing.Server;
 using FishNet.Object;
 using UnityEngine;
@@ -18,6 +19,8 @@ namespace AnyVR.LobbySystem
         private void ServerRPC_SetName(string playerName)
         {
             PlayerNameUpdateResult result = SetName_Internal(playerName);
+
+            LogPlayerNameUpdateResult(result);
 
             TargetRPC_OnNameChange(Owner, result);
 
@@ -41,7 +44,7 @@ namespace AnyVR.LobbySystem
             if (GetPlayerState<GlobalPlayerState>().Name != "null")
                 yield break;
 
-            Owner.Kick(KickReason.UnusualActivity);
+            Owner.Kick(KickReason.UnusualActivity, LoggingType.Warning, $"Kicking player {OwnerId}. Player did not send a name update.");
         }
 
         public override void OnStartServer()

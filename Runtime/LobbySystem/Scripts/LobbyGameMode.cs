@@ -26,10 +26,8 @@ namespace AnyVR.LobbySystem
 
         public virtual void OnBeginPlay()
         {
-            Debug.Log("OnBeginPlay");
             GetGameState().OnPlayerJoin += _ =>
             {
-                Debug.Log("OnPlayerJoin");
                 if (_inactiveCoroutine != null)
                 {
                     StopCoroutine(_inactiveCoroutine);
@@ -38,7 +36,6 @@ namespace AnyVR.LobbySystem
 
             GetGameState().OnPlayerLeave += _ =>
             {
-                Debug.Log("OnPlayerLeave");
                 if (!GetGameState().GetPlayerStates().Any())
                 {
                     _inactiveCoroutine = StartCoroutine(CloseInactiveLobby());

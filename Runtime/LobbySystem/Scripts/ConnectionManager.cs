@@ -8,10 +8,12 @@ using FishNet.Managing.Timing;
 using FishNet.Transporting;
 using FishNet.Transporting.Multipass;
 using FishNet.Transporting.Tugboat;
+using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
 using UnityEngine.Assertions;
 // using FishNet.Transporting.Bayou;
 using Logger = AnyVR.Logging.Logger;
+using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace AnyVR.LobbySystem
 {
@@ -39,6 +41,15 @@ namespace AnyVR.LobbySystem
                 await Task.Delay(10);
             }
         }
+
+#region Serialized Fields
+
+        [SerializeField] [Scene]
+        private string _globalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
+
+        public string GlobalScene => _globalScene;
+
+#endregion
 
 #region Private Fields
 
@@ -170,6 +181,11 @@ namespace AnyVR.LobbySystem
                 _connectionAwaiter.Complete(ConnectionStatus.Connected);
             }
 
+            if (args.ConnectionState == LocalConnectionState.Stopped)
+            {
+                SceneManager.UnloadSceneAsync(SceneManager.GetSceneByPath(_globalScene));
+            }
+
             OnClientConnectionState?.Invoke(State);
         }
 
@@ -189,7 +205,7 @@ namespace AnyVR.LobbySystem
 
             Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Server started on port: {_networkManager.TransportManager.Transport.GetPort()}");
 
-            SceneLoadData sld = LobbySceneService.GlobalSceneLoadData();
+            SceneLoadData sld = LobbySceneService.GlobalSceneLoadData(_globalScene);
 
             Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), "Loading global scene...");
             _networkManager.SceneManager.LoadGlobalScenes(sld);

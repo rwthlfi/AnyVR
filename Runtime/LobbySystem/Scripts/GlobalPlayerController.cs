@@ -181,6 +181,7 @@ namespace AnyVR.LobbySystem
         ///     <param name="quickConnectCode">The quick connect code of the target lobby.</param>
         ///     <returns>An asynchronous task that returns the result of the join process.</returns>
         /// </summary>
+        [Client]
         public async Task<JoinLobbyResult> QuickConnect(string quickConnectCode)
         {
             JoinLobbyResult result = await Client_QuickConnect(quickConnectCode);
@@ -243,6 +244,25 @@ namespace AnyVR.LobbySystem
                 CreateLobbyStatus.CreationInProgress => "Lobby Creation Failed. Creation is in progress.",
                 CreateLobbyStatus.InvalidLobbyName => "Lobby Creation Failed. Invalid Parameters.",
                 _ => throw new ArgumentOutOfRangeException()
+            };
+
+            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), message);
+        }
+
+        [Conditional("ANY_VR_LOG")]
+        private static void LogPlayerNameUpdateResult(PlayerNameUpdateResult result)
+        {
+            string message = result switch
+            {
+                PlayerNameUpdateResult.Success => "PlayerNameUpdate Success",
+                PlayerNameUpdateResult.Timeout => "PlayerNameUpdate Failed. Timeout occured.",
+                PlayerNameUpdateResult.NameTaken => "PlayerNameUpdate Failed. Name is already taken.",
+                PlayerNameUpdateResult.InvalidName => "PlayerNameUpdate Failed. Invalid name.",
+                PlayerNameUpdateResult.AlreadySet => "PlayerNameUpdate Failed. Name is already set.",
+                PlayerNameUpdateResult.TooLong => "PlayerNameUpdate Failed. Name is too long.",
+                PlayerNameUpdateResult.TooShort => "PlayerNameUpdate Failed. Name is too short.",
+                PlayerNameUpdateResult.Cancelled => "PlayerNameUpdate Failed. Operation was cancelled.",
+                _ => throw new ArgumentOutOfRangeException(nameof(result), result, null)
             };
 
             Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), message);

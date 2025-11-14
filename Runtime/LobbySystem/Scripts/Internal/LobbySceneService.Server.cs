@@ -192,9 +192,9 @@ namespace AnyVR.LobbySystem.Internal
             _internal.SceneManager.UnloadConnectionScenes(conn, sud);
         }
 
-        internal static SceneLoadData GlobalSceneLoadData()
+        internal static SceneLoadData GlobalSceneLoadData(string globalScenePath)
         {
-            string scene = Path.GetFileNameWithoutExtension(GlobalScene);
+            string scene = Path.GetFileNameWithoutExtension(globalScenePath);
             SceneLoadData sld = new(scene)
             {
                 Params =

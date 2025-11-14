@@ -107,7 +107,7 @@ namespace AnyVR.LobbySystem.Internal
             LobbyGameMode lobbyGameMode = _lobbyRegistry.GetLobbyGameMode(player.LobbyId);
             Assert.IsNotNull(lobbyGameMode);
 
-            _sceneService.UnloadLobbySceneForPlayer(player.Owner, lobbyGameMode);
+            _sceneService.UnloadLobbySceneForPlayer(ServerManager.Clients[player.ID], lobbyGameMode);
         }
 
         [Server]

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using AnyVR.LobbySystem.Internal;
 using FishNet.Connection;
+using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Transporting;
 using UnityEngine;
@@ -15,31 +16,34 @@ namespace AnyVR.LobbySystem
             base.OnStartServer();
             SpawnGameState();
 
-            ServerManager.OnRemoteConnectionState += (conn, args) =>
+            ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
+
+            SceneManager.OnClientPresenceChangeEnd += OnClientPresenceChangeEnd;
+        }
+        private void OnClientPresenceChangeEnd(ClientPresenceChangeEventArgs args)
+        {
+            if (args.Scene != gameObject.scene)
+                return;
+
+            if (args.Added)
             {
-                if (args.ConnectionState != RemoteConnectionState.Stopped)
-                    return;
-
-                if (_playerControllers.ContainsKey(conn))
-                {
-                    OnPlayerUnloadScene(conn);
-                }
-            };
-
-            SceneManager.OnClientPresenceChangeEnd += args =>
+                OnPlayerLoadScene(args.Connection);
+            }
+            else
             {
-                if (args.Scene != gameObject.scene)
-                    return;
+                OnPlayerUnloadScene(args.Connection);
+            }
+        }
 
-                if (args.Added)
-                {
-                    OnPlayerLoadScene(args.Connection);
-                }
-                else
-                {
-                    OnPlayerUnloadScene(args.Connection);
-                }
-            };
+        private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        {
+            if (args.ConnectionState != RemoteConnectionState.Stopped)
+                return;
+
+            if (_playerControllers.ContainsKey(conn))
+            {
+                OnPlayerUnloadScene(conn);
+            }
         }
 
         private void SpawnGameState()
@@ -63,7 +67,7 @@ namespace AnyVR.LobbySystem
             Despawn(playerState.NetworkObject, DespawnType.Destroy);
 
             // Despawn player controller
-            bool success = _playerControllers.TryGetValue(conn, out PlayerController playerController);
+            bool success = _playerControllers.Remove(conn, out PlayerController playerController);
             Assert.IsTrue(success);
             Despawn(playerController.NetworkObject, DespawnType.Destroy);
         }
@@ -96,6 +100,13 @@ namespace AnyVR.LobbySystem
         public T GetGameState<T>() where T : GameStateBase
         {
             return _gameState as T;
+        }
+
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+            SceneManager.OnClientPresenceChangeEnd -= OnClientPresenceChangeEnd;
+            ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
         }
 
 #region Serialized Fields

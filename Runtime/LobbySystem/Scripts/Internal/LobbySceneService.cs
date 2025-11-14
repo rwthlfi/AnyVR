@@ -8,7 +8,6 @@ namespace AnyVR.LobbySystem.Internal
 {
     internal partial class LobbySceneService
     {
-        private const string GlobalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
         private readonly LobbyManagerInternal _internal;
 
         internal LobbySceneService(LobbyManagerInternal @internal)

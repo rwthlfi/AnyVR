@@ -74,9 +74,11 @@ namespace AnyVR.Sample
         private async void ConnectToServer()
         {
             Uri tokenServerUri = new($"http://{_serverAddressInputField.text}");
-            await ConnectionManager.Instance.ConnectToServer(tokenServerUri, _usernameInputField.text);
-            
-            InitializeLobbyUIEntries();
+            ConnectionResult result = await ConnectionManager.Instance.ConnectToServer(tokenServerUri, _usernameInputField.text);
+            if (result.IsSuccess)
+            {
+                InitializeLobbyUIEntries();
+            }
         }
 
         private void InitializeLobbyUIEntries()
