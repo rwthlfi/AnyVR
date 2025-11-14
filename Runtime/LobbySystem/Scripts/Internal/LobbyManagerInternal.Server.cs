@@ -56,6 +56,7 @@ namespace AnyVR.LobbySystem.Internal
             Assert.IsTrue(success);
 
             gameMode.SetLobbyId(gls.LobbyId);
+
             gameMode.OnBeginPlay();
 
             creator.ObserverRPC_OnCreateLobbyResult(CreateLobbyStatus.Success, gls.LobbyId);
@@ -115,20 +116,14 @@ namespace AnyVR.LobbySystem.Internal
             GlobalLobbyState state = (GlobalLobbyState)GlobalGameState.Instance.GetLobbyInfo(lobbyId);
             Assert.IsNotNull(state);
 
-            _lobbyRegistry.UnregisterLobby(state);
-            Despawn(state.NetworkObject, DespawnType.Destroy);
-
             LobbyGameMode gameMode = _lobbyRegistry.GetLobbyGameMode(lobbyId);
             Assert.IsNotNull(gameMode);
             _sceneService.UnloadLobby(gameMode);
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal), $"Lobby with id '{lobbyId}' is closed");
-        }
+            _lobbyRegistry.UnregisterLobby(state);
+            Despawn(state.NetworkObject, DespawnType.Destroy);
 
-        [Server]
-        internal LobbyGameMode GetLobbyGameMode(Guid lobbyId)
-        {
-            return _lobbyRegistry.GetLobbyGameMode(lobbyId);
+            Logger.Log(LogLevel.Verbose, nameof(LobbyManagerInternal), $"Lobby with id '{lobbyId}' is closed");
         }
     }
 }

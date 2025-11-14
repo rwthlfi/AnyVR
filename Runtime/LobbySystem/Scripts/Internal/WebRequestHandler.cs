@@ -28,7 +28,7 @@ namespace AnyVR.LobbySystem.Internal
     internal class TokenResponse : Response
     {
         // ReSharper disable once InconsistentNaming
-        internal string token;
+        public string token;
     }
 
     internal static class WebRequestHandler

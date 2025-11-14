@@ -21,14 +21,15 @@ namespace AnyVR.LobbySystem
         {
             Assert.IsFalse(lobbyId == Guid.Empty);
             _lobbyId.Value = lobbyId;
+            GetGameState<LobbyState>().SetLobbyId(lobbyId);
         }
 
         public virtual void OnBeginPlay()
         {
-            GetGameState<LobbyState>().SetLobbyId(_lobbyId.Value);
-
+            Debug.Log("OnBeginPlay");
             GetGameState().OnPlayerJoin += _ =>
             {
+                Debug.Log("OnPlayerJoin");
                 if (_inactiveCoroutine != null)
                 {
                     StopCoroutine(_inactiveCoroutine);
@@ -37,6 +38,7 @@ namespace AnyVR.LobbySystem
 
             GetGameState().OnPlayerLeave += _ =>
             {
+                Debug.Log("OnPlayerLeave");
                 if (!GetGameState().GetPlayerStates().Any())
                 {
                     _inactiveCoroutine = StartCoroutine(CloseInactiveLobby());

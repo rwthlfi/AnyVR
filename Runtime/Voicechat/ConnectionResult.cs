@@ -5,6 +5,7 @@ namespace AnyVR.Voicechat
         Connected,
         Timeout,
         Cancel,
+        TokenRetrievalFailed,
         Error,
         AlreadyConnected,
         PlatformNotSupported

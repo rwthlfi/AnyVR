@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using AnyVR.LobbySystem.Internal;
 using FishNet.Connection;
-using FishNet.Managing.Scened;
 using FishNet.Object;
+using FishNet.Transporting;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -14,7 +14,32 @@ namespace AnyVR.LobbySystem
         {
             base.OnStartServer();
             SpawnGameState();
-            SceneManager.OnClientPresenceChangeEnd += OnClientPresenceChangeEnd;
+
+            ServerManager.OnRemoteConnectionState += (conn, args) =>
+            {
+                if (args.ConnectionState != RemoteConnectionState.Stopped)
+                    return;
+
+                if (_playerControllers.ContainsKey(conn))
+                {
+                    OnPlayerUnloadScene(conn);
+                }
+            };
+
+            SceneManager.OnClientPresenceChangeEnd += args =>
+            {
+                if (args.Scene != gameObject.scene)
+                    return;
+
+                if (args.Added)
+                {
+                    OnPlayerLoadScene(args.Connection);
+                }
+                else
+                {
+                    OnPlayerUnloadScene(args.Connection);
+                }
+            };
         }
 
         private void SpawnGameState()
@@ -23,31 +48,25 @@ namespace AnyVR.LobbySystem
             Spawn(_gameState.NetworkObject, null, gameObject.scene);
         }
 
-        private void OnClientPresenceChangeEnd(ClientPresenceChangeEventArgs args)
+        private void OnPlayerLoadScene(NetworkConnection conn)
         {
-            if (args.Scene != gameObject.scene)
-                return;
-
-            if (args.Added)
-            {
-                PlayerStateBase ps = SpawnPlayerState(args.Connection);
-                SpawnPlayerController(args.Connection, ps);
-            }
-            else
-            {
-                Assert.IsNotNull(GetGameState().GetPlayerState(args.Connection.ClientId));
-
-                // Despawn player state
-                PlayerStateBase playerState = GetGameState().RemovePlayerState(args.Connection);
-                Despawn(playerState.NetworkObject, DespawnType.Destroy);
-
-                // Despawn player controller
-                bool success = _playerControllers.TryGetValue(args.Connection, out PlayerController playerController);
-                Assert.IsTrue(success);
-                Despawn(playerController.NetworkObject, DespawnType.Destroy);
-            }
+            PlayerStateBase ps = SpawnPlayerState(conn);
+            SpawnPlayerController(conn, ps);
         }
 
+        private void OnPlayerUnloadScene(NetworkConnection conn)
+        {
+            Assert.IsNotNull(GetGameState().GetPlayerState(conn.ClientId));
+
+            // Despawn player state
+            PlayerStateBase playerState = GetGameState().RemovePlayerState(conn);
+            Despawn(playerState.NetworkObject, DespawnType.Destroy);
+
+            // Despawn player controller
+            bool success = _playerControllers.TryGetValue(conn, out PlayerController playerController);
+            Assert.IsTrue(success);
+            Despawn(playerController.NetworkObject, DespawnType.Destroy);
+        }
 
         protected virtual PlayerStateBase SpawnPlayerState(NetworkConnection conn)
         {
