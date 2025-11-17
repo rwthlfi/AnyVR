@@ -17,7 +17,6 @@ namespace AnyVR.LobbySystem
             SpawnGameState();
 
             ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
-
             SceneManager.OnClientPresenceChangeEnd += OnClientPresenceChangeEnd;
         }
         private void OnClientPresenceChangeEnd(ClientPresenceChangeEventArgs args)

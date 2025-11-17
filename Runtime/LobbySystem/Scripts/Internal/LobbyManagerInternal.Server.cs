@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using AnyVR.Logging;
 using FishNet.Object;
@@ -73,6 +74,15 @@ namespace AnyVR.LobbySystem.Internal
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal),
                     $"Client '{player.OwnerId}' could not be added to lobby '{lobbyId}'. Lobby was not found.");
                 player.ObserverRPC_OnJoinLobbyResult(JoinLobbyResult.LobbyDoesNotExist);
+                return;
+            }
+
+            IEnumerable<LobbyPlayerState> players = _lobbyRegistry.GetLobbyGameMode(lobbyId).GetGameState<LobbyState>().GetPlayerStates();
+            if (players.Any(other => other.ID == player.OwnerId))
+            {
+                Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal),
+                    $"Client '{player.OwnerId}' is already a participant in the lobby '{lobbyId}'.");
+                player.ObserverRPC_OnJoinLobbyResult(JoinLobbyResult.AlreadyConnected);
                 return;
             }
 

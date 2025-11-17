@@ -108,13 +108,13 @@ namespace AnyVR.LobbySystem
             if (!uint.TryParse(quickConnectCode, out uint code))
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal), $"QuickConnect failed: invalid code '{quickConnectCode}'");
-                return Task.FromResult(JoinLobbyResult.InvalidFormat);
+                return Task.FromResult(JoinLobbyResult.InvalidQuickConnectFormat);
             }
 
             if (code >= 99999)
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal), $"QuickConnect failed: code out of range '{code}'");
-                return Task.FromResult(JoinLobbyResult.OutOfRange);
+                return Task.FromResult(JoinLobbyResult.QuickConnectOutOfRange);
             }
 
             return Client_JoinLobby(() => ServerRPC_QuickConnect(code), timeout);
@@ -215,57 +215,19 @@ namespace AnyVR.LobbySystem
         [Conditional("ANY_VR_LOG")]
         private static void LogJoinLobbyResult(JoinLobbyResult result)
         {
-            string message = result switch
-            {
-                JoinLobbyResult.Success => "Successfully joined lobby.",
-                JoinLobbyResult.AlreadyConnected => "Failed to Join Lobby. You are already connected.",
-                JoinLobbyResult.LobbyDoesNotExist => "Failed to Join Lobby. The lobby does not exist.",
-                JoinLobbyResult.LobbyIsFull => "Failed to Join Lobby. The lobby is full.",
-                JoinLobbyResult.PasswordMismatch => "Failed to Join Lobby. Incorrect lobby password.",
-                JoinLobbyResult.AlreadyJoining => "Failed to Join Lobby. Already attempting to join a lobby.",
-                JoinLobbyResult.Timeout => "Failed to Join Lobby. Server did not handle join request (timeout).",
-                JoinLobbyResult.InvalidFormat => "Failed to Join Lobby. Quick connect code has an invalid format.",
-                JoinLobbyResult.OutOfRange => "Failed to Join Lobby. Quick connect code is out of range.",
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), message);
+            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
         }
 
         [Conditional("ANY_VR_LOG")]
         private static void LogCreateLobbyResult(CreateLobbyResult result)
         {
-            string message = result.Status switch
-            {
-                CreateLobbyStatus.Success => $"Successfully created lobby {result.LobbyId.GetValueOrDefault()}.",
-                CreateLobbyStatus.LobbyNameTaken => "Lobby Creation Failed. Lobby name is taken.",
-                CreateLobbyStatus.InvalidScene => "Lobby Creation Failed. Invalid scene.",
-                CreateLobbyStatus.Timeout => "Lobby Creation Failed. Timeout occured.",
-                CreateLobbyStatus.CreationInProgress => "Lobby Creation Failed. Creation is in progress.",
-                CreateLobbyStatus.InvalidLobbyName => "Lobby Creation Failed. Invalid Parameters.",
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), message);
+            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
         }
 
         [Conditional("ANY_VR_LOG")]
         private static void LogPlayerNameUpdateResult(PlayerNameUpdateResult result)
         {
-            string message = result switch
-            {
-                PlayerNameUpdateResult.Success => "PlayerNameUpdate Success",
-                PlayerNameUpdateResult.Timeout => "PlayerNameUpdate Failed. Timeout occured.",
-                PlayerNameUpdateResult.NameTaken => "PlayerNameUpdate Failed. Name is already taken.",
-                PlayerNameUpdateResult.InvalidName => "PlayerNameUpdate Failed. Invalid name.",
-                PlayerNameUpdateResult.AlreadySet => "PlayerNameUpdate Failed. Name is already set.",
-                PlayerNameUpdateResult.TooLong => "PlayerNameUpdate Failed. Name is too long.",
-                PlayerNameUpdateResult.TooShort => "PlayerNameUpdate Failed. Name is too short.",
-                PlayerNameUpdateResult.Cancelled => "PlayerNameUpdate Failed. Operation was cancelled.",
-                _ => throw new ArgumentOutOfRangeException(nameof(result), result, null)
-            };
-
-            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), message);
+            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
         }
 
 #endregion

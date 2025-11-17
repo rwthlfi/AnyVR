@@ -19,11 +19,11 @@ namespace AnyVR.LobbySystem
         [Client]
         private static void Client_OnLoadStart(SceneLoadStartEventArgs args)
         {
+            if (!LobbySceneService.IsLoadingLobby(args.QueueData, false))
+                return;
+            
             Assert.IsNotNull(GlobalGameState.Instance.LobbyConfiguration);
-            if (LobbySceneService.IsLoadingLobby(args.QueueData, false))
-            {
-                USceneManager.UnloadSceneAsync(GlobalGameState.Instance.LobbyConfiguration.OfflineScene);
-            }
+            USceneManager.UnloadSceneAsync(GlobalGameState.Instance.LobbyConfiguration.OfflineScene);
         }
 
         [Client]

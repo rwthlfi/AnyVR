@@ -60,5 +60,27 @@ namespace AnyVR.LobbySystem
 
             Assert.IsTrue(ConnectionStatus != ConnectionStatus.Connected || PlayerNameResult != null);
         }
+
+        /// <summary>
+        ///     Returns a human-readable message describing the connection attempt result.
+        /// </summary>
+        public string ToFriendlyString()
+        {
+            // First handle connection failure states
+            switch (ConnectionStatus)
+            {
+                case ConnectionStatus.Timeout: return "The server did not respond in time.";
+                case ConnectionStatus.AlreadyConnected: return "You are already connected to a server.";
+                case ConnectionStatus.ServerIpRequestFailed: return "Could not retrieve the server address from the token server.";
+                case ConnectionStatus.Cancelled: return "The connection attempt was cancelled.";
+                case ConnectionStatus.Connected: break;
+                default: return ConnectionStatus.ToString();
+            }
+
+            // At this point, ConnectionStatus == Connected
+            Assert.IsTrue(PlayerNameResult != null);
+
+            return PlayerNameResult == PlayerNameUpdateResult.Success ? "Connection successful." : $"You were kicked from the server {PlayerNameResult.Value.ToFriendlyString()}";
+        }
     }
 }

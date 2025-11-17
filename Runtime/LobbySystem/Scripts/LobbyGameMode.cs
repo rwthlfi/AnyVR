@@ -65,7 +65,6 @@ namespace AnyVR.LobbySystem
             return ps;
         }
 
-
         private IEnumerator ExpireLobby(DateTime expirationDate)
         {
             float timeUntilExpiration = (float)(expirationDate - DateTime.UtcNow).TotalSeconds;
@@ -101,8 +100,6 @@ namespace AnyVR.LobbySystem
             Logger.Log(LogLevel.Warning, nameof(LobbyGameMode), $"Closing lobby {GetGameState<LobbyState>().LobbyId} due to inactivity.");
             LobbyManagerInternal.Instance.Server_CloseLobby(GetGameState<LobbyState>().LobbyId);
         }
-
-
 
 #region Private Fields
 

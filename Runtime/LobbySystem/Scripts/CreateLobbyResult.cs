@@ -24,4 +24,28 @@ namespace AnyVR.LobbySystem
             LobbyId = lobbyId;
         }
     }
+
+    public static partial class EnumExtensions
+    {
+        /// <summary>
+        ///     Converts a <see cref="CreateLobbyResult" /> value into a human-readable string, suitable for displaying to the user.
+        ///     <returns>
+        ///         A user-friendly description of the lobby creation result.
+        ///     </returns>
+        /// </summary>
+        public static string ToFriendlyString(this CreateLobbyResult result)
+        {
+            return result.Status switch
+            {
+                CreateLobbyStatus.Success => "Lobby created successfully.",
+                CreateLobbyStatus.InvalidLobbyName => "The lobby name is invalid.",
+                CreateLobbyStatus.LobbyNameTaken => "A lobby with this name already exists.",
+                CreateLobbyStatus.InvalidScene => "The selected scene is not valid.",
+                CreateLobbyStatus.Timeout => "The server did not respond in time.",
+                CreateLobbyStatus.CreationInProgress => "A lobby is already being created.",
+
+                _ => result.ToString()
+            };
+        }
+    }
 }

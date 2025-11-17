@@ -30,17 +30,11 @@ namespace AnyVR.LobbySystem
 
 #region Singleton
 
-        private static LobbyPlayerController _instance;
+        public static LobbyPlayerController Instance { get; private set; }
 
         private void Awake()
         {
-            _instance = this;
-        }
-
-        [Client]
-        public static LobbyPlayerController GetInstance()
-        {
-            return _instance;
+            Instance = this;
         }
 
 #endregion

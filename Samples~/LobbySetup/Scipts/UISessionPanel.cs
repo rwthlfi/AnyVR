@@ -37,7 +37,7 @@ namespace AnyVR.Sample
             _lobbyState = LobbyState.GetInstance();
             if (_lobbyState == null)
             {
-                Debug.LogWarning("LobbyHandler not found. Disabling UISessionPanel.");
+                Debug.LogWarning("LobbyState not found. Disabling UISessionPanel.");
                 return;
             }
             
@@ -120,8 +120,8 @@ namespace AnyVR.Sample
             UIUserListEntry entry = Instantiate(_entryPrefab, _entryParent);
             entry.SetPlayerInfo((LobbyPlayerState)playerState);
 
-            entry.OnKickButtonPressed += player => LobbyPlayerController.GetInstance().Kick(player);
-            entry.OnPromoteToAdminButtonPressed += player => LobbyPlayerController.GetInstance().PromoteToAdmin(player);
+            entry.OnKickButtonPressed += player => LobbyPlayerController.Instance.Kick(player);
+            entry.OnPromoteToAdminButtonPressed += player => LobbyPlayerController.Instance.PromoteToAdmin(player);
 
             _players.Add(globalPlayerState.ID, entry);
         }

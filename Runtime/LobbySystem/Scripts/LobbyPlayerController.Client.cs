@@ -59,11 +59,9 @@ namespace AnyVR.LobbySystem
                 return Voicechat.ConnectionResult.PlatformNotSupported;
             }
 
-            Uri tokenUri = new UriBuilder
+            Uri tokenUri = new UriBuilder(ConnectionManager.Instance.LiveKitTokenServer)
             {
                 Scheme = ConnectionManager.Instance.UseSecureProtocol ? "https" : "http",
-                Host = ConnectionManager.Instance.LiveKitTokenServer.Host,
-                Port = ConnectionManager.Instance.LiveKitTokenServer.Port,
                 Path = "requestToken",
                 Query = $"room_name={Uri.EscapeDataString(roomName)}&user_name={Uri.EscapeDataString(userName)}"
             }.Uri;
@@ -89,10 +87,24 @@ namespace AnyVR.LobbySystem
 
             LiveKitClient.SetAudioObjectMapping(identity =>
             {
-                return this.GetGameState().GetPlayerStates<LobbyPlayerState>().First(state => state.Global.Name == identity).gameObject;
-            });
+                LobbyPlayerState playerState = this.GetGameState().GetPlayerStates<LobbyPlayerState>().FirstOrDefault(state => state.Global.Name == identity);
 
-            return await LiveKitClient.Connect(ConnectionManager.Instance.LiveKitVoiceServer.ToString(), response.token);
+                if (playerState == null)
+                {
+                    // This happens, when someone joins the LiveKit room who is not participating in the lobby.
+                    // TODO: Allow third-party voice participants?
+                    Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), "Could not match LiveKit participant to player state.");
+                    return null;
+                }
+                return playerState.gameObject;
+            });
+            
+            Uri voicechatUri = new UriBuilder(ConnectionManager.Instance.LiveKitVoiceServer)
+            {
+                Scheme = ConnectionManager.Instance.UseSecureProtocol ? "wss" : "ws"
+            }.Uri;
+
+            return await LiveKitClient.Connect(voicechatUri.ToString(), response.token);
         }
 
         [Client]
