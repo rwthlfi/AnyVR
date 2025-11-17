@@ -20,6 +20,11 @@ namespace AnyVR.Voicechat
         {
             _audioSource = audioSource;
         }
+        
+        public AudioSource GetAudioSource()
+        {
+            return _audioSource;
+        }
 
         /// <summary>
         ///     Updates the speaker volume for the local participant.
@@ -29,5 +34,6 @@ namespace AnyVR.Voicechat
         {
             _audioSource.volume = volume;
         }
+        
     }
 }

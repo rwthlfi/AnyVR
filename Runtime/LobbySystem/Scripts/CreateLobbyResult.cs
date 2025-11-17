@@ -28,7 +28,8 @@ namespace AnyVR.LobbySystem
     public static partial class EnumExtensions
     {
         /// <summary>
-        ///     Converts a <see cref="CreateLobbyResult" /> value into a human-readable string, suitable for displaying to the user.
+        ///     Converts a <see cref="CreateLobbyResult" /> value into a human-readable string, suitable for displaying to the
+        ///     user.
         ///     <returns>
         ///         A user-friendly description of the lobby creation result.
         ///     </returns>

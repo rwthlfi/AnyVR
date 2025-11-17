@@ -17,7 +17,7 @@ namespace AnyVR.Voicechat
     {
         public override bool IsConnected => _room is { IsConnected: true };
 
-        public override void Init()
+        protected override void Init()
         {
             _room = new Room();
 
@@ -109,7 +109,7 @@ namespace AnyVR.Voicechat
             }
         }
 
-        public override void UnpublishMicrophone()
+        internal override void UnpublishMicrophone()
         {
             _room.LocalParticipant.UnpublishTrack(_audioTrack, true);
             _audioSource.Dispose();
@@ -159,15 +159,15 @@ namespace AnyVR.Voicechat
                     Logger.Log(LogLevel.Warning, nameof(StandaloneLiveKitClient), "Video tracks currently not supported."); //TODO
                     break;
                 case RemoteAudioTrack audioTrack:
-                    GameObject audioObject = AudioObjectMap(participant.Identity);
+                    AudioSource audioSource = AudioSourceMap(participant.Identity);
 
-                    if (audioObject == null)
+                    if (audioSource == null)
                     {
                         Logger.Log(LogLevel.Error, nameof(StandaloneLiveKitClient), $"Could not fetch audio object for participant {participant.Identity}");
                         return;
                     }
-
-                    AudioSource audioSource = audioObject.AddComponent<AudioSource>();
+                    
+                    audioSource.Stop();
                     AudioStream audioStream = new(audioTrack, audioSource);
                     Remotes[participant.Identity].SetAudioSource(audioSource);
                     break;
@@ -190,6 +190,23 @@ namespace AnyVR.Voicechat
 
         public override event Action<RemoteParticipant> OnParticipantConnected;
         public override event Action<string> OnParticipantDisconnected;
+        
+        public override void Dispose()
+        {
+            foreach (RemoteParticipant remote in Remotes.Values)
+            {
+                if(remote == null)
+                    continue;
+                
+                AudioSource audioSource = remote.GetAudioSource();
+                if (audioSource == null)
+                    continue;
+                
+                audioSource.Stop();
+                Destroy(audioSource);
+            }
+            _room.Disconnect();
+        }
 
 #endregion
     }

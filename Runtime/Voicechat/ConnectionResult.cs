@@ -1,5 +1,6 @@
 namespace AnyVR.Voicechat
 {
+    // TODO: rename 
     public enum ConnectionResult
     {
         Connected,

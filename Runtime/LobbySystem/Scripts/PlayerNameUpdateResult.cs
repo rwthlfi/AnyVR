@@ -46,7 +46,8 @@ namespace AnyVR.LobbySystem
     public static partial class EnumExtensions
     {
         /// <summary>
-        ///     Converts a <see cref="PlayerNameUpdateResult" /> value into a human-readable string, suitable for displaying to the user.
+        ///     Converts a <see cref="PlayerNameUpdateResult" /> value into a human-readable string, suitable for displaying to the
+        ///     user.
         ///     <returns>
         ///         A user-friendly description of the name update result.
         ///     </returns>

@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AnyVR.Logging;
 using UnityEngine;
+using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.Voicechat
 {
-    public abstract class LiveKitClient : MonoBehaviour
+    public abstract class LiveKitClient : MonoBehaviour, IDisposable
     {
         internal abstract Task<MicrophonePublishResult> PublishMicrophone(string deviceName);
 
-        public abstract void UnpublishMicrophone();
+        internal abstract void UnpublishMicrophone();
 
         protected void UpdateActiveSpeakers(HashSet<string> activeSpeakers)
         {
@@ -18,6 +20,8 @@ namespace AnyVR.Voicechat
                 participant.IsSpeaking = activeSpeakers.Contains(participant.Identity);
             }
         }
+        
+        protected abstract void Init();
 
 #region Private Fields
 
@@ -27,7 +31,7 @@ namespace AnyVR.Voicechat
 
         protected readonly Dictionary<string, RemoteParticipant> Remotes = new();
 
-        protected Func<string, GameObject> AudioObjectMap;
+        protected Func<string, AudioSource> AudioSourceMap;
 
 #endregion
 
@@ -41,16 +45,38 @@ namespace AnyVR.Voicechat
 
         public bool IsMicEnabled { get; protected set; }
 
-        public void SetAudioObjectMapping(Func<string, GameObject> audioObjectMap)
+        public void SetAudioObjectMapping(Func<string, AudioSource> audioSourceMap)
         {
-            AudioObjectMap = audioObjectMap;
+            AudioSourceMap = audioSourceMap;
         }
-
-        public abstract void Init();
 
         public abstract Task<ConnectionResult> Connect(string address, string token);
 
         public abstract void Disconnect();
+
+        public static LiveKitClient Instantiate(GameObject go)
+        {
+            // #if UNITY_EDITOR
+//             Logger.Log(LogLevel.Verbose, nameof(LiveKitClient), "VoiceChatManager not initialized. Platform: EDITOR");
+//             return null;
+#if UNITY_SERVER
+            Logger.Log(LogLevel.Verbose, nameof(LiveKitClient), "VoiceChatManager not initialized. Platform: SERVER");
+            return null;
+#endif
+
+#if UNITY_WEBGL
+            LiveKitClient liveKitClient = go.AddComponent<WebGLVoiceChatClient>();
+            Logger.Log(LogLevel.Verbose, nameof(LiveKitClient),"VoiceChatManager initialized. Platform: WEBGL");
+#elif UNITY_STANDALONE // && !UNITY_EDITOR
+            LiveKitClient liveKitClient = go.AddComponent<StandaloneLiveKitClient>();
+            Logger.Log(LogLevel.Verbose, nameof(LiveKitClient), "VoiceChatManager initialized. Platform: STANDALONE");
+#else
+            // throw new PlatformNotSupportedException("VoiceChatManager not initialized. Platform: UNKNOWN");
+#endif
+
+            liveKitClient.Init();
+            return liveKitClient;
+        }
 
 #endregion
 
@@ -61,5 +87,12 @@ namespace AnyVR.Voicechat
         public abstract event Action<string> OnParticipantDisconnected;
 
 #endregion
+
+        private void OnDestroy()
+        {
+            Dispose(); 
+        }
+
+        public abstract void Dispose();
     }
 }

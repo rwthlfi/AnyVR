@@ -9,6 +9,9 @@ using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    /// TODO
+    /// </summary>
     public partial class GlobalPlayerController : PlayerController
     {
         private readonly RpcAwaiter<PlayerNameUpdateResult> _playerNameUpdateAwaiter = new(PlayerNameUpdateResult.Timeout, PlayerNameUpdateResult.Cancelled);

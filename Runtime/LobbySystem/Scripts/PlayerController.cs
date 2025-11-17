@@ -3,6 +3,11 @@ using FishNet.Object.Synchronizing;
 
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    ///     Base implementation of the PlayerController.
+    ///     <seealso cref="GlobalPlayerController" />
+    ///     <seealso cref="LobbyPlayerController" />
+    /// </summary>
     public class PlayerController : NetworkBehaviour
     {
         private readonly SyncVar<PlayerStateBase> _playerState = new();

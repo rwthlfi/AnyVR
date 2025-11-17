@@ -1,117 +1,92 @@
-using System;
-using System.Linq;
 using System.Threading.Tasks;
-using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
-using AnyVR.Voicechat;
 using FishNet.Connection;
 using FishNet.Object;
-using UnityEngine.Assertions;
+using UnityEngine;
+using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
     public partial class LobbyPlayerController
     {
+        public VoiceChatClient Voice;
+
         public override void OnStartClient()
         {
             base.OnStartClient();
-
-            ConnectToLiveKitRoom(this.GetGameState<LobbyState>().LobbyInfo.Name.Value, GetPlayerState<LobbyPlayerState>().Global.Name).ContinueWith(task =>
-            {
-                if (task.Result != Voicechat.ConnectionResult.Connected)
-                {
-                    Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), $"Voicechat connection failed: {task.Exception}");
-                    return;
-                }
-
-                Voicechat.ConnectionResult res = task.Result;
-                Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Voicechat connection result: {res}");
-
-                LiveKitClient.LocalParticipant.PublishMicrophone("RODE NT-USB Analog Stereo");
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            Voice = new VoiceChatClient(this);
         }
 
+        /// <summary>
+        ///     Promote another player in the lobby.
+        ///     Only admins have the authority to promote other players.
+        /// </summary>
+        /// <param name="other">The player which should be promoted.</param>
+        /// <returns>An asynchronous <see cref="PlayerPromotionResult" /> indicating if the operation was succeeded. </returns>
         [Client]
-        public Task<PlayerPromotionResult> PromoteToAdmin(LobbyPlayerState other, TimeSpan? timeout = null)
+        public Task<PlayerPromotionResult> PromoteToAdmin(LobbyPlayerState other)
         {
-            Task<PlayerPromotionResult> task = _playerPromoteUpdateAwaiter.WaitForResult(timeout);
+            Task<PlayerPromotionResult> task = _playerPromoteUpdateAwaiter.WaitForResult();
             ServerRPC_PromoteToAdmin(other);
             return task;
         }
 
+        /// <summary>
+        ///     Kick another player from the lobby.
+        ///     Only admins have the authority to kick other players.
+        /// </summary>
+        /// <param name="other">The player which should be kicked.</param>
+        /// <returns>An asynchronous <see cref="PlayerKickResult" /> indicating if the operation was succeeded. </returns>
         [Client]
-        public Task<PlayerKickResult> Kick(LobbyPlayerState other, TimeSpan? timeout = null)
+        public Task<PlayerKickResult> Kick(LobbyPlayerState other)
         {
-            Task<PlayerKickResult> task = _playerKickUpdateAwaiter.WaitForResult(timeout);
+            Task<PlayerKickResult> task = _playerKickUpdateAwaiter.WaitForResult();
             ServerRPC_KickPlayer(other);
             return task;
         }
 
-        [Client]
-        private async Task<Voicechat.ConnectionResult> ConnectToLiveKitRoom(string roomName, string userName) // TODO use client id instead of name
-        {
-            Assert.IsNotNull(userName);
-
-            Assert.IsNull(LiveKitClient);
-            LiveKitClient = VoicechatManager.InstantiateClient();
-            if (LiveKitClient == null)
-            {
-                return Voicechat.ConnectionResult.PlatformNotSupported;
-            }
-
-            Uri tokenUri = new UriBuilder(ConnectionManager.Instance.LiveKitTokenServer)
-            {
-                Scheme = ConnectionManager.Instance.UseSecureProtocol ? "https" : "http",
-                Path = "requestToken",
-                Query = $"room_name={Uri.EscapeDataString(roomName)}&user_name={Uri.EscapeDataString(userName)}"
-            }.Uri;
-
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Requesting LiveKit Token from '{tokenUri}'");
-            TokenResponse response = await WebRequestHandler.GetAsync<TokenResponse>(tokenUri.ToString());
-
-            if (!response.Success)
-            {
-                Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), "LiveKit token retrieval failed!");
-                return Voicechat.ConnectionResult.TokenRetrievalFailed;
-            }
-
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Received LiveKit Token: '{response.token}'");
-
-            if (string.IsNullOrWhiteSpace(response.token))
-            {
-                Logger.Log(LogLevel.Warning, nameof(LobbyPlayerController), "Received LiveKit Token is null or white space!");
-                return Voicechat.ConnectionResult.TokenRetrievalFailed;
-            }
-
-            Assert.IsFalse(string.IsNullOrWhiteSpace(response.token), "Received LiveKit Token is null or white space!");
-
-            LiveKitClient.SetAudioObjectMapping(identity =>
-            {
-                LobbyPlayerState playerState = this.GetGameState().GetPlayerStates<LobbyPlayerState>().FirstOrDefault(state => state.Global.Name == identity);
-
-                if (playerState == null)
-                {
-                    // This happens, when someone joins the LiveKit room who is not participating in the lobby.
-                    // TODO: Allow third-party voice participants?
-                    Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), "Could not match LiveKit participant to player state.");
-                    return null;
-                }
-                return playerState.gameObject;
-            });
-            
-            Uri voicechatUri = new UriBuilder(ConnectionManager.Instance.LiveKitVoiceServer)
-            {
-                Scheme = ConnectionManager.Instance.UseSecureProtocol ? "wss" : "ws"
-            }.Uri;
-
-            return await LiveKitClient.Connect(voicechatUri.ToString(), response.token);
-        }
-
+        /// <summary>
+        ///     Leave the current lobby.
+        /// </summary>
         [Client]
         public void LeaveLobby()
         {
-            LiveKitClient.Disconnect();
             ServerRPC_LeaveLobby();
+        }
+
+        /// <summary>
+        ///     Called when a remote player publishes an audio track.
+        ///     Override this to specify a specific AudioSource the player's audio stream should be attached to.
+        ///     The default implementation instantiates a non-spatial audio source on the corresponding player state.
+        ///     The returned AudioSource component will be destroyed after the corresponding player unpublishes their audio track.
+        /// </summary>
+        /// <param name="player">The remote player who published the audio track.</param>
+        [Client]
+        protected virtual AudioSource GetRemotePlayerAudioSource(LobbyPlayerState player)
+        {
+            return player.gameObject.AddComponent<AudioSource>();
+        }
+
+        [Client]
+        internal AudioSource GetRemoteParticipantAudioSource(string liveKitIdentity)
+        {
+            if (int.TryParse(liveKitIdentity, out int clientId))
+            {
+                LobbyPlayerState playerState = this.GetGameState().GetPlayerState<LobbyPlayerState>(clientId);
+
+                if (playerState != null)
+                {
+                    //TODO: Check that the corresponding player wants to publish their microphone.
+                    //Currently, a malicious player could impersonate another player's voice.
+
+                    return GetRemotePlayerAudioSource(playerState);
+                }
+            }
+
+            // This happens when someone joins the LiveKit room who is not participating in the lobby.
+            // TODO: Allow third-party voice participants?
+            Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), "Could not match LiveKit participant to player state.");
+            return null;
         }
 
 #region RPCs

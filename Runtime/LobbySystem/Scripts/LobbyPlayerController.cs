@@ -1,11 +1,13 @@
 using AnyVR.LobbySystem.Internal;
-using AnyVR.Voicechat;
 using FishNet.Object;
 using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    /// TODO
+    /// </summary>
     public partial class LobbyPlayerController : PlayerController
     {
 #region Serialized Properties
@@ -19,8 +21,6 @@ namespace AnyVR.LobbySystem
 #endregion
 
 #region Private Fields
-
-        protected LiveKitClient LiveKitClient;
 
         private readonly RpcAwaiter<PlayerKickResult> _playerKickUpdateAwaiter = new(PlayerKickResult.Timeout, PlayerKickResult.Cancelled);
 

@@ -21,7 +21,7 @@ namespace AnyVR.LobbySystem
         {
             if (!LobbySceneService.IsLoadingLobby(args.QueueData, false))
                 return;
-            
+
             Assert.IsNotNull(GlobalGameState.Instance.LobbyConfiguration);
             USceneManager.UnloadSceneAsync(GlobalGameState.Instance.LobbyConfiguration.OfflineScene);
         }
