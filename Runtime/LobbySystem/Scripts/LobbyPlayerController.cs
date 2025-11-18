@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 namespace AnyVR.LobbySystem
 {
     /// <summary>
-    /// TODO
+    ///     TODO
     /// </summary>
     public partial class LobbyPlayerController : PlayerController
     {

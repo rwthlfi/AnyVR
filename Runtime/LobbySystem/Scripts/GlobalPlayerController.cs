@@ -10,7 +10,7 @@ using UnityEngine.Assertions;
 namespace AnyVR.LobbySystem
 {
     /// <summary>
-    /// TODO
+    ///     TODO
     /// </summary>
     public partial class GlobalPlayerController : PlayerController
     {

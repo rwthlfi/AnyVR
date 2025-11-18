@@ -9,6 +9,12 @@ namespace AnyVR.Voicechat
 {
     public abstract class LiveKitClient : MonoBehaviour, IDisposable
     {
+        private void OnDestroy()
+        {
+            Dispose();
+        }
+
+        public abstract void Dispose();
         internal abstract Task<MicrophonePublishResult> PublishMicrophone(string deviceName);
 
         internal abstract void UnpublishMicrophone();
@@ -20,12 +26,12 @@ namespace AnyVR.Voicechat
                 participant.IsSpeaking = activeSpeakers.Contains(participant.Identity);
             }
         }
-        
+
         protected abstract void Init();
 
 #region Private Fields
 
-        protected readonly TimedAwaiter<ConnectionResult> ConnectionAwaiter = new(ConnectionResult.Timeout, ConnectionResult.Cancel);
+        protected readonly TimedAwaiter<LiveKitConnectionResult> ConnectionAwaiter = new(LiveKitConnectionResult.Timeout, LiveKitConnectionResult.Cancel);
 
         protected readonly TimedAwaiter<MicrophonePublishResult> TrackPublishResult = new(MicrophonePublishResult.Timeout, MicrophonePublishResult.Cancelled);
 
@@ -50,7 +56,7 @@ namespace AnyVR.Voicechat
             AudioSourceMap = audioSourceMap;
         }
 
-        public abstract Task<ConnectionResult> Connect(string address, string token);
+        public abstract Task<LiveKitConnectionResult> Connect(string address, string token);
 
         public abstract void Disconnect();
 
@@ -87,12 +93,5 @@ namespace AnyVR.Voicechat
         public abstract event Action<string> OnParticipantDisconnected;
 
 #endregion
-
-        private void OnDestroy()
-        {
-            Dispose(); 
-        }
-
-        public abstract void Dispose();
     }
 }

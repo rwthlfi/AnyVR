@@ -1,7 +1,6 @@
-namespace AnyVR.Voicechat
+namespace AnyVR.LobbySystem
 {
-    // TODO: rename 
-    public enum ConnectionResult
+    public enum VoiceConnectionResult
     {
         Connected,
         Timeout,

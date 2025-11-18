@@ -20,7 +20,7 @@ namespace AnyVR.Voicechat
         {
             _audioSource = audioSource;
         }
-        
+
         public AudioSource GetAudioSource()
         {
             return _audioSource;
@@ -34,6 +34,5 @@ namespace AnyVR.Voicechat
         {
             _audioSource.volume = volume;
         }
-        
     }
 }

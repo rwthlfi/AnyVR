@@ -47,9 +47,9 @@ namespace AnyVR.Voicechat
             };
         }
 
-        public override Task<ConnectionResult> Connect(string address, string token)
+        public override Task<LiveKitConnectionResult> Connect(string address, string token)
         {
-            Task<ConnectionResult> result = ConnectionAwaiter.WaitForResult();
+            Task<LiveKitConnectionResult> result = ConnectionAwaiter.WaitForResult();
             StartCoroutine(Co_Connect(address, token));
             return result;
         }
@@ -124,12 +124,6 @@ namespace AnyVR.Voicechat
 
         private IEnumerator Co_Connect(string address, string token)
         {
-            if (IsConnected)
-            {
-                ConnectionAwaiter.Complete(ConnectionResult.AlreadyConnected);
-                yield break;
-            }
-
             ConnectInstruction op = _room.Connect(address, token, new RoomOptions());
 
             yield return op;
@@ -137,7 +131,7 @@ namespace AnyVR.Voicechat
             if (op.IsError)
             {
                 Logger.Log(LogLevel.Error, nameof(StandaloneLiveKitClient), $"Failed to connect to LiveKit room. address = {address}, token = {token}");
-                ConnectionAwaiter.Complete(ConnectionResult.Error);
+                ConnectionAwaiter.Complete(LiveKitConnectionResult.Error);
             }
             else
             {
@@ -147,7 +141,7 @@ namespace AnyVR.Voicechat
                 {
                     Remotes.Add(remote.Identity, new RemoteParticipant(remote.Sid, remote.Identity, remote.Name));
                 }
-                ConnectionAwaiter.Complete(ConnectionResult.Connected);
+                ConnectionAwaiter.Complete(LiveKitConnectionResult.Connected);
             }
         }
 
@@ -166,7 +160,7 @@ namespace AnyVR.Voicechat
                         Logger.Log(LogLevel.Error, nameof(StandaloneLiveKitClient), $"Could not fetch audio object for participant {participant.Identity}");
                         return;
                     }
-                    
+
                     audioSource.Stop();
                     AudioStream audioStream = new(audioTrack, audioSource);
                     Remotes[participant.Identity].SetAudioSource(audioSource);
@@ -190,18 +184,18 @@ namespace AnyVR.Voicechat
 
         public override event Action<RemoteParticipant> OnParticipantConnected;
         public override event Action<string> OnParticipantDisconnected;
-        
+
         public override void Dispose()
         {
             foreach (RemoteParticipant remote in Remotes.Values)
             {
-                if(remote == null)
+                if (remote == null)
                     continue;
-                
+
                 AudioSource audioSource = remote.GetAudioSource();
                 if (audioSource == null)
                     continue;
-                
+
                 audioSource.Stop();
                 Destroy(audioSource);
             }

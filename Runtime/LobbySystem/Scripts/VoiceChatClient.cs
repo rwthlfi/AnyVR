@@ -26,17 +26,25 @@ namespace AnyVR.LobbySystem
         }
 
         [Client]
-        public async Task<Voicechat.ConnectionResult> ConnectToRoom()
+        public async Task<VoiceConnectionResult> ConnectToRoom()
         {
             string roomName = _controller.GetGameState<LobbyState>().LobbyInfo.Name.Value;
             string identity = _controller.GetPlayerState<LobbyPlayerState>().ID.ToString();
 
             Assert.IsNotNull(identity);
 
-            _liveKitClient = LiveKitClient.Instantiate(_controller.gameObject);
             if (_liveKitClient == null)
             {
-                return Voicechat.ConnectionResult.PlatformNotSupported;
+                _liveKitClient = LiveKitClient.Instantiate(_controller.gameObject);
+                if (_liveKitClient == null)
+                {
+                    return VoiceConnectionResult.PlatformNotSupported;
+                }
+            }
+
+            if (_liveKitClient.IsConnected)
+            {
+                return VoiceConnectionResult.AlreadyConnected;
             }
 
             Uri tokenUri = new UriBuilder(ConnectionManager.Instance.LiveKitTokenServer)
@@ -50,7 +58,7 @@ namespace AnyVR.LobbySystem
             if (!response.Success)
             {
                 Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), "LiveKit token retrieval failed!");
-                return Voicechat.ConnectionResult.TokenRetrievalFailed;
+                return VoiceConnectionResult.TokenRetrievalFailed;
             }
 
             Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Received LiveKit Token: '{response.token}'");
@@ -58,7 +66,7 @@ namespace AnyVR.LobbySystem
             if (string.IsNullOrWhiteSpace(response.token))
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyPlayerController), "Received LiveKit Token is null or white space!");
-                return Voicechat.ConnectionResult.TokenRetrievalFailed;
+                return VoiceConnectionResult.TokenRetrievalFailed;
             }
 
             Assert.IsFalse(string.IsNullOrWhiteSpace(response.token), "Received LiveKit Token is null or white space!");
@@ -70,7 +78,17 @@ namespace AnyVR.LobbySystem
                 Scheme = ConnectionManager.Instance.UseSecureProtocol ? "wss" : "ws"
             }.Uri;
 
-            return await _liveKitClient.Connect(voicechatUri.ToString(), response.token);
+            LiveKitConnectionResult success = await _liveKitClient.Connect(voicechatUri.ToString(), response.token);
+
+            // Map LiveKitConnectionResult from the voicechat assembly to public VoiceConnectionResult form lobby assembly
+            return success switch
+            {
+                LiveKitConnectionResult.Connected => VoiceConnectionResult.Connected,
+                LiveKitConnectionResult.Timeout => VoiceConnectionResult.Timeout,
+                LiveKitConnectionResult.Cancel => VoiceConnectionResult.Cancel,
+                LiveKitConnectionResult.Error => VoiceConnectionResult.Error,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         public void PublishMicrophone(string device)
