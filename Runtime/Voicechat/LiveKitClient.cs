@@ -19,14 +19,6 @@ namespace AnyVR.Voicechat
 
         internal abstract void UnpublishMicrophone();
 
-        protected void UpdateActiveSpeakers(HashSet<string> activeSpeakers)
-        {
-            foreach (RemoteParticipant participant in Remotes.Values)
-            {
-                participant.IsSpeaking = activeSpeakers.Contains(participant.Identity);
-            }
-        }
-
         protected abstract void Init();
 
 #region Private Fields
@@ -49,7 +41,7 @@ namespace AnyVR.Voicechat
 
         public LocalParticipant LocalParticipant { get; protected set; }
 
-        public bool IsMicEnabled { get; protected set; }
+        public bool IsMicPublished { get; protected set; }
 
         public void SetAudioObjectMapping(Func<string, AudioSource> audioSourceMap)
         {
@@ -91,6 +83,8 @@ namespace AnyVR.Voicechat
         public abstract event Action<RemoteParticipant> OnParticipantConnected;
 
         public abstract event Action<string> OnParticipantDisconnected;
+
+        public abstract event Action<IEnumerable<RemoteParticipant>> OnActiveSpeakerChanged;
 
 #endregion
     }

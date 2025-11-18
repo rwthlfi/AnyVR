@@ -13,6 +13,10 @@ namespace AnyVR.LobbySystem
         /// </summary>
         public static LobbyPlayerState Local { get; private set; }
 
+        public IReadOnlyObservedVar<bool> IsConnectedToVoice => _isConnectedToVoice;
+
+        public IReadOnlyObservedVar<bool> IsSpeaking => _isSpeaking;
+
 #endregion
 
 #region Lifecycle

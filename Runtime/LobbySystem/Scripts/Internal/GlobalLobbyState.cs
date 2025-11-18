@@ -49,10 +49,10 @@ namespace AnyVR.LobbySystem.Internal
 #region Public API
 
         public Guid LobbyId => _lobbyId.Value;
-        public IReadOnlyReplicatedProperty<string> Name => _name;
-        public IReadOnlyReplicatedProperty<bool> IsPasswordProtected => _isPasswordProtected;
-        public IReadOnlyReplicatedProperty<ushort> NumPlayers => _numPlayers;
-        public IReadOnlyReplicatedProperty<DateTime?> ExpirationDate => _expirationDate;
+        public IReadOnlyObservedVar<string> Name => _name;
+        public IReadOnlyObservedVar<bool> IsPasswordProtected => _isPasswordProtected;
+        public IReadOnlyObservedVar<ushort> NumPlayers => _numPlayers;
+        public IReadOnlyObservedVar<DateTime?> ExpirationDate => _expirationDate;
         public int CreatorId => _creatorId.Value;
         public GlobalPlayerState Creator => GlobalGameState.Instance.GetPlayerState<GlobalPlayerState>(CreatorId);
         public ushort LobbyCapacity => _lobbyCapacity.Value;

@@ -1,6 +1,7 @@
 #if UNITY_STANDALONE
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LiveKit;
@@ -43,7 +44,7 @@ namespace AnyVR.Voicechat
 
             _room.ActiveSpeakersChanged += speakers =>
             {
-                UpdateActiveSpeakers(speakers.Select(speaker => speaker.Identity).ToHashSet());
+                OnActiveSpeakerChanged?.Invoke(speakers.Select(participant => Remotes.GetValueOrDefault(participant.Identity)).Where(remote => remote != null));
             };
         }
 
@@ -105,6 +106,7 @@ namespace AnyVR.Voicechat
             {
                 Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), $"Published audio track! Active microphone: {_activeMicName}");
                 _audioSource.Start();
+                IsMicPublished = true;
                 TrackPublishResult.Complete(MicrophonePublishResult.Published);
             }
         }
@@ -114,6 +116,7 @@ namespace AnyVR.Voicechat
             _room.LocalParticipant.UnpublishTrack(_audioTrack, true);
             _audioSource.Dispose();
             _audioSource = null;
+            IsMicPublished = false;
             Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), "Local audio track unpublished.");
         }
 
@@ -184,6 +187,7 @@ namespace AnyVR.Voicechat
 
         public override event Action<RemoteParticipant> OnParticipantConnected;
         public override event Action<string> OnParticipantDisconnected;
+        public override event Action<IEnumerable<RemoteParticipant>> OnActiveSpeakerChanged;
 
         public override void Dispose()
         {

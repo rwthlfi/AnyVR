@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AnyVR.Logging;
+using AnyVR.Voicechat;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
@@ -14,7 +17,30 @@ namespace AnyVR.LobbySystem
         public override void OnStartClient()
         {
             base.OnStartClient();
+
             Voice = new VoiceChatClient(this);
+            Voice.OnActiveSpeakerChanged += OnActiveSpeakerChanged;
+            Voice.OnParticipantConnected += participant => OnParticipantConnectionChanged(participant.Identity, true);
+            Voice.OnParticipantDisconnected += identity => OnParticipantConnectionChanged(identity, false);
+        }
+
+        private void OnActiveSpeakerChanged(IEnumerable<RemoteParticipant> speakers)
+        {
+            HashSet<int> active = speakers.Select(s => int.TryParse(s.Identity, out int id) ? id : -1)
+                .Where(id => id >= 0)
+                .ToHashSet();
+
+            foreach (LobbyPlayerState player in this.GetGameState().GetPlayerStates<LobbyPlayerState>())
+                player.SetIsSpeaking(active.Contains(player.ID));
+        }
+
+        private void OnParticipantConnectionChanged(string identity, bool connected)
+        {
+            if (!int.TryParse(identity, out int id))
+                return;
+
+            LobbyPlayerState player = this.GetGameState().GetPlayerState<LobbyPlayerState>(id);
+            player.SetIsConnectedToVoice(connected);
         }
 
         /// <summary>
@@ -55,14 +81,14 @@ namespace AnyVR.LobbySystem
         }
 
         /// <summary>
-        ///     Called when a remote player publishes an audio track.
-        ///     Override this to specify a specific AudioSource the player's audio stream should be attached to.
+        ///     Is called when a remote player publishes an audio track.
+        ///     Override this to specify the AudioSource the player's audio stream should be attached to.
         ///     The default implementation instantiates a non-spatial audio source on the corresponding player state.
         ///     The returned AudioSource component will be destroyed after the corresponding player unpublishes their audio track.
         /// </summary>
         /// <param name="player">The remote player who published the audio track.</param>
         [Client]
-        protected virtual AudioSource GetRemotePlayerAudioSource(LobbyPlayerState player)
+        protected virtual AudioSource ProvideRemoteAudioSource(LobbyPlayerState player)
         {
             return player.gameObject.AddComponent<AudioSource>();
         }
@@ -79,7 +105,7 @@ namespace AnyVR.LobbySystem
                     //TODO: Check that the corresponding player wants to publish their microphone.
                     //Currently, a malicious player could impersonate another player's voice.
 
-                    return GetRemotePlayerAudioSource(playerState);
+                    return ProvideRemoteAudioSource(playerState);
                 }
             }
 

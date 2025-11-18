@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
@@ -24,6 +25,16 @@ namespace AnyVR.LobbySystem
         {
             _controller = controller;
         }
+
+        public bool IsConnected => _liveKitClient.IsConnected;
+
+        public bool IsMicrophonePublished => _liveKitClient.IsMicPublished;
+
+        internal event Action<IEnumerable<RemoteParticipant>> OnActiveSpeakerChanged;
+
+        internal event Action<RemoteParticipant> OnParticipantConnected;
+
+        internal event Action<string> OnParticipantDisconnected;
 
         [Client]
         public async Task<VoiceConnectionResult> ConnectToRoom()
@@ -78,10 +89,17 @@ namespace AnyVR.LobbySystem
                 Scheme = ConnectionManager.Instance.UseSecureProtocol ? "wss" : "ws"
             }.Uri;
 
-            LiveKitConnectionResult success = await _liveKitClient.Connect(voicechatUri.ToString(), response.token);
+            LiveKitConnectionResult result = await _liveKitClient.Connect(voicechatUri.ToString(), response.token);
+
+            if (result == LiveKitConnectionResult.Connected)
+            {
+                _liveKitClient.OnActiveSpeakerChanged += OnActiveSpeakerChanged;
+                _liveKitClient.OnParticipantConnected += OnParticipantConnected;
+                _liveKitClient.OnParticipantDisconnected += OnParticipantDisconnected;
+            }
 
             // Map LiveKitConnectionResult from the voicechat assembly to public VoiceConnectionResult form lobby assembly
-            return success switch
+            return result switch
             {
                 LiveKitConnectionResult.Connected => VoiceConnectionResult.Connected,
                 LiveKitConnectionResult.Timeout => VoiceConnectionResult.Timeout,

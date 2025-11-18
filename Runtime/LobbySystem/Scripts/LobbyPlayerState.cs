@@ -5,7 +5,7 @@ using FishNet.Object.Synchronizing;
 namespace AnyVR.LobbySystem
 {
     /// <summary>
-    ///     Represents the state of a player inside a lobby.
+    ///     Represents the state of a player in a specific lobby.
     ///     Only replicated to players in the same lobby.
     ///     Inherit from this class to add additional synchronized properties as needed.
     ///     By default, contains a field with the id of the lobby and if the player is an admin in the lobby.
@@ -25,6 +25,16 @@ namespace AnyVR.LobbySystem
             _playerAvatar = avatar;
         }
 
+        internal void SetIsSpeaking(bool isSpeaking)
+        {
+            _isSpeaking.Value = isSpeaking;
+        }
+
+        internal void SetIsConnectedToVoice(bool b)
+        {
+            _isConnectedToVoice.Value = b;
+        }
+
 #region Replicated Properties
 
         private readonly SyncVar<Guid> _lobbyId = new(Guid.Empty);
@@ -35,6 +45,17 @@ namespace AnyVR.LobbySystem
         // TODO add player avatar class
 
 #endregion
+
+#region Private Properties
+
+        // Not replicated via fishnet but updated by the local player controller
+        private readonly ObservedVar<bool> _isSpeaking = new();
+
+        // Not replicated via fishnet but updated by the local player controller
+        private readonly ObservedVar<bool> _isConnectedToVoice = new();
+
+#endregion
+
 
 #region Public API
 
