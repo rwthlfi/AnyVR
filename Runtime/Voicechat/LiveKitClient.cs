@@ -15,6 +15,7 @@ namespace AnyVR.Voicechat
         }
 
         public abstract void Dispose();
+        
         internal abstract Task<MicrophonePublishResult> PublishMicrophone(string deviceName);
 
         internal abstract void UnpublishMicrophone();
@@ -63,7 +64,7 @@ namespace AnyVR.Voicechat
 #endif
 
 #if UNITY_WEBGL
-            LiveKitClient liveKitClient = go.AddComponent<WebGLVoiceChatClient>();
+            LiveKitClient liveKitClient = go.AddComponent<WebGLVoicechatClient>();
             Logger.Log(LogLevel.Verbose, nameof(LiveKitClient),"VoiceChatManager initialized. Platform: WEBGL");
 #elif UNITY_STANDALONE // && !UNITY_EDITOR
             LiveKitClient liveKitClient = go.AddComponent<StandaloneLiveKitClient>();

@@ -7,7 +7,6 @@ using FishNet.Managing.Scened;
 using FishNet.Managing.Timing;
 using FishNet.Transporting;
 using FishNet.Transporting.Multipass;
-using FishNet.Transporting.Tugboat;
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -163,9 +162,9 @@ namespace AnyVR.LobbySystem
 
             Multipass mp = GetComponent<Multipass>();
 #if UNITY_WEBGL
-            mp.SetClientTransport<Bayou>();
+            mp.SetClientTransport<FishNet.Transporting.Bayou.Bayou>();
 #else
-            mp.SetClientTransport<Tugboat>();
+            mp.SetClientTransport<FishNet.Transporting.Tugboat.Tugboat>();
 #endif
 
 #if UNITY_EDITOR && UNITY_SERVER
@@ -253,7 +252,7 @@ namespace AnyVR.LobbySystem
 
             m.SetClientAddress(FishnetServer.Host);
             m.SetPort(FishnetServer.Port);
-            // m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol); //TODO
+            m.GetTransport<FishNet.Transporting.Bayou.Bayou>().SetUseWSS(UseSecureProtocol);
 
             Task<ConnectionStatus> task = _connectionAwaiter.WaitForResult(timeout);
             _networkManager.ClientManager.StartConnection();
@@ -276,7 +275,6 @@ namespace AnyVR.LobbySystem
         private async Task<((string host, ushort port), Uri liveKitVoiceServer)?> FetchServerAddresses(Uri tokenServerUri)
         {
             UseSecureProtocol = tokenServerUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
-
 
             Uri requestUri = new(tokenServerUri, "requestServerIp");
             Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Requesting server ip from '{requestUri}'");

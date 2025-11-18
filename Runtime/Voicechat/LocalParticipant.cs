@@ -11,7 +11,7 @@ namespace AnyVR.Voicechat
 
         public bool IsMicEnabled { get; protected set; }
 
-        public void PublishMicrophone(string deviceName)
+        public void PublishMicrophone(string deviceName = null)
         {
             _client.PublishMicrophone(deviceName);
         }

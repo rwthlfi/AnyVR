@@ -1,58 +1,64 @@
-#if UNITY_WEBGL && !UNITY_EDITOR
-using AnyVR.Logging;
+#if UNITY_WEBGL
 using LiveKit;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using Logger = AnyVR.Logging.Logger;
 using LogLevel = AnyVR.Logging.LogLevel;
 
 namespace AnyVR.Voicechat
 {
-    internal class WebGLVoicechatClient : VoicechatClient
+    internal class WebGLVoicechatClient : LiveKitClient
     {
-        private const string Tag = nameof(WebGLVoicechatClient);
         private Room _room;
-        internal override event Action<Participant> ParticipantConnected;
-        internal override event Action<string> ParticipantDisconnected;
-        internal override event Action ConnectedToRoom;
-        internal override event Action<string> VideoReceived;
+        
+        private bool _isConnected;
 
-        internal override void Init()
+        public override void Dispose()
+        {
+            _room.Disconnect();
+        }
+        
+        // Ignores device name
+        internal override Task<MicrophonePublishResult> PublishMicrophone(string deviceName)
+        {
+            _room.LocalParticipant.SetMicrophoneEnabled(true);
+            return Task.FromResult(MicrophonePublishResult.Published);
+        }
+        
+        internal override void UnpublishMicrophone()
+        {
+            _room.LocalParticipant.SetMicrophoneEnabled(false);
+        }
+
+        protected override void Init()
         {
             _room = new Room();
+            
             _room.ParticipantConnected += participant =>
             {
-                Logger.Log(LogLevel.Verbose, Tag, $"Participant Connected! Name: {participant.Identity}");
-                Remotes.Add(participant.Sid, new Participant(participant.Sid, participant.Identity));
-                ParticipantConnected?.Invoke(Remotes[participant.Sid]);
+                Logger.Log(LogLevel.Verbose, nameof(WebGLVoicechatClient), $"Participant Connected! Name: {participant.Identity}");
+                Remotes.Add(participant.Identity, new RemoteParticipant(participant.Sid, participant.Identity, participant.Name));
+                OnParticipantConnected?.Invoke(Remotes[participant.Identity]);
             };
+            
             _room.ParticipantDisconnected += participant =>
             {
-                Logger.Log(LogLevel.Verbose, Tag, $"Participant Disconnected! Name: {participant.Identity}");
-                ParticipantDisconnected?.Invoke(participant.Sid);
+                Logger.Log(LogLevel.Verbose, nameof(WebGLVoicechatClient), $"Participant Disconnected! Name: {participant.Identity}");
+                OnParticipantDisconnected?.Invoke(participant.Identity);
             };
+            
             _room.TrackSubscribed += (track, _, participant) =>
             {
-                Logger.Log(LogLevel.Verbose, Tag, $"Track Subscribed! Participant: {participant.Identity}, Kind: {track.Kind}");
+                Logger.Log(LogLevel.Verbose, nameof(WebGLVoicechatClient), $"Track Subscribed! Participant: {participant.Identity}, Kind: {track.Kind}");
                 switch (track.Kind)
                 {
                     case TrackKind.Video:
                         {
-                            HTMLVideoElement video = track.Attach() as HTMLVideoElement;
-                            video!.VideoReceived += tex =>
-                            {
-                                Logger.Log(LogLevel.Verbose, Tag, "video test" + tex.format);
-                                // VideoReceived is called every time the video resolution changes
-                                Logger.Log(LogLevel.Verbose, Tag, 
-                                    $"Sid: {participant.Sid}, Remotes: {string.Join('|', Remotes.Keys.ToArray())}");
-                                Remotes[participant.Sid].VideoTexture = tex;
-
-                                VideoReceived?.Invoke(participant.Sid);
-                            };
-                            break;
+                            throw new NotImplementedException();
                         }
                     case TrackKind.Audio:
                         track.Attach(); // attaching an audio track suffices to play the audio 
@@ -65,38 +71,39 @@ namespace AnyVR.Voicechat
             };
             _room.TrackPublished += (_, participant) =>
             {
-                Logger.Log(LogLevel.Verbose, Tag, $"Track Published! Participant: {participant.Identity}");
+                Logger.Log(LogLevel.Verbose, nameof(WebGLVoicechatClient), $"Track Published! Participant: {participant.Identity}");
             };
             _room.ActiveSpeakersChanged += speakers =>
             {
-                HashSet<string> sids = speakers.Select(speaker => speaker.Sid).ToHashSet();
-                UpdateActiveSpeakers(sids);
+                OnActiveSpeakerChanged?.Invoke(speakers.Select(participant => Remotes.GetValueOrDefault(participant.Identity)).Where(remote => remote != null));
             };
-            _room.LocalTrackPublished += (_, _) => { Logger.Log(LogLevel.Verbose, Tag, "Local Track Published!"); };
-            _room.Disconnected += _ => Connected = false;
+            _room.LocalTrackPublished += (_, _) => { Logger.Log(LogLevel.Verbose, nameof(WebGLVoicechatClient), "Local Track Published!"); };
 
-            Logger.Log(LogLevel.Verbose, Tag, "WebGLVoicechatClient initialized!");
+            _room.Disconnected += _ =>
+            {
+                _isConnected = false;
+            };
+
+            Logger.Log(LogLevel.Verbose, nameof(WebGLVoicechatClient), "WebGLVoicechatClient initialized!");
         }
+        
+        public override bool IsConnected => _isConnected;
 
-
-        internal override void Connect(string address, string token)
+        public override Task<LiveKitConnectionResult> Connect(string address, string token)
         {
+            Task<LiveKitConnectionResult> result = ConnectionAwaiter.WaitForResult();
             StartCoroutine(Co_Connect(address, token));
+            return result;
         }
 
-        internal override void Disconnect()
+        public override void Disconnect()
         {
             _room.Disconnect();
         }
-
-        internal override void SetActiveMicrophone(string micName)
-        {
-        }
         
-        public override string GetRoomName()
-        {
-            return _room.Name;
-        }
+        public override event Action<RemoteParticipant> OnParticipantConnected;
+        public override event Action<string> OnParticipantDisconnected;
+        public override event Action<IEnumerable<RemoteParticipant>> OnActiveSpeakerChanged;
 
         private IEnumerator Co_Connect(string address, string token)
         {
@@ -110,33 +117,17 @@ namespace AnyVR.Voicechat
             }
             else
             {
-                Logger.Log(LogLevel.Verbose, Tag, "Successfully connected to LiveKit room!");
-                Connected = true;
+                Logger.Log(LogLevel.Verbose, nameof(WebGLVoicechatClient), "Successfully connected to LiveKit room!");
 
-                LocalParticipant = new Participant(_room.LocalParticipant.Sid, _room.LocalParticipant.Identity);
-                foreach (RemoteParticipant remote in _room.RemoteParticipants.Values)
+                LocalParticipant = new LocalParticipant(this, _room.LocalParticipant.Sid, _room.LocalParticipant.Identity, _room.LocalParticipant.Name);
+                foreach (LiveKit.RemoteParticipant remote in _room.RemoteParticipants.Values)
                 {
-                    Remotes.Add(remote.Sid, new Participant(remote.Sid, remote.Identity));
+                    Remotes.Add(remote.Identity, new RemoteParticipant(remote.Sid, remote.Identity, remote.Name));
                 }
 
-                Connected = true;
-                ConnectedToRoom?.Invoke();
+                _isConnected = true;
+                ConnectionAwaiter.Complete(LiveKitConnectionResult.Connected);
             }
-        }
-
-        internal override void SetClientMute(string sid, bool mute)
-        {
-            if (_room.RemoteParticipants.TryGetValue(sid, out RemoteParticipant remote))
-            {
-                remote.SetVolume(mute ? 0 : 1);
-            }
-        }
-
-        internal override void SetMicrophoneEnabled(bool b)
-        {
-            IsMicEnabled = b;
-            Logger.Log(LogLevel.Verbose, Tag, $"Setting microphone state: {(b ? "enabled" : "disabled")}");
-            _room.LocalParticipant.SetMicrophoneEnabled(b);
         }
     }
 }
