@@ -51,7 +51,7 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 0}
   _gameStatePrefab: {fileID: 5453082942033962944, guid: 6e6479a9ba502c354b129a82ccf5af6b, type: 3}
   _playerStatePrefab: {fileID: 3207414219965831246, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
-  _playerControllerPrefab: {fileID: 8759174644159321255, guid: ec0acb6b4b9c67189b170d5585b1cdc6, type: 3}
+  _playerControllerPrefab: {fileID: 8542949045221009858, guid: ec0acb6b4b9c67189b170d5585b1cdc6, type: 3}
 --- !u!114 &9052915785183046015
 MonoBehaviour:
   m_ObjectHideFlags: 0
