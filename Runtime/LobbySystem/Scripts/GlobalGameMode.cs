@@ -1,5 +1,9 @@
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    ///     Override this class to implement server-side gameplay logic on the server.
+    ///     <seealso cref="GameModeBase" />
+    /// </summary>
     public class GlobalGameMode : GameModeBase
     {
         public override void OnStartServer()

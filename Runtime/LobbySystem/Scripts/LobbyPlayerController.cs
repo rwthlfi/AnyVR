@@ -6,7 +6,12 @@ using UnityEngine.Serialization;
 namespace AnyVR.LobbySystem
 {
     /// <summary>
-    ///     TODO
+    ///     Represents the controller of a specific player in a lobby.
+    ///     Each instance of this component is owned by the corresponding player and is only replicated to that player.
+    ///     The LobbyPlayerController can be used to invoke operations on the server by sending RPCs.
+    ///     Override and RPCs as needed. Each lobby can be configured with its own custom lobby player controller.
+    ///     The default implementation exposes some client-side lobby actions (promote, kick, leave, etc.).
+    ///     Also manages voice–chat integration via the <see cref="VoiceChatClient" />.
     /// </summary>
     public partial class LobbyPlayerController : PlayerController
     {

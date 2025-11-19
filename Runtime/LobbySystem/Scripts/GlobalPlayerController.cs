@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
@@ -10,7 +9,11 @@ using UnityEngine.Assertions;
 namespace AnyVR.LobbySystem
 {
     /// <summary>
-    ///     TODO
+    ///     Represents the controller of a specific player on the server.
+    ///     Each instance of this component is owned by the corresponding player and is only replicated to that player.
+    ///     The GlobalPlayerController can be used to invoke operations on the server by sending RPCs.
+    ///     Override and RPCs as needed.
+    ///     The default implementation exposes some client-side actions to create and join lobbies.
     /// </summary>
     public partial class GlobalPlayerController : PlayerController
     {
@@ -19,8 +22,6 @@ namespace AnyVR.LobbySystem
         private TaskCompletionSource<CreateLobbyResult> _createLobbyTcs;
 
         private TaskCompletionSource<JoinLobbyResult> _joinLobbyTcs;
-
-        public static GlobalPlayerController Instance { get; private set; }
 
         public override void OnStartClient()
         {
@@ -126,6 +127,13 @@ namespace AnyVR.LobbySystem
 #region Public API
 
         /// <summary>
+        ///     The GlobalPlayerController of the local player.
+        ///     Is not <c>null</c> if the local client is connected to a server.
+        ///     Is <c>null</c> on the server.
+        /// </summary>
+        public static GlobalPlayerController Instance { get; private set; }
+
+        /// <summary>
         ///     Updates the player's name.
         ///     Does not succeed if this is not the local player's global state.
         /// </summary>
@@ -151,7 +159,7 @@ namespace AnyVR.LobbySystem
         public async Task<CreateLobbyResult> CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMeta, ushort maxClients)
         {
             CreateLobbyResult result = await Client_CreateLobby(lobbyName, password, sceneMeta, maxClients);
-            LogCreateLobbyResult(result);
+            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
             return result;
         }
 
@@ -175,7 +183,7 @@ namespace AnyVR.LobbySystem
         public async Task<JoinLobbyResult> JoinLobby(Guid lobbyId, string password = null)
         {
             JoinLobbyResult result = await Client_JoinLobby(() => ServerRPC_JoinLobby(lobbyId, password));
-            LogJoinLobbyResult(result);
+            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
             return result;
         }
 
@@ -188,7 +196,7 @@ namespace AnyVR.LobbySystem
         public async Task<JoinLobbyResult> QuickConnect(string quickConnectCode)
         {
             JoinLobbyResult result = await Client_QuickConnect(quickConnectCode);
-            LogJoinLobbyResult(result);
+            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
             return result;
         }
 
@@ -209,28 +217,6 @@ namespace AnyVR.LobbySystem
         internal void ObserverRPC_OnJoinLobbyResult(JoinLobbyResult result)
         {
             _joinLobbyTcs?.TrySetResult(result);
-        }
-
-#endregion
-
-#region Logs
-
-        [Conditional("ANY_VR_LOG")]
-        private static void LogJoinLobbyResult(JoinLobbyResult result)
-        {
-            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
-        }
-
-        [Conditional("ANY_VR_LOG")]
-        private static void LogCreateLobbyResult(CreateLobbyResult result)
-        {
-            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
-        }
-
-        [Conditional("ANY_VR_LOG")]
-        private static void LogPlayerNameUpdateResult(PlayerNameUpdateResult result)
-        {
-            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
         }
 
 #endregion

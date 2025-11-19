@@ -20,7 +20,7 @@ namespace AnyVR.LobbySystem
         {
             PlayerNameUpdateResult result = SetName_Internal(playerName);
 
-            LogPlayerNameUpdateResult(result);
+            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
 
             TargetRPC_OnNameChange(Owner, result);
 

@@ -9,6 +9,13 @@ using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    ///     Base class for game mode. Is only enabled on the server and is therefore server authoritative.
+    ///     Spawns and despawns player states and player controllers on the server.
+    ///     Also spawns the configured game state.
+    ///     <seealso cref="GlobalGameMode" />
+    ///     <seealso cref="LobbyGameMode" />
+    /// </summary>
     public abstract class GameModeBase : NetworkBehaviour
     {
         public override void OnStartServer()
@@ -19,6 +26,7 @@ namespace AnyVR.LobbySystem
             ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
             SceneManager.OnClientPresenceChangeEnd += OnClientPresenceChangeEnd;
         }
+
         private void OnClientPresenceChangeEnd(ClientPresenceChangeEventArgs args)
         {
             if (args.Scene != gameObject.scene)

@@ -11,6 +11,12 @@ using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
+    /// <summary>
+    ///     Override this class to implement server-side gameplay logic of a lobby.
+    ///     Each lobby can be configured with its own custom LobbyGameMode.
+    ///     Manages the lobby lifecycle, closing inactive lobbies, and automatically expiring lobbies at a set time.
+    ///     <seealso cref="GameModeBase" />
+    /// </summary>
     public class LobbyGameMode : GameModeBase
     {
         private readonly SyncVar<Guid> _lobbyId = new();
