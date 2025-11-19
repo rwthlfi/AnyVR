@@ -89,6 +89,8 @@ namespace AnyVR.Voicechat
         
         public override bool IsConnected => _isConnected;
 
+        public override bool IsMicPublished => IsConnected && _room.LocalParticipant.IsMicrophoneEnabled;
+        
         public override Task<LiveKitConnectionResult> Connect(string address, string token)
         {
             Task<LiveKitConnectionResult> result = ConnectionAwaiter.WaitForResult();
