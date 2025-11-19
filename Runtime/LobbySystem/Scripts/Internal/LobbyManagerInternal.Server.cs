@@ -30,6 +30,9 @@ namespace AnyVR.LobbySystem.Internal
                 return;
             }
 
+            Assert.IsNotNull(GlobalGameState.Instance.LobbyConfiguration);
+            Assert.IsNotNull(GlobalGameState.Instance.LobbyConfiguration.LobbyScenes);
+            
             LobbySceneMetaData scene = GlobalGameState.Instance.LobbyConfiguration.LobbyScenes.FirstOrDefault(s => s.ID == sceneId);
             if (scene == null)
             {
