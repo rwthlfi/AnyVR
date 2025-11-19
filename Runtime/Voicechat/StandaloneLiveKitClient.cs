@@ -18,6 +18,8 @@ namespace AnyVR.Voicechat
     {
         public override bool IsConnected => _room is { IsConnected: true };
 
+        public override bool IsMicPublished => IsConnected && _room.LocalParticipant.Tracks.Any(pair => pair.Value.Track is LocalAudioTrack);
+
         protected override void Init()
         {
             _room = new Room();
@@ -106,7 +108,6 @@ namespace AnyVR.Voicechat
             {
                 Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), $"Published audio track! Active microphone: {_activeMicName}");
                 _audioSource.Start();
-                IsMicPublished = true;
                 TrackPublishResult.Complete(MicrophonePublishResult.Published);
             }
         }
@@ -116,7 +117,6 @@ namespace AnyVR.Voicechat
             _room.LocalParticipant.UnpublishTrack(_audioTrack, true);
             _audioSource.Dispose();
             _audioSource = null;
-            IsMicPublished = false;
             Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), "Local audio track unpublished.");
         }
 

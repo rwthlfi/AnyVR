@@ -15,7 +15,7 @@ namespace AnyVR.Voicechat
         }
 
         public abstract void Dispose();
-        
+
         internal abstract Task<MicrophonePublishResult> PublishMicrophone(string deviceName);
 
         internal abstract void UnpublishMicrophone();
@@ -42,7 +42,7 @@ namespace AnyVR.Voicechat
 
         public LocalParticipant LocalParticipant { get; protected set; }
 
-        public bool IsMicPublished { get; protected set; }
+        public abstract bool IsMicPublished { get; }
 
         public void SetAudioObjectMapping(Func<string, AudioSource> audioSourceMap)
         {

@@ -26,16 +26,25 @@ namespace AnyVR.LobbySystem
             _controller = controller;
         }
 
-        public bool IsConnected => _liveKitClient.IsConnected;
-
-        public bool IsMicrophonePublished => _liveKitClient.IsMicPublished;
-
         internal event Action<IEnumerable<RemoteParticipant>> OnActiveSpeakerChanged;
 
         internal event Action<RemoteParticipant> OnParticipantConnected;
 
         internal event Action<string> OnParticipantDisconnected;
 
+#region Public API
+
+        public bool IsConnected => _liveKitClient.IsConnected;
+
+        public bool IsMicrophonePublished => _liveKitClient != null && _liveKitClient.IsMicPublished;
+
+        /// <summary>
+        ///     Connects the local player to the LiveKit voice room of the player's lobby.
+        ///     Requests a LiveKit token from the token server before connecting to the LiveKit server.
+        /// </summary>
+        /// <returns>
+        ///     A <see cref="VoiceConnectionResult" /> indicating the result of the connection attempt.
+        /// </returns>
         [Client]
         public async Task<VoiceConnectionResult> ConnectToRoom()
         {
@@ -109,16 +118,37 @@ namespace AnyVR.LobbySystem
             };
         }
 
-        public void PublishMicrophone(string device)
+        /// <summary>
+        ///     Publishes the microphone to the LiveKit server.
+        ///     On WebGL builds, the microphone device has to be set in the browser permissions and the <c>device</c> parameter
+        ///     will be ignored.
+        /// </summary>
+        /// <param name="device">
+        ///     A valid microphone device is one from <c>Microphone.devices</c>. Pass <c>null</c> for the default
+        ///     device.
+        /// </param>
+        public void PublishMicrophone(string device = null)
         {
             _liveKitClient.LocalParticipant.PublishMicrophone(device);
         }
 
+        /// <summary>
+        ///     Sets the playback volume for a remote player's audio stream.
+        ///     The volume is clamped to the range [0, 1].
+        /// </summary>
+        /// <param name="player">The player state of the remote player whose audio volume should be adjusted.</param>
+        /// <param name="volume">The desired volume level, where 0 is silent and 1 is full volume.</param>
         public void SetPlayerVolume(LobbyPlayerState player, float volume)
         {
             SetPlayerVolume(player.ID, volume);
         }
 
+        /// <summary>
+        ///     Sets the playback volume for a remote player's audio stream.
+        ///     The volume is clamped to the range [0, 1].
+        /// </summary>
+        /// <param name="playerID">The (fishnet) clientId of the remote player whose audio volume should be adjusted.</param>
+        /// <param name="volume">The desired volume level, where 0 is silent and 1 is full volume.</param>
         public void SetPlayerVolume(int playerID, float volume)
         {
             RemoteParticipant remoteParticipant = _liveKitClient.RemoteParticipants[playerID.ToString()];
@@ -129,15 +159,23 @@ namespace AnyVR.LobbySystem
             source.volume = Math.Clamp(volume, 0, 1);
         }
 
+        /// <summary>
+        ///     Unpublishes the microphone's audio track.
+        /// </summary>
         public void UnpublishMicrophone()
         {
             _liveKitClient.LocalParticipant.UnpublishMicrophone();
         }
 
+        /// <summary>
+        ///     Disconnects from the LiveKit room and destroys the LiveKit client.
+        /// </summary>
         public void DisconnectFromLiveKitRoom()
         {
             // LiveKitClient disconnects automatically on destroy
             Object.Destroy(_liveKitClient);
         }
+
+#endregion
     }
 }
