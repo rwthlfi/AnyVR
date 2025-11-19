@@ -6,7 +6,9 @@ using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Managing.Timing;
 using FishNet.Transporting;
+using FishNet.Transporting.Bayou;
 using FishNet.Transporting.Multipass;
+using FishNet.Transporting.Tugboat;
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -164,7 +166,7 @@ namespace AnyVR.LobbySystem
 #if UNITY_WEBGL
             mp.SetClientTransport<FishNet.Transporting.Bayou.Bayou>();
 #else
-            mp.SetClientTransport<FishNet.Transporting.Tugboat.Tugboat>();
+            mp.SetClientTransport<Tugboat>();
 #endif
 
 #if UNITY_EDITOR && UNITY_SERVER
@@ -252,7 +254,7 @@ namespace AnyVR.LobbySystem
 
             m.SetClientAddress(FishnetServer.Host);
             m.SetPort(FishnetServer.Port);
-            m.GetTransport<FishNet.Transporting.Bayou.Bayou>().SetUseWSS(UseSecureProtocol);
+            m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol);
 
             Task<ConnectionStatus> task = _connectionAwaiter.WaitForResult(timeout);
             _networkManager.ClientManager.StartConnection();
