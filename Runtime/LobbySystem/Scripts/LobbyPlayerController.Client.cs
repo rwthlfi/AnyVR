@@ -90,7 +90,7 @@ namespace AnyVR.LobbySystem
                 }
             }
 
-            // Map LiveKitConnectionResult from the voicechat assembly to public VoiceConnectionResult form lobby assembly
+            // Map LiveKitConnectionResult from the voicechat assembly to public VoiceConnectionResult
             return result switch
             {
                 LiveKitConnectionResult.Connected => VoiceConnectionResult.Connected,

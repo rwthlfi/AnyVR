@@ -21,6 +21,7 @@ namespace AnyVR.LobbySystem
         private readonly SyncVar<string> _playerName = new("null");
 
         private readonly SyncVar<PlatformType> _platformType = new(PlatformType.Unknown);
+
         public static GlobalPlayerState LocalPlayer => GlobalGameState.Instance.GetPlayerState(InstanceFinder.ClientManager.Connection.ClientId);
 
 #endregion

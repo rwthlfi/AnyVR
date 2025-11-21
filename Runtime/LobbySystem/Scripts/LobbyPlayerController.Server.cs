@@ -11,7 +11,6 @@ namespace AnyVR.LobbySystem
         public override void OnStartServer()
         {
             base.OnStartServer();
-            Debug.Log("OnStartServer. Spawning Avatar");
             SpawnAvatar();
         }
 
@@ -28,7 +27,6 @@ namespace AnyVR.LobbySystem
             GetPlayerState<LobbyPlayerState>().SetAvatar(nob);
             Spawn(nob, Owner, gameObject.scene);
         }
-
 
 #region RPCs
 

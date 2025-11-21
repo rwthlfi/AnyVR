@@ -30,12 +30,17 @@ namespace AnyVR.Sample
         {
             Assert.IsNotNull(_uiSessionPanel);
             _uiSessionPanel.gameObject.SetActive(false);
+    #if UNITY_WEBGL
+            _microphoneDropdown.gameObject.SetActive(false);
+    #else
             _microphoneDropdown.options = Microphone.devices.Select(mic => new TMP_Dropdown.OptionData(mic)).ToList();
             _microphoneDropdown.onValueChanged.AddListener(_ => ChangeMicrophone());
+    #endif
             _publishMicButton.GetComponentInChildren<TextMeshProUGUI>().text = "Publish Mic";
             _publishMicButton.onClick.AddListener(ToggleMicPublished);
             _muteButton.onClick.AddListener(ToggleMicMuted);
             _muteButton.GetComponentInChildren<TextMeshProUGUI>().text = "Mute Mic";
+            _leaveButton.onClick.AddListener(LobbyPlayerController.Instance.LeaveLobby);
         }
 
         private void Update()

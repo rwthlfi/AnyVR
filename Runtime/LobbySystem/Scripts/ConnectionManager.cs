@@ -8,11 +8,9 @@ using FishNet.Managing.Timing;
 using FishNet.Transporting;
 using FishNet.Transporting.Bayou;
 using FishNet.Transporting.Multipass;
-using FishNet.Transporting.Tugboat;
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
 using UnityEngine.Assertions;
-// using FishNet.Transporting.Bayou;
 using Logger = AnyVR.Logging.Logger;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
@@ -29,7 +27,7 @@ namespace AnyVR.LobbySystem
     {
         private static async Task WaitUntilClientStarted()
         {
-            TimeSpan timeout = TimeSpan.FromSeconds(3);
+            TimeSpan timeout = TimeSpan.FromSeconds(10);
             DateTime start = DateTime.UtcNow;
             while (GlobalPlayerController.Instance == null || !GlobalPlayerController.Instance.IsClientStarted ||
                    GlobalPlayerState.LocalPlayer == null || !GlobalPlayerState.LocalPlayer.IsClientStarted)
@@ -39,7 +37,7 @@ namespace AnyVR.LobbySystem
                     return;
                 }
 
-                await Task.Delay(10);
+                await Task.Yield();
             }
         }
 
@@ -164,7 +162,7 @@ namespace AnyVR.LobbySystem
 
             Multipass mp = GetComponent<Multipass>();
 #if UNITY_WEBGL
-            mp.SetClientTransport<FishNet.Transporting.Bayou.Bayou>();
+            mp.SetClientTransport<Bayou>();
 #else
             mp.SetClientTransport<Tugboat>();
 #endif

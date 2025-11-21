@@ -57,10 +57,6 @@ namespace AnyVR.Voicechat
             }
         }
 
-        internal abstract bool IsLocalMicPublished { get; }
-
-        internal abstract bool IsLocalMicMuted { get; }
-
         public void SetAudioObjectMapping(Func<string, AudioSource> audioSourceMap)
         {
             AudioSourceMap = audioSourceMap;
@@ -92,7 +88,7 @@ namespace AnyVR.Voicechat
 
 #if UNITY_WEBGL
             LiveKitClient liveKitClient = go.AddComponent<WebGLVoicechatClient>();
-            Logger.Log(LogLevel.Verbose, nameof(LiveKitClient),"VoiceChatManager initialized. Platform: WEBGL");
+            Logger.Log(LogLevel.Verbose, nameof(LiveKitClient), "VoiceChatManager initialized. Platform: WEBGL");
 #elif UNITY_STANDALONE // && !UNITY_EDITOR
             LiveKitClient liveKitClient = go.AddComponent<StandaloneLiveKitClient>();
             Logger.Log(LogLevel.Verbose, nameof(LiveKitClient), "VoiceChatManager initialized. Platform: STANDALONE");

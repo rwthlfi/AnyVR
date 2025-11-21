@@ -1999,6 +1999,10 @@ PrefabInstance:
       value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5808065475186452488, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
+      propertyPath: _logging
+      value: 
+      objectReference: {fileID: 11400000, guid: 7f0ee3bb74bdd8cc298660cbf92d1c8f, type: 2}
+    - target: {fileID: 5808065475186452488, guid: 3e68ea088354fe955830d12d0d831c21, type: 3}
       propertyPath: _spawnablePrefabs
       value: 
       objectReference: {fileID: 11400000, guid: c4dddc0eb86df83588bb6e63d5d958a2, type: 2}

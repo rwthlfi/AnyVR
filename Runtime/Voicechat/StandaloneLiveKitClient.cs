@@ -18,10 +18,6 @@ namespace AnyVR.Voicechat
     {
         public override bool IsConnected => _room is { IsConnected: true };
 
-        internal override bool IsLocalMicPublished => IsConnected && _audioTrack != null;
-
-        internal override bool IsLocalMicMuted => IsLocalMicPublished && _audioTrack is { Muted: true };
-
         protected override void Init()
         {
             _room = new Room();
