@@ -18,7 +18,9 @@ namespace AnyVR.Voicechat
     {
         public override bool IsConnected => _room is { IsConnected: true };
 
-        public override bool IsMicPublished => IsConnected && _room.LocalParticipant.Tracks.Any(pair => pair.Value.Track is LocalAudioTrack);
+        internal override bool IsLocalMicPublished => IsConnected && _audioTrack != null;
+
+        internal override bool IsLocalMicMuted => IsLocalMicPublished && _audioTrack is { Muted: true };
 
         protected override void Init()
         {
@@ -44,10 +46,43 @@ namespace AnyVR.Voicechat
                 OnTrackSubscribed(track, publication, participant);
             };
 
+            _room.TrackUnsubscribed += (track, publication, participant) =>
+            {
+                Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), $"Track Unsubscribed! Participant: {participant.Identity}, Kind: {track.Kind}");
+                OnTrackUnsubscribed(track, publication, participant);
+            };
+
             _room.ActiveSpeakersChanged += speakers =>
             {
-                OnActiveSpeakerChanged?.Invoke(speakers.Select(participant => Remotes.GetValueOrDefault(participant.Identity)).Where(remote => remote != null));
+                OnActiveSpeakerChange(speakers.Select(p => p is LiveKit.LocalParticipant ? (Participant)LocalParticipant : Remotes.GetValueOrDefault(p.Identity)).Where(p => p is not null).ToHashSet());
             };
+
+            _room.LocalTrackPublished += (publication, participant) =>
+            {
+                LocalParticipant.SetIsMicPublished(true);
+            };
+
+            _room.LocalTrackUnpublished += (publication, participant) =>
+            {
+                LocalParticipant.SetIsMicPublished(false);
+            };
+
+            _room.TrackMuted += OnTrackMuteChange;
+
+            _room.TrackUnmuted += OnTrackMuteChange;
+        }
+
+        private void OnTrackMuteChange(TrackPublication publication, LiveKit.Participant participant)
+        {
+            Debug.Log($"OnTrackMuteChange: {publication.Muted}");
+            if (participant is LiveKitRemoteParticipant)
+            {
+                Remotes[participant.Identity].SetIsMicMuted(publication.Muted);
+            }
+            else if (participant is LiveKit.LocalParticipant)
+            {
+                LocalParticipant.SetIsMicMuted(publication.Muted);
+            }
         }
 
         public override Task<LiveKitConnectionResult> Connect(string address, string token)
@@ -108,6 +143,7 @@ namespace AnyVR.Voicechat
             {
                 Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), $"Published audio track! Active microphone: {_activeMicName}");
                 _audioSource.Start();
+                _audioTrack = track;
                 TrackPublishResult.Complete(MicrophonePublishResult.Published);
             }
         }
@@ -117,12 +153,21 @@ namespace AnyVR.Voicechat
             _room.LocalParticipant.UnpublishTrack(_audioTrack, true);
             _audioSource.Dispose();
             _audioSource = null;
+            _audioTrack = null;
             Logger.Log(LogLevel.Verbose, nameof(StandaloneLiveKitClient), "Local audio track unpublished.");
         }
 
         public override void Disconnect()
         {
             _room.Disconnect();
+        }
+
+        internal override void SetMute(bool mute)
+        {
+            if (_audioTrack is ILocalTrack track)
+            {
+                track.SetMute(mute);
+            }
         }
 
         private IEnumerator Co_Connect(string address, string token)
@@ -164,11 +209,21 @@ namespace AnyVR.Voicechat
                         return;
                     }
 
-                    audioSource.Stop();
                     AudioStream audioStream = new(audioTrack, audioSource);
+                    Remotes[participant.Identity].SetAudioStream(audioStream);
                     Remotes[participant.Identity].SetAudioSource(audioSource);
                     break;
             }
+        }
+
+        private void OnTrackUnsubscribed(IRemoteTrack track, RemoteTrackPublication publication, LiveKitRemoteParticipant participant)
+        {
+            RemoteParticipant remote = Remotes[participant.Identity];
+            AudioSource audioSource = remote.GetAudioSource();
+            remote.GetAudioStream().Dispose();
+            remote.SetAudioSource(null);
+            remote.SetAudioStream(null);
+            Destroy(audioSource);
         }
 
 #region Private Fields
@@ -187,7 +242,6 @@ namespace AnyVR.Voicechat
 
         public override event Action<RemoteParticipant> OnParticipantConnected;
         public override event Action<string> OnParticipantDisconnected;
-        public override event Action<IEnumerable<RemoteParticipant>> OnActiveSpeakerChanged;
 
         public override void Dispose()
         {

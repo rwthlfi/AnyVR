@@ -30,6 +30,16 @@ namespace AnyVR.LobbySystem
             _isSpeaking.Value = isSpeaking;
         }
 
+        internal void SetIsMicrophonePublished(bool isPublished)
+        {
+            _isMicrophonePublished.Value = isPublished;
+        }
+
+        internal void SetIsMicrophoneMuted(bool isMuted)
+        {
+            _isMicrophoneMuted.Value = isMuted;
+        }
+
         internal void SetIsConnectedToVoice(bool b)
         {
             _isConnectedToVoice.Value = b;
@@ -49,10 +59,16 @@ namespace AnyVR.LobbySystem
 #region Private Properties
 
         // Not replicated via fishnet but updated by the local player controller
-        private readonly ObservedVar<bool> _isSpeaking = new();
+        private readonly ObservedVar<bool> _isConnectedToVoice = new();
 
         // Not replicated via fishnet but updated by the local player controller
-        private readonly ObservedVar<bool> _isConnectedToVoice = new();
+        private readonly ObservedVar<bool> _isMicrophonePublished = new();
+
+        // Not replicated via fishnet but updated by the local player controller
+        private readonly ObservedVar<bool> _isMicrophoneMuted = new();
+
+        // Not replicated via fishnet but updated by the local player controller
+        private readonly ObservedVar<bool> _isSpeaking = new();
 
 #endregion
 

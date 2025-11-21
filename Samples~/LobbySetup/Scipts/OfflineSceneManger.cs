@@ -10,8 +10,15 @@ namespace AnyVR.Sample
 {
     public class OfflineSceneManger : MonoBehaviour
     {
+#region UI Fields
+
+        // Maps each lobby to an ui element
+        private Dictionary<Guid, LobbyUIEntry> _lobbyUIEntries;
+
+#endregion
+
 #region Serialized Fields
-        
+
         [Header("UI/Connection Panel")]
         [SerializeField] private Button _connectBtn;
 
@@ -43,25 +50,18 @@ namespace AnyVR.Sample
 
 #endregion
 
-#region UI Fields
-
-        // Maps each lobby to an ui element
-        private Dictionary<Guid, LobbyUIEntry> _lobbyUIEntries;
-
-#endregion
-
 #region Lifecycle
-        
+
         private void Start()
         {
             Assert.IsNotNull(ConnectionManager.Instance);
-            
+
             ConnectionManager.Instance.OnClientConnectionState += OnClientConnectionStateChanged;
             OnClientConnectionStateChanged(ConnectionManager.Instance.State);
-            
+
             _connectBtn.onClick.AddListener(ConnectToServer);
             _leaveServerBtn.onClick.AddListener(() => ConnectionManager.Instance.LeaveServer());
-            _createLobbyBtn.onClick.AddListener( () => _ = GlobalPlayerController.Instance.CreateLobby(_lobbyNameInputField.text, _passwordInputField.text, _lobbySceneMetaData, _lobbySceneMetaData.MaxUsers));
+            _createLobbyBtn.onClick.AddListener(() => _ = GlobalPlayerController.Instance.CreateLobby(_lobbyNameInputField.text, _passwordInputField.text, _lobbySceneMetaData, _lobbySceneMetaData.MaxUsers));
             _quickConnectBtn.onClick.AddListener(() => _ = GlobalPlayerController.Instance.QuickConnect(_quickConnectInputField.text));
 
             _lobbyUIEntries = new Dictionary<Guid, LobbyUIEntry>();
@@ -70,7 +70,7 @@ namespace AnyVR.Sample
             if (GlobalGameState.Instance != null)
                 InitializeLobbyUIEntries();
         }
-        
+
         private async void ConnectToServer()
         {
             Uri tokenServerUri = new($"http://{_serverAddressInputField.text}");
@@ -88,7 +88,7 @@ namespace AnyVR.Sample
 
             UpdateLobbyUIEntries();
         }
-        
+
         private void OnClientConnectionStateChanged(ConnectionState state)
         {
             switch (state)
@@ -117,7 +117,7 @@ namespace AnyVR.Sample
             globalGameState.OnLobbyOpened -= AddLobbyEntry;
             globalGameState.OnLobbyClosed -= RemoveLobbyEntry;
         }
-        
+
 #endregion
 
 #region UI Methods
@@ -156,17 +156,19 @@ namespace AnyVR.Sample
 
             Destroy(entry.gameObject);
         }
-        
+
         private void SetActivePanel(RectTransform activePanel)
         {
-            foreach (RectTransform panel in new[] { _connectionPanel, _onlinePanel })
+            foreach (RectTransform panel in new[]
+                     {
+                         _connectionPanel, _onlinePanel
+                     })
             {
                 panel.gameObject.SetActive(false);
             }
             activePanel.gameObject.SetActive(true);
         }
-        
+
 #endregion
-        
     }
 }

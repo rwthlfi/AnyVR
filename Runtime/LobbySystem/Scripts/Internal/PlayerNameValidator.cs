@@ -7,7 +7,7 @@ namespace AnyVR.LobbySystem.Internal
     public static class PlayerNameValidator
     {
         private const int MinPlayerNameLength = 2;
-        
+
         private const int MaxPlayerNameLength = 96;
 
         private static readonly string[] NameBlacklist =

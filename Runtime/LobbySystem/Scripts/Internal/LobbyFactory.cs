@@ -9,17 +9,17 @@ namespace AnyVR.LobbySystem.Internal
     internal class LobbyFactory
     {
         private static readonly Random Random = new();
-        
+
         private int _creatorId;
-        
+
         private DateTime? _expirationDate;
-        
+
         private bool _isPasswordProtected;
-        
+
         private ushort _lobbyCapacity = 16;
-        
+
         private string _name;
-        
+
         private LobbySceneMetaData _scene;
 
         public LobbyFactory WithName(string name)

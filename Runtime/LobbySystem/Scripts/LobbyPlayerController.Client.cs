@@ -1,46 +1,158 @@
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using System.Threading.Tasks;
+using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using AnyVR.Voicechat;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
+using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
     public partial class LobbyPlayerController
     {
-        public VoiceChatClient Voice;
+        public LiveKitClient Voice { get; private set; }
 
         public override void OnStartClient()
         {
             base.OnStartClient();
 
-            Voice = new VoiceChatClient(this);
-            Voice.OnActiveSpeakerChanged += OnActiveSpeakerChanged;
-            Voice.OnParticipantConnected += participant => OnParticipantConnectionChanged(participant.Identity, true);
-            Voice.OnParticipantDisconnected += identity => OnParticipantConnectionChanged(identity, false);
+            Voice = LiveKitClient.Instantiate(gameObject);
+            Voice.OnParticipantConnected += OnParticipantConnected;
+            Voice.OnParticipantDisconnected += OnParticipantDisconnected;
         }
 
-        private void OnActiveSpeakerChanged(IEnumerable<RemoteParticipant> speakers)
+        /// <summary>
+        ///     Connects the local player to the LiveKit voice room of the player's lobby.
+        ///     Requests a LiveKit token from the token server before connecting to the LiveKit server.
+        /// </summary>
+        /// <returns>
+        ///     A <see cref="VoiceConnectionResult" /> indicating the result of the connection attempt.
+        /// </returns>
+        [Client]
+        public async Task<VoiceConnectionResult> ConnectToLiveKitRoom()
         {
-            HashSet<int> active = speakers.Select(s => int.TryParse(s.Identity, out int id) ? id : -1)
-                .Where(id => id >= 0)
-                .ToHashSet();
+            string roomName = this.GetGameState<LobbyState>().LobbyInfo.Name.Value;
+            string identity = GetPlayerState<LobbyPlayerState>().ID.ToString();
 
-            foreach (LobbyPlayerState player in this.GetGameState().GetPlayerStates<LobbyPlayerState>())
-                player.SetIsSpeaking(active.Contains(player.ID));
+            Assert.IsNotNull(identity);
+
+            if (Voice == null)
+            {
+                return VoiceConnectionResult.PlatformNotSupported;
+            }
+
+            if (Voice.IsConnected)
+            {
+                return VoiceConnectionResult.AlreadyConnected;
+            }
+
+            Uri tokenUri = new UriBuilder(ConnectionManager.Instance.LiveKitTokenServer)
+            {
+                Scheme = ConnectionManager.Instance.UseSecureProtocol ? "https" : "http", Path = "requestToken", Query = $"room_name={Uri.EscapeDataString(roomName)}&identity={Uri.EscapeDataString(identity)}"
+            }.Uri;
+
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Requesting LiveKit Token from '{tokenUri}'");
+            TokenResponse response = await WebRequestHandler.GetAsync<TokenResponse>(tokenUri.ToString());
+
+            if (!response.Success)
+            {
+                Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), "LiveKit token retrieval failed!");
+                return VoiceConnectionResult.TokenRetrievalFailed;
+            }
+
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Received LiveKit Token: '{response.token}'");
+
+            if (string.IsNullOrWhiteSpace(response.token))
+            {
+                Logger.Log(LogLevel.Warning, nameof(LobbyPlayerController), "Received LiveKit Token is null or white space!");
+                return VoiceConnectionResult.TokenRetrievalFailed;
+            }
+
+            Assert.IsFalse(string.IsNullOrWhiteSpace(response.token), "Received LiveKit Token is null or white space!");
+
+            Voice.SetAudioObjectMapping(GetRemoteParticipantAudioSource);
+
+            Uri voicechatUri = new UriBuilder(ConnectionManager.Instance.LiveKitVoiceServer)
+            {
+                Scheme = ConnectionManager.Instance.UseSecureProtocol ? "wss" : "ws"
+            }.Uri;
+
+            LiveKitConnectionResult result = await Voice.Connect(voicechatUri.ToString(), response.token);
+
+            if (result == LiveKitConnectionResult.Connected)
+            {
+                foreach (Participant participant in Voice.Participants)
+                {
+                    InitParticipant(participant);
+                }
+            }
+
+            // Map LiveKitConnectionResult from the voicechat assembly to public VoiceConnectionResult form lobby assembly
+            return result switch
+            {
+                LiveKitConnectionResult.Connected => VoiceConnectionResult.Connected,
+                LiveKitConnectionResult.Timeout => VoiceConnectionResult.Timeout,
+                LiveKitConnectionResult.Cancel => VoiceConnectionResult.Cancel,
+                LiveKitConnectionResult.Error => VoiceConnectionResult.Error,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
-        private void OnParticipantConnectionChanged(string identity, bool connected)
+        /// <summary>
+        ///     Disconnect from the LiveKit room.
+        /// </summary>
+        public void DisconnectFromLiveKitRoom()
+        {
+            Voice.Disconnect();
+        }
+
+        private void OnParticipantConnected(RemoteParticipant remote)
+        {
+            InitParticipant(remote);
+        }
+
+        private void OnParticipantDisconnected(string identity)
         {
             if (!int.TryParse(identity, out int id))
                 return;
 
             LobbyPlayerState player = this.GetGameState().GetPlayerState<LobbyPlayerState>(id);
-            player.SetIsConnectedToVoice(connected);
+            player.SetIsConnectedToVoice(false);
+        }
+
+        private void InitParticipant(Participant participant)
+        {
+            if (!int.TryParse(participant.Identity, out int id))
+                return;
+
+            LobbyPlayerState player = this.GetGameState().GetPlayerState<LobbyPlayerState>(id);
+
+            participant.IsSpeakingUpdate += isSpeaking =>
+            {
+                if (player != null)
+                {
+                    player.SetIsSpeaking(isSpeaking);
+                }
+            };
+            participant.IsMicMutedUpdate += isMuted =>
+            {
+                if (player != null)
+                {
+                    player.SetIsMicrophoneMuted(isMuted);
+                }
+            };
+            participant.IsMicPublishedUpdate += isPublished =>
+            {
+                if (player != null)
+                {
+                    player.SetIsMicrophonePublished(isPublished);
+                }
+            };
+
+            player.SetIsConnectedToVoice(true);
         }
 
         /// <summary>

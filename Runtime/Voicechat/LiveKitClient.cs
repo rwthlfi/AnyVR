@@ -20,6 +20,8 @@ namespace AnyVR.Voicechat
 
         internal abstract void UnpublishMicrophone();
 
+        internal abstract void SetMute(bool mute);
+
         protected abstract void Init();
 
 #region Private Fields
@@ -36,13 +38,28 @@ namespace AnyVR.Voicechat
 
 #region Public API
 
+        /// <summary>
+        ///     If the local player is connected to a LiveKit room.
+        /// </summary>
         public abstract bool IsConnected { get; }
-
-        public IReadOnlyDictionary<string, RemoteParticipant> RemoteParticipants => Remotes;
 
         public LocalParticipant LocalParticipant { get; protected set; }
 
-        public abstract bool IsMicPublished { get; }
+        public IReadOnlyDictionary<string, RemoteParticipant> RemoteParticipants => Remotes;
+
+        public IEnumerable<Participant> Participants
+        {
+            get
+            {
+                yield return LocalParticipant;
+                foreach (RemoteParticipant remote in Remotes.Values)
+                    yield return remote;
+            }
+        }
+
+        internal abstract bool IsLocalMicPublished { get; }
+
+        internal abstract bool IsLocalMicMuted { get; }
 
         public void SetAudioObjectMapping(Func<string, AudioSource> audioSourceMap)
         {
@@ -52,6 +69,16 @@ namespace AnyVR.Voicechat
         public abstract Task<LiveKitConnectionResult> Connect(string address, string token);
 
         public abstract void Disconnect();
+
+        protected void OnActiveSpeakerChange(HashSet<Participant> speakers)
+        {
+            foreach (Participant player in Participants)
+            {
+                player.SetIsSpeaking(speakers.Contains(player));
+            }
+
+            OnActiveSpeakerChanged?.Invoke(speakers);
+        }
 
         public static LiveKitClient Instantiate(GameObject go)
         {
@@ -74,6 +101,7 @@ namespace AnyVR.Voicechat
 #endif
 
             liveKitClient.Init();
+
             return liveKitClient;
         }
 
@@ -85,7 +113,7 @@ namespace AnyVR.Voicechat
 
         public abstract event Action<string> OnParticipantDisconnected;
 
-        public abstract event Action<IEnumerable<RemoteParticipant>> OnActiveSpeakerChanged;
+        public event Action<IEnumerable<Participant>> OnActiveSpeakerChanged;
 
 #endregion
     }

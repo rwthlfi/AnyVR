@@ -8,7 +8,7 @@ namespace AnyVR.LobbySystem.Internal
         private readonly T _canceledValue;
 
         private readonly T _timeoutValue;
-        
+
         private TaskCompletionSource<T> _tcs;
 
         public RpcAwaiter(T timeoutValue, T canceledValue)

@@ -15,6 +15,10 @@ namespace AnyVR.LobbySystem
 
         public IReadOnlyObservedVar<bool> IsConnectedToVoice => _isConnectedToVoice;
 
+        public IReadOnlyObservedVar<bool> IsMicrophonePublished => _isMicrophonePublished;
+
+        public IReadOnlyObservedVar<bool> IsMicrophoneMuted => _isMicrophoneMuted;
+
         public IReadOnlyObservedVar<bool> IsSpeaking => _isSpeaking;
 
 #endregion
