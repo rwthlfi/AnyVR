@@ -49,7 +49,7 @@ namespace AnyVR.Voicechat
         }
 
 #if !UNITY_WEBGL
-        internal void SetAudioStream(AudioStream audioStream)
+        internal void SetAudioStream(LiveKit.AudioStream audioStream)
         {
             _audioStream = audioStream;
         }

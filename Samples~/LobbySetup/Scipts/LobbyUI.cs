@@ -40,7 +40,10 @@ namespace AnyVR.Sample
             _publishMicButton.onClick.AddListener(ToggleMicPublished);
             _muteButton.onClick.AddListener(ToggleMicMuted);
             _muteButton.GetComponentInChildren<TextMeshProUGUI>().text = "Mute Mic";
-            _leaveButton.onClick.AddListener(LobbyPlayerController.Instance.LeaveLobby);
+            _leaveButton.onClick.AddListener(() =>
+            {
+                LobbyPlayerController.Instance.LeaveLobby();
+            });
         }
 
         private void Update()

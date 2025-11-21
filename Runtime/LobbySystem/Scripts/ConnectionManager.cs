@@ -6,13 +6,14 @@ using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Managing.Timing;
 using FishNet.Transporting;
-using FishNet.Transporting.Bayou;
 using FishNet.Transporting.Multipass;
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
+using FishNet.Transporting.Bayou;
+using FishNet.Transporting.Tugboat;
 
 namespace AnyVR.LobbySystem
 {
@@ -161,11 +162,14 @@ namespace AnyVR.LobbySystem
             _networkManager.ClientManager.OnClientTimeOut += OnClientTimeout;
 
             Multipass mp = GetComponent<Multipass>();
-#if UNITY_WEBGL
-            mp.SetClientTransport<Bayou>();
-#else
-            mp.SetClientTransport<Tugboat>();
-#endif
+            if (Application.platform == RuntimePlatform.WebGLPlayer)
+            {
+                mp.SetClientTransport<Bayou>();
+            }
+            else
+            {
+                mp.SetClientTransport<Tugboat>();
+            }
 
 #if UNITY_EDITOR && UNITY_SERVER
             Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), "Starting server ...");
