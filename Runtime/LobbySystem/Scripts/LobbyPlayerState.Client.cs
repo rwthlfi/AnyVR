@@ -27,9 +27,10 @@ namespace AnyVR.LobbySystem
         ///     If the player's microphone is muted.
         /// </summary>
         /// <remarks>
-        ///     If this is the player state of a remote player which uses the standalone build, <c>IsMicrophoneMuted</c> will always be false due to a bug in the LiveKit package.
+        ///     If this is the player state of a remote player which uses the standalone build, <c>IsMicrophoneMuted</c> will
+        ///     always be false due to a bug in the LiveKit package.
         ///     TODO Remove this after LiveKit fix.
-        /// <seealso href="https://github.com/livekit/client-sdk-unity/issues/152">LiveKit Issue #152</seealso>
+        ///     <seealso href="https://github.com/livekit/client-sdk-unity/issues/152">LiveKit Issue #152</seealso>
         /// </remarks>
         public IReadOnlyObservedVar<bool> IsMicrophoneMuted => _isMicrophoneMuted;
 

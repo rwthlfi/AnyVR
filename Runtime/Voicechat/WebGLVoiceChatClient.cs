@@ -177,7 +177,7 @@ namespace AnyVR.Voicechat
             }
             else
             {
-                Logger.Log(LogLevel.Verbose, nameof(WebGLVoicechatClient), "Successfully connected to LiveKit room!");
+                Logger.Log(LogLevel.Info, nameof(WebGLVoicechatClient), "Successfully connected to LiveKit room!");
 
                 LocalParticipant = new LocalParticipant(this, _room.LocalParticipant.Sid, _room.LocalParticipant.Identity, _room.LocalParticipant.Name);
                 foreach (LiveKit.RemoteParticipant remote in _room.RemoteParticipants.Values)

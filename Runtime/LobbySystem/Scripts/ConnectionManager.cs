@@ -6,14 +6,14 @@ using FishNet.Managing;
 using FishNet.Managing.Scened;
 using FishNet.Managing.Timing;
 using FishNet.Transporting;
+using FishNet.Transporting.Bayou;
 using FishNet.Transporting.Multipass;
+using FishNet.Transporting.Tugboat;
 using GameKit.Dependencies.Utilities.Types;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
-using FishNet.Transporting.Bayou;
-using FishNet.Transporting.Tugboat;
 
 namespace AnyVR.LobbySystem
 {

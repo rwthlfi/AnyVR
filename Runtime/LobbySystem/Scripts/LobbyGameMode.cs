@@ -81,7 +81,7 @@ namespace AnyVR.LobbySystem
                 yield return new WaitForSeconds(timeUntilExpiration);
             }
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyGameMode), $"Lobby {GetGameState<LobbyState>().LobbyId} expired");
+            Logger.Log(LogLevel.Info, nameof(LobbyGameMode), $"Lobby {GetGameState<LobbyState>().LobbyId} expired");
             LobbyManagerInternal.Instance.Server_CloseLobby(GetGameState<LobbyState>().LobbyId);
         }
 
@@ -103,7 +103,7 @@ namespace AnyVR.LobbySystem
                 yield break;
             }
 
-            Logger.Log(LogLevel.Warning, nameof(LobbyGameMode), $"Closing lobby {GetGameState<LobbyState>().LobbyId} due to inactivity.");
+            Logger.Log(LogLevel.Info, nameof(LobbyGameMode), $"Closing lobby {GetGameState<LobbyState>().LobbyId} due to inactivity.");
             LobbyManagerInternal.Instance.Server_CloseLobby(GetGameState<LobbyState>().LobbyId);
         }
 

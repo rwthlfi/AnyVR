@@ -1,7 +1,6 @@
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using FishNet.Object;
-using UnityEngine;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem

@@ -71,8 +71,6 @@ namespace AnyVR.LobbySystem
                 return VoiceConnectionResult.TokenRetrievalFailed;
             }
 
-            Assert.IsFalse(string.IsNullOrWhiteSpace(response.token), "Received LiveKit Token is null or white space!");
-
             Voice.SetAudioObjectMapping(GetRemoteParticipantAudioSource);
 
             Uri voicechatUri = new UriBuilder(ConnectionManager.Instance.LiveKitVoiceServer)
@@ -91,7 +89,7 @@ namespace AnyVR.LobbySystem
             }
 
             // Map LiveKitConnectionResult from the voicechat assembly to public VoiceConnectionResult
-            return result switch
+            VoiceConnectionResult res = result switch
             {
                 LiveKitConnectionResult.Connected => VoiceConnectionResult.Connected,
                 LiveKitConnectionResult.Timeout => VoiceConnectionResult.Timeout,
@@ -99,6 +97,9 @@ namespace AnyVR.LobbySystem
                 LiveKitConnectionResult.Error => VoiceConnectionResult.Error,
                 _ => throw new ArgumentOutOfRangeException()
             };
+
+            Logger.Log(LogLevel.Info, nameof(LobbyPlayerController), res.ToFriendlyString());
+            return res;
         }
 
         /// <summary>
@@ -232,14 +233,14 @@ namespace AnyVR.LobbySystem
         [TargetRpc]
         private void TargetRPC_OnPromotionResult(NetworkConnection _, PlayerPromotionResult playerNameUpdateResult)
         {
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Promotion result: {playerNameUpdateResult}");
+            Logger.Log(LogLevel.Info, nameof(LobbyPlayerController), $"Promotion result: {playerNameUpdateResult}");
             _playerPromoteUpdateAwaiter?.Complete(playerNameUpdateResult);
         }
 
         [TargetRpc]
         private void TargetRPC_OnKickResult(NetworkConnection _, PlayerKickResult playerKickResult)
         {
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Kick result: {playerKickResult}");
+            Logger.Log(LogLevel.Info, nameof(LobbyPlayerController), $"Kick result: {playerKickResult}");
             _playerKickUpdateAwaiter?.Complete(playerKickResult);
         }
 

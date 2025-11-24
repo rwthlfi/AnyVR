@@ -4,7 +4,6 @@ using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using FishNet.Connection;
 using FishNet.Object;
-using UnityEngine;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
@@ -161,7 +160,7 @@ namespace AnyVR.LobbySystem
         public async Task<CreateLobbyResult> CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMeta, ushort maxClients)
         {
             CreateLobbyResult result = await Client_CreateLobby(lobbyName, password, sceneMeta, maxClients);
-            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
+            Logger.Log(LogLevel.Info, nameof(GlobalPlayerController), result.ToFriendlyString());
             return result;
         }
 
@@ -185,7 +184,7 @@ namespace AnyVR.LobbySystem
         public async Task<JoinLobbyResult> JoinLobby(Guid lobbyId, string password = null)
         {
             JoinLobbyResult result = await Client_JoinLobby(() => ServerRPC_JoinLobby(lobbyId, password));
-            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
+            Logger.Log(LogLevel.Info, nameof(GlobalPlayerController), result.ToFriendlyString());
             return result;
         }
 
@@ -198,7 +197,7 @@ namespace AnyVR.LobbySystem
         public async Task<JoinLobbyResult> QuickConnect(string quickConnectCode)
         {
             JoinLobbyResult result = await Client_QuickConnect(quickConnectCode);
-            Logger.Log(LogLevel.Verbose, nameof(GlobalPlayerController), result.ToFriendlyString());
+            Logger.Log(LogLevel.Info, nameof(GlobalPlayerController), result.ToFriendlyString());
             return result;
         }
 

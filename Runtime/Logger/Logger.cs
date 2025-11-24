@@ -14,9 +14,9 @@ namespace AnyVR.Logging
     internal enum LogLevel
     {
         Error = 0,
-        Warning = 1,
-        Debug = 2,
-        Verbose = 3
+        Warning,
+        Info,
+        Verbose
     }
 
     internal class Logger : MonoBehaviour
@@ -54,7 +54,7 @@ namespace AnyVR.Logging
                 case LogLevel.Warning:
                     Debug.LogWarning(prefixedMessage);
                     break;
-                case LogLevel.Debug:
+                case LogLevel.Info:
                     Debug.Log(prefixedMessage);
                     break;
                 case LogLevel.Verbose:

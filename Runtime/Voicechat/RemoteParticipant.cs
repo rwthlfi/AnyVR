@@ -1,4 +1,5 @@
 using System;
+using LiveKit;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -49,7 +50,7 @@ namespace AnyVR.Voicechat
         }
 
 #if !UNITY_WEBGL
-        internal void SetAudioStream(LiveKit.AudioStream audioStream)
+        internal void SetAudioStream(AudioStream audioStream)
         {
             _audioStream = audioStream;
         }
