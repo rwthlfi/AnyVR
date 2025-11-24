@@ -38,7 +38,6 @@ namespace AnyVR.Logging
             _instance._currentLevel = level;
         }
 
-        [Conditional("ANY_VR_LOG")]
         internal static void Log(LogLevel level, string tag, object message)
         {
             if (!_instance.ShouldLog(level))
