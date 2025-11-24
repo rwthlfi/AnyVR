@@ -41,22 +41,16 @@ namespace AnyVR.UserControlSystem.Interaction
                 Debug.Log($"[XRNetworkedBaseInteractable] Ownership request denied. Object is already owned by another client: {Owner}", this);
                 return;
             }
-            else if (Owner == conn)
+            if (Owner == conn)
             {
                 Debug.Log($"[XRNetworkedBaseInteractable] Ownership request ignored. Requesting client already owns the object: {Owner}", this);
             }
             else
             {
-                Debug.Log($"[XRNetworkedBaseInteractable] Taking ownership", this);
+                Debug.Log("[XRNetworkedBaseInteractable] Taking ownership", this);
                 _predictedOwner.TakeOwnership(true);
                 RequestAllowTakeOwnership(false);
             }
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        public void RequestAllowTakeOwnership(bool allowOwnership)
-        {
-            _predictedOwner.SetAllowTakeOwnership(allowOwnership);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -68,12 +62,15 @@ namespace AnyVR.UserControlSystem.Interaction
                 Debug.Log($"[XRNetworkedBaseInteractable] Ownership release request denied. Requesting client does not own the object: {Owner}", this);
                 return;
             }
-            else
-            {
-                Debug.Log($"[XRNetworkedBaseInteractable] Releasing ownership from {conn}", this);
-                NetworkObject.RemoveOwnership();
-                _predictedOwner.SetAllowTakeOwnership(true);
-            }
+            Debug.Log($"[XRNetworkedBaseInteractable] Releasing ownership from {conn}", this);
+            NetworkObject.RemoveOwnership();
+            _predictedOwner.SetAllowTakeOwnership(true);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void RequestAllowTakeOwnership(bool allowOwnership)
+        {
+            _predictedOwner.SetAllowTakeOwnership(allowOwnership);
         }
     }
 }

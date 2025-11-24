@@ -25,7 +25,7 @@ namespace AnyVR.UserControlSystem
 {
     public class XRNetworkedSocketInteractionFilter : MonoBehaviour, IXRHoverFilter, IXRSelectFilter
     {
-       public bool canProcess => isActiveAndEnabled;
+        public bool canProcess => isActiveAndEnabled;
 
         public bool Process(IXRHoverInteractor interactor, IXRHoverInteractable interactable)
         {

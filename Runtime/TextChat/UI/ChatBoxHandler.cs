@@ -15,7 +15,6 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using AnyVR.LobbySystem;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;

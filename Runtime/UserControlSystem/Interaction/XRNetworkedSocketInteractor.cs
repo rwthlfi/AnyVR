@@ -16,7 +16,6 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using FishNet.Object;
-using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
@@ -25,29 +24,28 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 namespace AnyVR.UserControlSystem.Interaction
 {
     /// <summary>
-    /// An XR Socket Interactor that is network-aware.
+    ///     An XR Socket Interactor that is network-aware.
     /// </summary>
     [RequireComponent(typeof(XRSocketInteractor))]
     public class XRNetworkedSocketInteractor : NetworkBehaviour
     {
-        protected XRSocketInteractor _socketInteractor;
-
         [SerializeField]
         protected NetworkObject _objectInSocket;
-        public NetworkObject ObjectInSocket => _objectInSocket;
-        public bool HasObjectInSocket => _objectInSocket != null;
 
         [SerializeField]
         protected UnityEvent<NetworkObject> _onSocketSelectOnClient;
-        /// <summary>
-        /// Event invoked on clients when an object is selected in the socket on the server.
-        /// </summary>
-        public UnityEvent<NetworkObject> OnSocketSelectOnClient => _onSocketSelectOnClient;
 
         [SerializeField]
         protected UnityEvent<NetworkObject> _onSocketSelectExitOnClient;
+        protected XRSocketInteractor _socketInteractor;
+        public NetworkObject ObjectInSocket => _objectInSocket;
+        public bool HasObjectInSocket => _objectInSocket != null;
         /// <summary>
-        /// Event invoked on clients when an object is released from the socket on the server.
+        ///     Event invoked on clients when an object is selected in the socket on the server.
+        /// </summary>
+        public UnityEvent<NetworkObject> OnSocketSelectOnClient => _onSocketSelectOnClient;
+        /// <summary>
+        ///     Event invoked on clients when an object is released from the socket on the server.
         /// </summary>
         public UnityEvent<NetworkObject> OnSocketSelectExitOnClient => _onSocketSelectExitOnClient;
 
@@ -60,14 +58,14 @@ namespace AnyVR.UserControlSystem.Interaction
         {
             _socketInteractor.selectEntered.AddListener(OnSocketSelect);
 
-            _socketInteractor.selectEntered.AddListener((args) =>
+            _socketInteractor.selectEntered.AddListener(args =>
             {
                 BroadCastSelectEnter(args.interactableObject.transform.GetComponent<NetworkObject>());
             });
 
             _socketInteractor.selectExited.AddListener(OnSocketRelease);
 
-            _socketInteractor.selectExited.AddListener((args) =>
+            _socketInteractor.selectExited.AddListener(args =>
             {
                 BroadCastSelectExit(args.interactableObject.transform.GetComponent<NetworkObject>());
             });

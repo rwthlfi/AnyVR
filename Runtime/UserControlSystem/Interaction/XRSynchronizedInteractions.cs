@@ -25,35 +25,35 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 namespace AnyVR.UserControlSystem.Interaction
 {
     /// <summary>
-    /// Synchronizes selected XR Interaction Toolkit interaction events over the network.
+    ///     Synchronizes selected XR Interaction Toolkit interaction events over the network.
     /// </summary>
     [RequireComponent(typeof(XRBaseInteractable))]
     public class XRSynchronizedInteractions : NetworkBehaviour
     {
-        [SerializeField, Tooltip("Check to synchronize first/last hover events over the network.")]
-        private bool _synchronizeFirstLastHoverEvents = false;
+        [SerializeField] [Tooltip("Check to synchronize first/last hover events over the network.")]
+        private bool _synchronizeFirstLastHoverEvents;
 
-        [SerializeField, Tooltip("Check to synchronize hover events over the network.")]
-        private bool _synchronizeHoverEvents = false;
+        [SerializeField] [Tooltip("Check to synchronize hover events over the network.")]
+        private bool _synchronizeHoverEvents;
 
-        [SerializeField, Tooltip("Check to synchronize first/last select events over the network.")]
-        private bool _synchronizeFirstLastSelectEvents = false;
+        [SerializeField] [Tooltip("Check to synchronize first/last select events over the network.")]
+        private bool _synchronizeFirstLastSelectEvents;
 
-        [SerializeField, Tooltip("Check to synchronize select events over the network.")]
-        private bool _synchronizeSelectEvents = false;
+        [SerializeField] [Tooltip("Check to synchronize select events over the network.")]
+        private bool _synchronizeSelectEvents;
 
-        [SerializeField, Tooltip("Check to synchronize first/last focus events over the network.")]
-        private bool _synchronizeFirstLastFocusEvents = false;
+        [SerializeField] [Tooltip("Check to synchronize first/last focus events over the network.")]
+        private bool _synchronizeFirstLastFocusEvents;
 
-        [SerializeField, Tooltip("Check to synchronize focus events over the network.")]
-        private bool _synchronizeFocusEvents = false;
+        [SerializeField] [Tooltip("Check to synchronize focus events over the network.")]
+        private bool _synchronizeFocusEvents;
 
-        [SerializeField, Tooltip("Check to synchronize activate events over the network.")]
-        private bool _synchronizeActivateEvents = false;
+        [SerializeField] [Tooltip("Check to synchronize activate events over the network.")]
+        private bool _synchronizeActivateEvents;
 
         private XRBaseInteractable _interactable;
         private PCSecondarySelectionAction _pcSecondarySelectionAction;
-        private bool _suppressSynchronization = false;
+        private bool _suppressSynchronization;
 
         private void Start()
         {
@@ -103,10 +103,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.firstHoverEntered.Invoke(new HoverEnterEventArgs()
+            _interactable.firstHoverEntered.Invoke(new HoverEnterEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -133,10 +132,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.lastHoverExited.Invoke(new HoverExitEventArgs()
+            _interactable.lastHoverExited.Invoke(new HoverExitEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -176,10 +174,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.hoverEntered.Invoke(new HoverEnterEventArgs()
+            _interactable.hoverEntered.Invoke(new HoverEnterEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -206,10 +203,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.hoverExited.Invoke(new HoverExitEventArgs()
+            _interactable.hoverExited.Invoke(new HoverExitEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -249,10 +245,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.firstSelectEntered.Invoke(new SelectEnterEventArgs()
+            _interactable.firstSelectEntered.Invoke(new SelectEnterEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -279,10 +274,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.lastSelectExited.Invoke(new SelectExitEventArgs()
+            _interactable.lastSelectExited.Invoke(new SelectExitEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -290,6 +284,7 @@ namespace AnyVR.UserControlSystem.Interaction
         #endregion
 
         #region Select
+
         private void SubscribeSelectSynchronization()
         {
             if (_synchronizeSelectEvents)
@@ -321,10 +316,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.selectEntered.Invoke(new SelectEnterEventArgs()
+            _interactable.selectEntered.Invoke(new SelectEnterEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -351,16 +345,17 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.selectExited.Invoke(new SelectExitEventArgs()
+            _interactable.selectExited.Invoke(new SelectExitEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
+
         #endregion
 
         #region First/Last Focus
+
         private void SubscribeFirstLastFocusSynchronization()
         {
             if (_synchronizeFirstLastFocusEvents)
@@ -392,10 +387,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.firstFocusEntered.Invoke(new FocusEnterEventArgs()
+            _interactable.firstFocusEntered.Invoke(new FocusEnterEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -422,16 +416,17 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.lastFocusExited.Invoke(new FocusExitEventArgs()
+            _interactable.lastFocusExited.Invoke(new FocusExitEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
+
         #endregion
 
         #region Focus
+
         private void SubscribeFocusSynchronization()
         {
             if (_synchronizeFocusEvents)
@@ -463,10 +458,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.focusEntered.Invoke(new FocusEnterEventArgs()
+            _interactable.focusEntered.Invoke(new FocusEnterEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -493,16 +487,17 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.focusExited.Invoke(new FocusExitEventArgs()
+            _interactable.focusExited.Invoke(new FocusExitEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
+
         #endregion
 
         #region Activate (Primary Action)
+
         private void SubscribeActivateSynchronization()
         {
             if (_synchronizeActivateEvents)
@@ -534,10 +529,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.activated.Invoke(new ActivateEventArgs()
+            _interactable.activated.Invoke(new ActivateEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -564,16 +558,17 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _interactable.deactivated.Invoke(new DeactivateEventArgs()
+            _interactable.deactivated.Invoke(new DeactivateEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
+
         #endregion
 
         #region Activate (Secondary Action)
+
         private void SubscribeActivateSecondarySynchronization()
         {
             if (_synchronizeActivateEvents && _pcSecondarySelectionAction != null)
@@ -605,10 +600,9 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _pcSecondarySelectionAction.SecondarySelectActivated.Invoke(new ActivateEventArgs()
+            _pcSecondarySelectionAction.SecondarySelectActivated.Invoke(new ActivateEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
@@ -635,13 +629,13 @@ namespace AnyVR.UserControlSystem.Interaction
                 return;
             }
             _suppressSynchronization = true;
-            _pcSecondarySelectionAction.SecondarySelectDeactivated.Invoke(new DeactivateEventArgs()
+            _pcSecondarySelectionAction.SecondarySelectDeactivated.Invoke(new DeactivateEventArgs
             {
-                interactableObject = _interactable,
-                interactorObject = null,
+                interactableObject = _interactable, interactorObject = null
             });
             _suppressSynchronization = false;
         }
+
         #endregion
     }
 }

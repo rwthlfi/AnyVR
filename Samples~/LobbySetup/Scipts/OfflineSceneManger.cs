@@ -10,10 +10,20 @@ namespace AnyVR.Sample
 {
     public class OfflineSceneManger : MonoBehaviour
     {
+#region UI Fields
+
+        // Maps each lobby to an ui element
+        private Dictionary<Guid, LobbyUIEntry> _lobbyUIEntries;
+
+#endregion
+
+#region Serialized Fields
+
         [Header("UI/Connection Panel")]
         [SerializeField] private Button _connectBtn;
 
-        [SerializeField] private RectTransform _connectionPanel, _serverPanel;
+        [SerializeField] private RectTransform _connectionPanel;
+        [SerializeField] private RectTransform _onlinePanel;
 
         [SerializeField] private TMP_InputField _serverAddressInputField;
 
@@ -28,111 +38,55 @@ namespace AnyVR.Sample
         [SerializeField] private LobbyUIEntry _lobbyEntryPrefab;
         [SerializeField] private RectTransform _lobbyEntryParent;
 
+        [Header("UI/Server Panel/QuickConnect")]
+        [SerializeField] private TMP_InputField _quickConnectInputField;
+        [SerializeField] private Button _quickConnectBtn;
+
         [Header("UI/Server Panel")]
         [SerializeField] private Button _leaveServerBtn;
 
         [Header("AnyVR")]
         [SerializeField] private LobbySceneMetaData _lobbySceneMetaData;
-        
-        private ConnectionManager _connectionManager;
 
-        private Dictionary<Guid, LobbyUIEntry> _lobbyUIEntries;
+#endregion
 
-        private RectTransform[] _panels;
+#region Lifecycle
 
         private void Start()
         {
-            _connectionManager = ConnectionManager.GetInstance();
-            Assert.IsNotNull(_connectionManager);
-            
-#if UNITY_SERVER
-            _connectionManager.StartServer();
-#else
-            _panels = new[]
-            {
-                _connectionPanel, _serverPanel
-            };
-            
-            _connectionManager.OnClientConnectionState += OnClientConnectionStateChanged;
+            Assert.IsNotNull(ConnectionManager.Instance);
+
+            ConnectionManager.Instance.OnClientConnectionState += OnClientConnectionStateChanged;
+            OnClientConnectionStateChanged(ConnectionManager.Instance.State);
+
             _connectBtn.onClick.AddListener(ConnectToServer);
-            _leaveServerBtn.onClick.AddListener(LeaveServer);
-            OnClientConnectionStateChanged(_connectionManager.State);
+            _leaveServerBtn.onClick.AddListener(() => ConnectionManager.Instance.LeaveServer());
+            _createLobbyBtn.onClick.AddListener(() => _ = GlobalPlayerController.Instance.CreateLobby(_lobbyNameInputField.text, _passwordInputField.text, _lobbySceneMetaData, _lobbySceneMetaData.MaxUsers));
+            _quickConnectBtn.onClick.AddListener(() => _ = GlobalPlayerController.Instance.QuickConnect(_quickConnectInputField.text));
 
-            LobbyManager.OnClientInitialized += lobbyManager =>
-            {
-                lobbyManager.OnLobbyOpened += AddLobbyEntry;
-                lobbyManager.OnLobbyClosed += RemoveLobbyEntry;
-            };
-
-            _createLobbyBtn.onClick.AddListener(CreateLobby);
             _lobbyUIEntries = new Dictionary<Guid, LobbyUIEntry>();
-            
-            LobbyManager lobbyManager = LobbyManager.GetInstance();
-            if (lobbyManager == null)
-                return;
-            
-            foreach (LobbyMetaData lmd in lobbyManager.Lobbies)
+
+            // Initialize lobby list if connected to server
+            if (GlobalGameState.Instance != null)
+                InitializeLobbyUIEntries();
+        }
+
+        private async void ConnectToServer()
+        {
+            Uri tokenServerUri = new($"http://{_serverAddressInputField.text}");
+            ConnectionResult result = await ConnectionManager.Instance.ConnectToServer(tokenServerUri, _usernameInputField.text);
+            if (result.IsSuccess)
             {
-                AddLobbyEntry(lmd);
+                InitializeLobbyUIEntries();
             }
-#endif
         }
 
-        private void OnDestroy()
+        private void InitializeLobbyUIEntries()
         {
-            _connectionManager.OnClientConnectionState -= OnClientConnectionStateChanged;
-            
-            LobbyManager lobbyManager = LobbyManager.GetInstance();
-            if (lobbyManager == null)
-                return;
-            
-            lobbyManager.OnLobbyOpened -= AddLobbyEntry;
-            lobbyManager.OnLobbyClosed -= RemoveLobbyEntry;
-        }
+            GlobalGameState.Instance.OnLobbyOpened += AddLobbyEntry;
+            GlobalGameState.Instance.OnLobbyClosed += RemoveLobbyEntry;
 
-        private void AddLobbyEntry(LobbyMetaData lmd)
-        {
-            if (_lobbyUIEntries.ContainsKey(lmd.LobbyId))
-            {
-                return;
-            }
-
-            LobbyUIEntry entry = Instantiate(_lobbyEntryPrefab, _lobbyEntryParent);
-            entry.SetLobby(lmd.LobbyId, lmd.Name, lmd.SceneName, lmd.CreatorId, lmd.LobbyCapacity);
-            
-            LobbyManager lobbyManager = LobbyManager.GetInstance();
-            Assert.IsNotNull(lobbyManager);
-            
-            entry.OnJoinButtonPressed += id => lobbyManager.JoinLobby(id);
-            _lobbyUIEntries.Add(lmd.LobbyId, entry);
-        }
-
-        private void RemoveLobbyEntry(Guid lobbyId)
-        {
-            if (!_lobbyUIEntries.Remove(lobbyId, out LobbyUIEntry entry))
-                return;
-
-            Destroy(entry.gameObject);
-        }
-
-        private void CreateLobby()
-        {
-            string lobbyName = _lobbyNameInputField.text;
-            string password = _passwordInputField.text;
-
-            if (string.IsNullOrWhiteSpace(lobbyName))
-            {
-                return;
-            }
-            
-            LobbyManager lobbyManager = LobbyManager.GetInstance();
-            Assert.IsNotNull(lobbyManager);
-            
-            lobbyManager.CreateLobby(lobbyName, password, _lobbySceneMetaData, _lobbySceneMetaData.MaxUsers);
-        }
-        private void LeaveServer()
-        {
-            _connectionManager.LeaveServer();
+            UpdateLobbyUIEntries();
         }
 
         private void OnClientConnectionStateChanged(ConnectionState state)
@@ -143,7 +97,7 @@ namespace AnyVR.Sample
                     SetActivePanel(_connectionPanel);
                     break;
                 case ConnectionState.Client:
-                    SetActivePanel(_serverPanel);
+                    SetActivePanel(_onlinePanel);
                     break;
                 case ConnectionState.Server:
                     break;
@@ -152,32 +106,69 @@ namespace AnyVR.Sample
             }
         }
 
-        private async void ConnectToServer()
+        private void OnDestroy()
         {
-            _connectionManager.UseSecureProtocol = false;
-            _connectionManager.SetTokenServerIp(_serverAddressInputField.text);
-            ServerAddressResponse res = await _connectionManager.RequestServerIp();
+            ConnectionManager.Instance.OnClientConnectionState -= OnClientConnectionStateChanged;
 
-            if (!res.Success)
+            GlobalGameState globalGameState = GlobalGameState.Instance;
+            if (globalGameState == null)
+                return;
+
+            globalGameState.OnLobbyOpened -= AddLobbyEntry;
+            globalGameState.OnLobbyClosed -= RemoveLobbyEntry;
+        }
+
+#endregion
+
+#region UI Methods
+
+        private void UpdateLobbyUIEntries()
+        {
+            foreach (Guid lmd in _lobbyUIEntries.Keys)
             {
-                Debug.LogError(res.Error);
+                RemoveLobbyEntry(lmd);
+            }
+
+            foreach (ILobbyInfo lobbyInfo in GlobalGameState.Instance.GetLobbies())
+            {
+                AddLobbyEntry(lobbyInfo);
+            }
+        }
+
+        private void AddLobbyEntry(ILobbyInfo lobbyInfo)
+        {
+            if (_lobbyUIEntries.ContainsKey(lobbyInfo.LobbyId))
+            {
                 return;
             }
 
-            bool success = _connectionManager.ConnectToServer(res, _usernameInputField.text, out string error);
-            if (success)
+            LobbyUIEntry entry = Instantiate(_lobbyEntryPrefab, _lobbyEntryParent);
+            entry.SetLobby(lobbyInfo);
+
+            entry.OnJoinButtonPressed += id => _ = GlobalPlayerController.Instance.JoinLobby(id);
+            _lobbyUIEntries.Add(lobbyInfo.LobbyId, entry);
+        }
+
+        private void RemoveLobbyEntry(Guid lobbyId)
+        {
+            if (!_lobbyUIEntries.Remove(lobbyId, out LobbyUIEntry entry))
                 return;
 
-            Debug.LogError("Did not receive server address: " + error);
+            Destroy(entry.gameObject);
         }
 
         private void SetActivePanel(RectTransform activePanel)
         {
-            foreach (RectTransform panel in _panels)
+            foreach (RectTransform panel in new[]
+                     {
+                         _connectionPanel, _onlinePanel
+                     })
             {
                 panel.gameObject.SetActive(false);
             }
             activePanel.gameObject.SetActive(true);
         }
+
+#endregion
     }
 }

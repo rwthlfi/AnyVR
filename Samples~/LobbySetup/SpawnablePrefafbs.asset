@@ -13,8 +13,12 @@ MonoBehaviour:
   m_Name: SpawnablePrefafbs
   m_EditorClassIdentifier: 
   _prefabs:
+  - {fileID: 7308729464564602820, guid: 88e002036104f05988175a0e93f78260, type: 3}
+  - {fileID: 4953228670959181866, guid: e97c39e6dc872b6f1a4b864c73f2c1da, type: 3}
   - {fileID: 9065046355952125734, guid: 8abde327d0837ae898daebf3ee88b3b1, type: 3}
-  - {fileID: 8505041916568804508, guid: adb8af0480e515c048510a165defe0ab, type: 3}
-  - {fileID: 9052915785183046015, guid: 25510a128cbd2d214bf9edaa8450328d, type: 3}
-  - {fileID: 7881639693188791789, guid: 9e7f34fc5d951c133bdf45f10ddb4440, type: 3}
+  - {fileID: 9111444471847147562, guid: 22b0b368b9aa61865ba7bc3af51c219b, type: 3}
+  - {fileID: 3118833873106882211, guid: ec0acb6b4b9c67189b170d5585b1cdc6, type: 3}
   - {fileID: 309886871373843250, guid: 217921babb1ff94abb542d4dcb98b6f8, type: 3}
+  - {fileID: 7270096850283665485, guid: 6e6479a9ba502c354b129a82ccf5af6b, type: 3}
+  - {fileID: 4945005472214722007, guid: 94262e05ac701b9d6a899617da803c86, type: 3}
+  - {fileID: 8505041916568804508, guid: adb8af0480e515c048510a165defe0ab, type: 3}

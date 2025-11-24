@@ -20,21 +20,28 @@ namespace AnyVR.Sample
 
         [SerializeField] private Button _joinBtn;
 
+        private ILobbyInfo _lobbyInfo;
+
         public event JoinEvent OnJoinButtonPressed;
 
-        public void SetLobby(Guid id, string lobbyName, string lobbySceneName, int lobbyCreatorId, ushort lobbyLobbyCapacity)
+        private void UpdateCapacityLabel()
         {
-            _lobbyNameText.text = lobbyName;
-            _lobbySceneNameText.text = lobbySceneName;
-            _lobbyCreatorText.text = lobbyCreatorId.ToString();
+            _lobbyCapacityText.text = $"{_lobbyInfo.NumPlayers.Value} / {_lobbyInfo.LobbyCapacity}";
+        }
 
-            GameState gameState = FindAnyObjectByType<GameState>();
-            PlayerState playerState = gameState.GetPlayerState(lobbyCreatorId);
+        public void SetLobby(ILobbyInfo lobby)
+        {
+            _lobbyInfo = lobby;
 
-            _lobbyCapacityText.text = playerState != null ? playerState.GetName() : $"Client_{lobbyCreatorId.ToString()}";
+            _lobbyNameText.text = lobby.Name.Value;
+            _lobbySceneNameText.text = lobby.Scene.Name;
+            _lobbyCreatorText.text = lobby.Creator != null ? lobby.Creator.Name : "N/A";
+
+            UpdateCapacityLabel();
+            lobby.NumPlayers.OnValueChanged += _ => UpdateCapacityLabel();
 
             _joinBtn.onClick.RemoveAllListeners();
-            _joinBtn.onClick.AddListener(() => OnJoinButtonPressed?.Invoke(id));
+            _joinBtn.onClick.AddListener(() => OnJoinButtonPressed?.Invoke(lobby.LobbyId));
         }
     }
 }

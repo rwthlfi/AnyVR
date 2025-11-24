@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,88 +10,96 @@ namespace AnyVR.Sample
 {
     public class UISessionPanel : MonoBehaviour
     {
-        private LobbyHandler _lobbyHandler;
-
-        private readonly Dictionary<int, UIUserListEntry> _players = new();
-        
         [SerializeField] private UIUserListEntry _entryPrefab;
-        
+
         [SerializeField] private RectTransform _entryParent;
 
         [SerializeField] private TextMeshProUGUI _pingLabel;
-        
+
         [SerializeField] private TextMeshProUGUI _lobbyNameLabel;
-        
+
         [SerializeField] private TextMeshProUGUI _ownerLabel;
-        
+
         [SerializeField] private TextMeshProUGUI _locationLabel;
-        
+
         [SerializeField] private TextMeshProUGUI _quickConnectLabel;
-        
+
         [SerializeField] private TextMeshProUGUI _capacityLabel;
-        
+
+        private LobbyState _lobbyState;
+
         private Coroutine _pingCoroutine;
+
+        private Dictionary<int, UIUserListEntry> _players;
 
         private void Start()
         {
-            _lobbyHandler = LobbyHandler.GetInstance();
-            if (_lobbyHandler == null)
+            _lobbyState = LobbyState.GetInstance();
+            if (_lobbyState == null)
             {
-                Debug.LogWarning("LobbyHandler not found. Disabling UISessionPanel.");
+                Debug.LogWarning("LobbyState not found. Disabling UISessionPanel.");
                 return;
             }
-            
-            _lobbyHandler.OnPlayerJoin += AddPlayerEntry;
-            _lobbyHandler.OnPlayerLeave += RemovePlayerEntry;
+
+            _players = new Dictionary<int, UIUserListEntry>();
+
+            _lobbyState.OnPlayerJoin += AddPlayerEntry;
+            _lobbyState.OnPlayerLeave += RemovePlayerEntry;
 
             _pingCoroutine = StartCoroutine(Co_UpdatePingLabel());
         }
 
-        private IEnumerator Co_UpdatePingLabel()
-        {
-            const float pingInterval = 0.5f;
-            if (_lobbyHandler == null)
-            {
-                yield return null;
-            }
-
-            ConnectionManager connectionManager = ConnectionManager.GetInstance();
-            Assert.IsNotNull(connectionManager);
-            
-            while (_lobbyHandler != null)
-            {
-                _pingLabel.text = $"{connectionManager.Latency.ToString()} ms";
-                yield return new WaitForSeconds(pingInterval);
-            }
-        }
-
         private void OnEnable()
         {
-            if (_lobbyHandler == null)
+            if (_lobbyState == null)
                 return;
 
             UpdateSessionInfo();
             RemoveAllEntries();
 
-            foreach (LobbyPlayerState player in _lobbyHandler.GetPlayerStates<LobbyPlayerState>())
+            foreach (LobbyPlayerState player in _lobbyState.GetPlayerStates<LobbyPlayerState>())
             {
                 AddPlayerEntry(player);
             }
-            
-            float playerCount = _lobbyHandler.GetPlayerStates().Count();
-            float capacity = _lobbyHandler.MetaData.LobbyCapacity;
-            
+
+            float playerCount = _lobbyState.GetPlayerStates().Count();
+            float capacity = _lobbyState.LobbyInfo.LobbyCapacity;
+
             _capacityLabel.text = $"({playerCount} / {capacity})";
         }
-        
+
+        private void OnDestroy()
+        {
+            if (_pingCoroutine != null)
+                StopCoroutine(_pingCoroutine);
+        }
+
+        private IEnumerator Co_UpdatePingLabel()
+        {
+            const float pingInterval = 0.5f;
+            if (_lobbyState == null)
+            {
+                yield return null;
+            }
+
+            ConnectionManager connectionManager = ConnectionManager.Instance;
+            Assert.IsNotNull(connectionManager);
+
+            while (_lobbyState != null)
+            {
+                _pingLabel.text = $"{connectionManager.Ping.ToString()} ms";
+                yield return new WaitForSeconds(pingInterval);
+            }
+        }
+
         private void UpdateSessionInfo()
         {
-            _lobbyNameLabel.text = _lobbyHandler.MetaData.Name;
-            _locationLabel.text = _lobbyHandler.MetaData.SceneName;
-            _quickConnectLabel.text = _lobbyHandler.QuickConnectCode.ToString();
+            _lobbyNameLabel.text = _lobbyState.LobbyInfo.Name.Value;
+            _locationLabel.text = _lobbyState.LobbyInfo.Scene.Name;
+            _quickConnectLabel.text = _lobbyState.LobbyInfo.QuickConnectCode.ToString();
 
-            PlayerState owner = _lobbyHandler.GetLobbyOwner();
-            _ownerLabel.text = owner != null ? owner.GetName() : "N/A (disconnected)";
+            GlobalPlayerState owner = _lobbyState.LobbyInfo.Creator;
+            _ownerLabel.text = owner != null ? owner.Name : "N/A (disconnected)";
         }
 
         private void RemoveAllEntries()
@@ -104,32 +111,27 @@ namespace AnyVR.Sample
             _players.Clear();
         }
 
-        private void AddPlayerEntry(PlayerState playerState)
+        private void AddPlayerEntry(PlayerStateBase playerState)
         {
-            if (_players.ContainsKey(playerState.GetID()))
+            GlobalPlayerState globalPlayerState = ((LobbyPlayerState)playerState).Global;
+            if (_players.ContainsKey(globalPlayerState.ID))
                 return;
-            
+
             UIUserListEntry entry = Instantiate(_entryPrefab, _entryParent);
-            entry.SetPlayerInfo((LobbyPlayerState) playerState);
-            
-            entry.OnKickButtonPressed += player => player.KickPlayer();
-            entry.OnPromoteToAdminButtonPressed += player => player.PromoteToAdmin();
-            
-            _players.Add(playerState.GetID(), entry);
+            entry.SetPlayerInfo((LobbyPlayerState)playerState);
+
+            entry.OnKickButtonPressed += player => LobbyPlayerController.Instance.Kick(player);
+            entry.OnPromoteToAdminButtonPressed += player => LobbyPlayerController.Instance.PromoteToAdmin(player);
+
+            _players.Add(globalPlayerState.ID, entry);
         }
-        
+
         private void RemovePlayerEntry(int playerId)
         {
             _players.Remove(playerId, out UIUserListEntry entry);
 
             if (entry != null)
                 Destroy(entry.gameObject);
-        }
-
-        private void OnDestroy()
-        {
-            if(_pingCoroutine != null)
-                StopCoroutine(_pingCoroutine);
         }
     }
 }

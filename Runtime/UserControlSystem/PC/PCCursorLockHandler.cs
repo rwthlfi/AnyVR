@@ -15,7 +15,6 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using AnyVR.PlatformManagement;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -41,6 +40,8 @@ namespace AnyVR.UserControlSystem.PC
 
         [SerializeField]
         private bool _isCursorUnlocked;
+
+        private readonly UnityEvent<bool> _onCursorUnlockToggle = new();
         /// <summary>
         ///     Read-only property that indicates whether the cursor is currently unlocked or not.
         /// </summary>
@@ -53,8 +54,6 @@ namespace AnyVR.UserControlSystem.PC
                 s_instance.ToggleCursorUnlock(value);
             }
         }
-
-        private readonly UnityEvent<bool> _onCursorUnlockToggle = new();
         public static UnityEvent<bool> OnCursorUnlockToggle => s_instance._onCursorUnlockToggle;
 
 
@@ -80,7 +79,7 @@ namespace AnyVR.UserControlSystem.PC
             // Locks cursor initially.
             IsCursorUnlocked = false;
         }
-        
+
         private void OnDestroy()
         {
             // Unsubscribes from the action events to prevent memory leaks.

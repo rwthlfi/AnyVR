@@ -101,19 +101,48 @@ MonoBehaviour:
   m_StartingSelectFilters: []
   _maxInteractionDistance: 3
   _interactionRaycastOrigin: {fileID: 6796444230602997808}
-  _interactionMode: 0
-  _interactionAction:
-    m_UseReference: 1
+  _selectionMode: 0
+  _selectionAction:
+    m_UseReference: 0
     m_Action:
       m_Name: Interaction
       m_Type: 0
       m_ExpectedControlType: Button
-      m_Id: bcebd797-19cd-48ca-87e9-6047082764a9
+      m_Id: 83b42db1-f020-4d07-b135-c847eff3e1e5
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
       m_Flags: 0
-    m_Reference: {fileID: -7565586953333158246, guid: 40eee974618b10508bf944a19ac75728, type: 3}
+    m_Reference: {fileID: 0}
+  _primaryInteractionAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Primary Interaction
+      m_Type: 0
+      m_ExpectedControlType: Button
+      m_Id: 234d9625-e2db-49c7-b124-0749d90c9e0b
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 0}
+  _secondaryInteractionAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Secondary Interaction
+      m_Type: 0
+      m_ExpectedControlType: Button
+      m_Id: dcab1bc8-5866-4ea0-b1f8-a294462606af
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 0}
+  _throwingSettings:
+    _throwDelay: 0.5
+    _animSpeed: 1
+    _maxThrowChargeDuration: 2
+    _maxThrowForce: 10
 --- !u!1001 &6796444230212220738
 PrefabInstance:
   m_ObjectHideFlags: 0
