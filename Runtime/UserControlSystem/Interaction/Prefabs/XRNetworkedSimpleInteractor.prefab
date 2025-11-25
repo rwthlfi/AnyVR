@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 6322980337709677528}
   - component: {fileID: 3868904154735718649}
   - component: {fileID: 4608062098410976269}
+  - component: {fileID: 4194923970930585361}
   m_Layer: 0
   m_Name: XRNetworkedSimpleInteractor
   m_TagString: Untagged
@@ -105,7 +106,7 @@ MonoBehaviour:
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 65535
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 9519964123548962130
+  <AssetPathHash>k__BackingField: 4423838107859015216
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
@@ -126,7 +127,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _overrideType: 3
   _updateHostVisibility: 1
-  _observerConditions: []
+  _observerConditions:
+  - {fileID: 11400000, guid: 2033f54fd2794464bae08fa5a55c8996, type: 2}
 --- !u!114 &6322980337709677528
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -236,6 +238,22 @@ MonoBehaviour:
   _synchronizeFirstLastFocusEvents: 0
   _synchronizeFocusEvents: 0
   _synchronizeActivateEvents: 0
+--- !u!114 &4194923970930585361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4980796098947048322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 03002f7d324007e41b10a9dc87ed3c38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 1473241084270032054}
+  _networkObjectCache: {fileID: 0}
+  _allowTakeOwnership: 1
 --- !u!1 &7199263169247024841
 GameObject:
   m_ObjectHideFlags: 0
