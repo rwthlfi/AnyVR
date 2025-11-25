@@ -105,40 +105,34 @@ namespace AnyVR.LobbySystem.Internal
         [Server]
         private static SceneLoadData CreateSceneLoadData(GlobalLobbyState state)
         {
-            return CreateSceneLoadDataInternal(
-                state.Scene.ScenePath,
-                state.LobbyId
-            );
+            return CreateSceneLoadDataInternal(new SceneLookupData(state.Scene.ScenePath), state.LobbyId);
         }
 
         [Server]
         private static SceneLoadData CreateSceneLoadData(LobbyGameMode gameMode)
         {
-            return CreateSceneLoadDataInternal(
-                gameMode.gameObject.scene.handle,
-                gameMode.GetGameState<LobbyState>().LobbyId
-            );
+            return CreateSceneLoadDataInternal(new SceneLookupData(gameMode.gameObject.scene.handle), gameMode.GetGameState<LobbyState>().LobbyId);
         }
 
         [Server]
-        private static SceneLoadData CreateSceneLoadDataInternal(object sceneIdentifier, Guid lobbyId)
+        private static SceneLoadData CreateSceneLoadDataInternal(SceneLookupData lookupData, Guid lobbyId)
         {
-            SceneLoadData sld = sceneIdentifier switch
+            SceneLoadData sld = new(lookupData)
             {
-                string path => new SceneLoadData(path),
-                int handle => new SceneLoadData(handle),
-                _ => throw new ArgumentException("Unsupported scene identifier type", nameof(sceneIdentifier))
+                Params =
+                {
+                    ServerParams = new object[]
+                    {
+                        SceneLoadParam.Lobby, lobbyId
+                    }
+                },
+                ReplaceScenes = ReplaceOption.OnlineOnly,
+                Options =
+                {
+                    AllowStacking = true, LocalPhysics = LocalPhysicsMode.None, AutomaticallyUnload = false
+                }
             };
 
-            sld.Params.ServerParams = new object[]
-            {
-                SceneLoadParam.Lobby, lobbyId
-            };
-
-            sld.ReplaceScenes = ReplaceOption.OnlineOnly;
-            sld.Options.AllowStacking = true;
-            sld.Options.LocalPhysics = LocalPhysicsMode.None;
-            sld.Options.AutomaticallyUnload = false;
             sld.Params.ClientParams = SerializeClientParams(sld.Params.ServerParams);
             return sld;
         }
@@ -180,6 +174,8 @@ namespace AnyVR.LobbySystem.Internal
             SceneLoadData sld = CreateSceneLoadData(lobbyGameMode);
             Assert.IsNotNull(sld);
 
+            SceneLookupData lookupData = new(lobbyGameMode.gameObject.scene.name);
+            sld.PreferredActiveScene = new PreferredScene(lookupData, lookupData);
             _internal.SceneManager.LoadConnectionScenes(conn, sld);
         }
 
