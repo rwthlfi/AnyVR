@@ -175,7 +175,7 @@ namespace AnyVR.LobbySystem.Internal
             Assert.IsNotNull(sld);
 
             SceneLookupData lookupData = new(lobbyGameMode.gameObject.scene.name);
-            sld.PreferredActiveScene = new PreferredScene(lookupData, lookupData);
+            sld.PreferredActiveScene = new PreferredScene(lookupData, null);
             _internal.SceneManager.LoadConnectionScenes(conn, sld);
         }
 
@@ -191,7 +191,8 @@ namespace AnyVR.LobbySystem.Internal
         internal static SceneLoadData GlobalSceneLoadData(string globalScenePath)
         {
             string scene = Path.GetFileNameWithoutExtension(globalScenePath);
-            SceneLoadData sld = new(scene)
+            SceneLookupData lookupData = new(scene);
+            SceneLoadData sld = new(lookupData)
             {
                 Params =
                 {
@@ -203,7 +204,8 @@ namespace AnyVR.LobbySystem.Internal
                     {
                         (object)SceneLoadParam.Global
                     })
-                }
+                },
+                PreferredActiveScene = new PreferredScene(null, lookupData)
             };
             return sld;
         }
