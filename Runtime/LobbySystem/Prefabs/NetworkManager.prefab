@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 5021902473138039828}
   - component: {fileID: 6287520840629278902}
   - component: {fileID: 3804329797783330967}
+  - component: {fileID: -1268452309432326146}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -189,3 +190,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _currentLevel: 1
+--- !u!114 &-1268452309432326146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1087981268889951963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15895a51081447d46bda466e7e830c08, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _sceneProcessor: {fileID: 0}
+  _lightProbeUpdating: 0
+  _moveClientObjects: 1
+  _setActiveScene: 0

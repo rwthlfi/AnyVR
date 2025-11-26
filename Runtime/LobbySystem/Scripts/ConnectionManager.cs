@@ -260,6 +260,7 @@ namespace AnyVR.LobbySystem
 
             Task<ConnectionStatus> task = _connectionAwaiter.WaitForResult(timeout);
             _networkManager.ClientManager.StartConnection();
+
             ConnectionStatus connectionStatus = await task;
 
             if (connectionStatus != ConnectionStatus.Connected)

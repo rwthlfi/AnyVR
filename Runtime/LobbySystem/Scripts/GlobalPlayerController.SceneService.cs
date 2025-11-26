@@ -1,6 +1,7 @@
 using AnyVR.LobbySystem.Internal;
 using FishNet.Managing.Scened;
 using FishNet.Object;
+using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
@@ -10,12 +11,6 @@ namespace AnyVR.LobbySystem
 {
     public partial class GlobalPlayerController
     {
-        [Client]
-        private static void Client_OnLoadEnd(SceneLoadEndEventArgs obj)
-        {
-            USceneManager.SetActiveScene(obj.LoadedScenes[0]);
-        }
-
         [Client]
         private static void Client_OnLoadStart(SceneLoadStartEventArgs args)
         {

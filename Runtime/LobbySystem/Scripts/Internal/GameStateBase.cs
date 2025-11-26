@@ -25,20 +25,6 @@ namespace AnyVR.LobbySystem.Internal
 
 #endregion
 
-#region Lifecycle Overrides
-
-        public override void OnStartNetwork()
-        {
-            base.OnStartNetwork();
-
-            _playerStates.OnChange += PlayerStatesOnChange;
-
-            Assert.IsFalse(Instances.ContainsKey(gameObject.scene));
-            Instances.Add(gameObject.scene, this);
-        }
-
-#endregion
-
         internal static GameStateBase GetInstance(Scene scene)
         {
             return Instances.GetValueOrDefault(scene);
@@ -64,6 +50,26 @@ namespace AnyVR.LobbySystem.Internal
                     throw new ArgumentOutOfRangeException(nameof(op), op, null);
             }
         }
+
+#region Lifecycle Overrides
+
+        public override void OnStartNetwork()
+        {
+            base.OnStartNetwork();
+
+            _playerStates.OnChange += PlayerStatesOnChange;
+
+            Assert.IsFalse(Instances.ContainsKey(gameObject.scene));
+            Instances.Add(gameObject.scene, this);
+        }
+
+        public override void OnStopNetwork()
+        {
+            base.OnStopNetwork();
+            Instances.Clear();
+        }
+
+#endregion
 
 #region Public API
 

@@ -15,10 +15,12 @@
 // along with AnyVR.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using System.Linq;
 using FishNet.Component.Ownership;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace AnyVR.UserControlSystem.Interaction
 {
@@ -30,6 +32,17 @@ namespace AnyVR.UserControlSystem.Interaction
         private void Awake()
         {
             _predictedOwner = GetComponent<PredictedOwner>();
+        }
+
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            //TODO: Remove this quick workaround for predicted spawning
+            Scene? scene = _predictedOwner?.Owner?.Scenes?.FirstOrDefault(); // Get scene of player. Could be wrong scene, but seems to work for now.
+            if (scene != null && scene.Value.IsValid())
+            {
+                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(gameObject, scene.Value);
+            }
         }
 
         [Client]

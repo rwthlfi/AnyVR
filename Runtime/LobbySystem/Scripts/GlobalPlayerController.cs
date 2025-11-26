@@ -5,6 +5,7 @@ using AnyVR.Logging;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine.Assertions;
+using UnityEngine.SceneManagement;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
@@ -31,7 +32,6 @@ namespace AnyVR.LobbySystem
             Instance = this;
 
             SceneManager.OnLoadStart += Client_OnLoadStart;
-            SceneManager.OnLoadEnd += Client_OnLoadEnd;
             SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
         }
 
