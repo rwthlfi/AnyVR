@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AnyVR.Logging;
 using UnityEngine;
+using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.Voicechat
@@ -78,26 +79,23 @@ namespace AnyVR.Voicechat
 
         public static LiveKitClient Instantiate(GameObject go)
         {
-            // #if UNITY_EDITOR
-//             Logger.Log(LogLevel.Verbose, nameof(LiveKitClient), "VoiceChatManager not initialized. Platform: EDITOR");
-//             return null;
+            LiveKitClient liveKitClient = null;
 #if UNITY_SERVER
             Logger.Log(LogLevel.Verbose, nameof(LiveKitClient), "VoiceChatManager not initialized. Platform: SERVER");
             return null;
 #endif
 
 #if UNITY_WEBGL
-            LiveKitClient liveKitClient = go.AddComponent<WebGLVoicechatClient>();
+            liveKitClient = go.AddComponent<WebGLVoicechatClient>();
             Logger.Log(LogLevel.Verbose, nameof(LiveKitClient), "VoiceChatManager initialized. Platform: WEBGL");
-#elif UNITY_STANDALONE // && !UNITY_EDITOR
-            LiveKitClient liveKitClient = go.AddComponent<StandaloneLiveKitClient>();
+#elif UNITY_STANDALONE || UNITY_ANDROID
+            liveKitClient = go.AddComponent<StandaloneLiveKitClient>();
             Logger.Log(LogLevel.Verbose, nameof(LiveKitClient), "VoiceChatManager initialized. Platform: STANDALONE");
 #else
             // throw new PlatformNotSupportedException("VoiceChatManager not initialized. Platform: UNKNOWN");
 #endif
-
+            Assert.IsNotNull(liveKitClient);
             liveKitClient.Init();
-
             return liveKitClient;
         }
 
