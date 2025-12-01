@@ -34,15 +34,20 @@ namespace AnyVR.LobbySystem
         {
             GetGameState().OnPlayerJoin += _ =>
             {
-                if (_inactiveCoroutine != null)
-                {
-                    StopCoroutine(_inactiveCoroutine);
-                }
+                if (_inactiveCoroutine == null)
+                    return;
+
+                StopCoroutine(_inactiveCoroutine);
+                _inactiveCoroutine = null;
             };
 
             GetGameState().OnPlayerLeave += _ =>
             {
-                if (!GetGameState().GetPlayerStates().Any())
+                if (GetGameState().GetPlayerStates().Any())
+                    return;
+
+                // Close lobbies due to inactivity if the lobby has no expiration date set.
+                if (_expirationCoroutine == null)
                 {
                     _inactiveCoroutine = StartCoroutine(CloseInactiveLobby());
                 }
@@ -51,14 +56,14 @@ namespace AnyVR.LobbySystem
             DateTime? expiration = LobbyInfo.ExpirationDate.Value;
             if (expiration.HasValue)
             {
-                StartCoroutine(ExpireLobby(expiration.Value));
+                _expirationCoroutine = StartCoroutine(ExpireLobby(expiration.Value));
             }
         }
 
         protected override PlayerStateBase SpawnPlayerState(NetworkConnection conn)
         {
             // We don't call base.SpawnPlayerState() because we want to set the lobby_id and the is_admin property before spawning.
-            // This way these properties will be replicated in the OnBeginClient method.
+            // This way these properties will be replicated in the OnBeginClient method. (Piggybacked with spawn message)
             LobbyPlayerState ps = Instantiate(_playerStatePrefab).GetComponent<LobbyPlayerState>();
 
             ps.SetPlayerId(conn.ClientId);
@@ -87,6 +92,7 @@ namespace AnyVR.LobbySystem
 
         /// <summary>
         ///     Checks if the lobby remains empty for a duration. Then closes the lobby if it remained empty.
+        ///     This coroutine is cancelled when a player joins the lobby.
         /// </summary>
         /// <param name="duration">Duration in seconds until expiration</param>
         private IEnumerator CloseInactiveLobby(ushort duration = 10)

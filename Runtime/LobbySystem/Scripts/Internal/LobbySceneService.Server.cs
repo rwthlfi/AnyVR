@@ -182,6 +182,7 @@ namespace AnyVR.LobbySystem.Internal
         [Server]
         internal void UnloadLobbySceneForPlayer(NetworkConnection conn, LobbyGameMode lobbyGameMode)
         {
+            // TODO: send reason to player (kick, lobby closed, player left, etc.)
             SceneUnloadData sud = CreateUnloadData(lobbyGameMode);
             Assert.IsNotNull(sud);
 
