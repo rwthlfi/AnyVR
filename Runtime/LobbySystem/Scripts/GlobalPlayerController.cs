@@ -5,7 +5,6 @@ using AnyVR.Logging;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine.Assertions;
-using UnityEngine.SceneManagement;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
@@ -156,10 +155,15 @@ namespace AnyVR.LobbySystem
         /// <param name="password">The password for the lobby. Pass null or white space for no password.</param>
         /// <param name="sceneMeta">The scene metadata of the lobby.</param>
         /// <param name="maxClients">The maximum number of clients allowed in the lobby.</param>
+        /// <param name="expirationDate">
+        ///     The time at which the lobby should automatically expire.
+        ///     If not <c>null</c>, the lobby will not be closed due to inactivity, but only at the specified time.
+        ///     If <c>null</c>, the lobby will not expire and only close due to inactivity.
+        /// </param>
         /// <returns>An asynchronous task that returns the result of the lobby creation.</returns>
-        public async Task<CreateLobbyResult> CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMeta, ushort maxClients)
+        public async Task<CreateLobbyResult> CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMeta, ushort maxClients, DateTime? expirationDate = null)
         {
-            CreateLobbyResult result = await Client_CreateLobby(lobbyName, password, sceneMeta, maxClients);
+            CreateLobbyResult result = await Client_CreateLobby(lobbyName, password, sceneMeta, maxClients, expirationDate);
             Logger.Log(LogLevel.Info, nameof(GlobalPlayerController), result.ToFriendlyString());
             return result;
         }

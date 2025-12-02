@@ -51,7 +51,7 @@ namespace AnyVR.LobbySystem.Internal
                 .WithExpiration(expirationDate)
                 .Create();
 
-            // Loading the lobby scene.
+            // Load and await the lobby scene.
             LobbyGameMode gameMode = await _sceneService.StartLobbyScene(gls);
 
             Assert.IsNotNull(gameMode, "Failed to load lobby scene");
@@ -60,7 +60,6 @@ namespace AnyVR.LobbySystem.Internal
             Assert.IsTrue(success);
 
             gameMode.SetLobbyId(gls.LobbyId);
-
             gameMode.OnBeginPlay();
 
             creator.ObserverRPC_OnCreateLobbyResult(CreateLobbyStatus.Success, gls.LobbyId);
@@ -131,8 +130,13 @@ namespace AnyVR.LobbySystem.Internal
 
             LobbyGameMode gameMode = _lobbyRegistry.GetLobbyGameMode(lobbyId);
             Assert.IsNotNull(gameMode);
-            _sceneService.UnloadLobby(gameMode);
 
+            foreach (PlayerStateBase playerState in gameMode.GetGameState().GetPlayerStates().ToList())
+            {
+                _sceneService.UnloadLobbySceneForPlayer(ServerManager.Clients[playerState.ID], gameMode);
+            }
+
+            _sceneService.UnloadLobby(gameMode);
             _lobbyRegistry.UnregisterLobby(state);
             Despawn(state.NetworkObject, DespawnType.Destroy);
 

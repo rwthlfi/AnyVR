@@ -1,7 +1,6 @@
 using AnyVR.LobbySystem.Internal;
 using FishNet.Managing.Scened;
 using FishNet.Object;
-using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
