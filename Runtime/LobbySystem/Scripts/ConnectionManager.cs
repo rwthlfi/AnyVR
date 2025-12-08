@@ -256,7 +256,7 @@ namespace AnyVR.LobbySystem
 
             m.SetClientAddress(FishnetServer.Host);
             m.SetPort(FishnetServer.Port);
-            m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol);
+            // m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol);
 
             Task<ConnectionStatus> task = _connectionAwaiter.WaitForResult(timeout);
             _networkManager.ClientManager.StartConnection();
