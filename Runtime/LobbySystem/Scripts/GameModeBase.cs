@@ -6,6 +6,7 @@ using FishNet.Object;
 using FishNet.Transporting;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.SceneManagement;
 
 namespace AnyVR.LobbySystem
 {
@@ -18,9 +19,20 @@ namespace AnyVR.LobbySystem
     /// </summary>
     public abstract class GameModeBase : NetworkBehaviour
     {
+        private static readonly Dictionary<Scene, GameModeBase> Instances = new();
+
+        internal static GameModeBase GetInstance(Scene scene)
+        {
+            return Instances.GetValueOrDefault(scene);
+        }
+
         public override void OnStartServer()
         {
             base.OnStartServer();
+
+            Assert.IsFalse(Instances.ContainsKey(gameObject.scene));
+            Instances.Add(gameObject.scene, this);
+
             SpawnGameState();
 
             ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
