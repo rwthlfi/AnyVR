@@ -58,6 +58,7 @@ namespace AnyVR.LobbySystem
                 VoiceConnectionResult.Error => "There was an error connecting to the LiveKit server.",
                 VoiceConnectionResult.AlreadyConnected => "Already connected to a LiveKit server.",
                 VoiceConnectionResult.PlatformNotSupported => "The voicechat is not supported on this platform.",
+                VoiceConnectionResult.Timeout => "Could not connect to the LiveKit server. Request timed out.",
                 _ => result.ToString()
             };
         }
