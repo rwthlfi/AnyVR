@@ -27,6 +27,8 @@ namespace AnyVR.LobbySystem
 
 #region Private Fields
 
+        private readonly RpcAwaiter<TokenResult> _tokenAwaiter = new(new TokenResult(TokenState.Timeout), new TokenResult(TokenState.Cancel));
+
         private readonly RpcAwaiter<PlayerKickResult> _playerKickUpdateAwaiter = new(PlayerKickResult.Timeout, PlayerKickResult.Cancelled);
 
         private readonly RpcAwaiter<PlayerPromotionResult> _playerPromoteUpdateAwaiter = new(PlayerPromotionResult.Timeout, PlayerPromotionResult.Cancelled);

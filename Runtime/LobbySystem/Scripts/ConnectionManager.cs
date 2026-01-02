@@ -111,21 +111,6 @@ namespace AnyVR.LobbySystem
         }
 
         /// <summary>
-        ///     The uri of the (LiveKit) tokenserver.
-        /// </summary>
-        public Uri LiveKitTokenServer { get; private set; }
-
-        /// <summary>
-        ///     The uri of the LiveKit server.
-        /// </summary>
-        public Uri LiveKitVoiceServer { get; private set; }
-
-        /// <summary>
-        ///     The host and port of the Fishnet server.
-        /// </summary>
-        public (string Host, ushort Port) FishnetServer { get; private set; }
-
-        /// <summary>
         ///     Called when the local client connection to the server has timed out.
         /// </summary>
         public event Action OnClientTimeout;
@@ -139,7 +124,7 @@ namespace AnyVR.LobbySystem
         ///     If <c>true</c>/<c>false</c>, use <c>https</c>/<c>http</c> and <c>wss</c>/<c>ws</c> internally.
         ///     This is set when connecting to the server in <see cref="ConnectToServer" />.
         /// </summary>
-        public bool UseSecureProtocol { get; private set; }
+        public bool UseSecureProtocol { get; }
 
 #endregion
 
@@ -225,14 +210,13 @@ namespace AnyVR.LobbySystem
         ///     After awaiting the asynchronous result, the active <see cref="GlobalGameState" /> is replicated and safe to use.
         ///     If the passed username is null, whitespace or already taken, the server will kick the local player immediately.
         /// </summary>
-        /// <param name="tokenServerUri">
-        ///     The uri of the token server. The uri of the fishnet server is fetched from the token
-        ///     server internally.
+        /// <param name="serverUri">
+        ///     The uri of the fishnet server.
         /// </param>
         /// <param name="userName">The desired username.</param>
         /// <param name="timeout">Optionally, specify a timeout. If <c>null</c> the timeout defaults to 5 seconds.</param>
         /// <returns>An asynchronous <see cref="ConnectionResult" /> indicating whether the connection attempt succeeded or failed.</returns>
-        public async Task<ConnectionResult> ConnectToServer(Uri tokenServerUri, string userName, TimeSpan? timeout = null)
+        public async Task<ConnectionResult> ConnectToServer(Uri serverUri, string userName, TimeSpan? timeout = null)
         {
             Assert.IsNotNull(_networkManager);
 
@@ -242,20 +226,10 @@ namespace AnyVR.LobbySystem
                 return new ConnectionResult(ConnectionStatus.AlreadyConnected, null);
             }
 
-            LiveKitTokenServer = tokenServerUri;
-            ((string host, ushort port), Uri liveKitVoiceServer)? res = await FetchServerAddresses(tokenServerUri);
-
-            if (!res.HasValue)
-            {
-                return new ConnectionResult(ConnectionStatus.ServerIpRequestFailed, null);
-            }
-            FishnetServer = res.Value.Item1;
-            LiveKitVoiceServer = res.Value.Item2;
-
             Multipass m = (Multipass)_networkManager.TransportManager.Transport;
 
-            m.SetClientAddress(FishnetServer.Host);
-            m.SetPort(FishnetServer.Port);
+            m.SetClientAddress(serverUri.Host);
+            m.SetPort((ushort)serverUri.Port);
             // m.GetTransport<Bayou>().SetUseWSS(UseSecureProtocol);
 
             Task<ConnectionStatus> task = _connectionAwaiter.WaitForResult(timeout);
@@ -275,42 +249,6 @@ namespace AnyVR.LobbySystem
             PlayerNameUpdateResult nameResult = await GlobalPlayerController.Instance.SetName(userName);
 
             return new ConnectionResult(connectionStatus, nameResult);
-        }
-
-        private async Task<((string host, ushort port), Uri liveKitVoiceServer)?> FetchServerAddresses(Uri tokenServerUri)
-        {
-            UseSecureProtocol = tokenServerUri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase);
-
-            Uri requestUri = new(tokenServerUri, "requestServerIp");
-            Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Requesting server ip from '{requestUri}'");
-
-            ServerAddressResponse response = await WebRequestHandler.GetAsync<ServerAddressResponse>(requestUri.ToString());
-            if (response.Success)
-            {
-                Logger.Log(LogLevel.Verbose, nameof(ConnectionManager), $"Received server ip: {{FishNet: {response.fishnet_server_address}, LiveKit: {response.livekit_server_address}}}");
-            }
-            else
-            {
-                Logger.Log(LogLevel.Warning, nameof(ConnectionManager), response.Error);
-                return null;
-            }
-
-            Uri liveKitVoiceServer = new($"{(UseSecureProtocol ? Uri.UriSchemeHttps : Uri.UriSchemeHttp)}://{response.livekit_server_address}");
-
-            string[] parts = response.fishnet_server_address.Split(':');
-            if (parts.Length != 2)
-            {
-                Logger.Log(LogLevel.Warning, nameof(ConnectionManager), $"Invalid FishNet server address: '{response.fishnet_server_address}'");
-                return null;
-            }
-
-
-            string host = parts[0];
-            if (ushort.TryParse(parts[1], out ushort port))
-                return ((host, port), liveKitVoiceServer);
-
-            Logger.Log(LogLevel.Warning, nameof(ConnectionManager), $"Invalid port in FishNet server address: '{response.fishnet_server_address}'");
-            return null;
         }
 
         /// <summary>

@@ -1,12 +1,10 @@
 using System;
 using System.Threading.Tasks;
-using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using AnyVR.Voicechat;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
-using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
@@ -34,11 +32,6 @@ namespace AnyVR.LobbySystem
         [Client]
         public async Task<VoiceConnectionResult> ConnectToLiveKitRoom()
         {
-            string roomName = this.GetGameState<LobbyState>().LobbyInfo.Name.Value;
-            string identity = GetPlayerState<LobbyPlayerState>().ID.ToString();
-
-            Assert.IsNotNull(identity);
-
             if (Voice == null)
             {
                 return VoiceConnectionResult.PlatformNotSupported;
@@ -49,23 +42,18 @@ namespace AnyVR.LobbySystem
                 return VoiceConnectionResult.AlreadyConnected;
             }
 
-            Uri tokenUri = new UriBuilder(ConnectionManager.Instance.LiveKitTokenServer)
-            {
-                Scheme = ConnectionManager.Instance.UseSecureProtocol ? "https" : "http", Path = "requestToken", Query = $"room_name={Uri.EscapeDataString(roomName)}&identity={Uri.EscapeDataString(identity)}"
-            }.Uri;
+            TokenResult tokenResult = await RequestLiveKitToken();
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Requesting LiveKit Token from '{tokenUri}'");
-            TokenResponse response = await WebRequestHandler.GetAsync<TokenResponse>(tokenUri.ToString());
-
-            if (!response.Success)
+            if (tokenResult.State != TokenState.Success)
             {
-                Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), "LiveKit token retrieval failed!");
+                Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), $"LiveKit token retrieval failed! {tokenResult.State.ToFriendlyString()}");
                 return VoiceConnectionResult.TokenRetrievalFailed;
             }
 
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Received LiveKit Token: '{response.token}'");
+            string token = tokenResult.Token;
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Received LiveKit Token: '{token}'");
 
-            if (string.IsNullOrWhiteSpace(response.token))
+            if (string.IsNullOrWhiteSpace(token))
             {
                 Logger.Log(LogLevel.Warning, nameof(LobbyPlayerController), "Received LiveKit Token is null or white space!");
                 return VoiceConnectionResult.TokenRetrievalFailed;
@@ -73,12 +61,12 @@ namespace AnyVR.LobbySystem
 
             Voice.SetAudioObjectMapping(GetRemoteParticipantAudioSource);
 
-            Uri voicechatUri = new UriBuilder(ConnectionManager.Instance.LiveKitVoiceServer)
+            Uri voicechatUri = new UriBuilder(tokenResult.LiveKitServerUrl)
             {
                 Scheme = ConnectionManager.Instance.UseSecureProtocol ? "wss" : "ws"
             }.Uri;
 
-            LiveKitConnectionResult result = await Voice.Connect(voicechatUri.ToString(), response.token);
+            LiveKitConnectionResult result = await Voice.Connect(voicechatUri.ToString(), token);
 
             if (result == LiveKitConnectionResult.Connected)
             {
@@ -100,6 +88,14 @@ namespace AnyVR.LobbySystem
 
             Logger.Log(LogLevel.Info, nameof(LobbyPlayerController), res.ToFriendlyString());
             return res;
+        }
+
+        [Client]
+        private Task<TokenResult> RequestLiveKitToken()
+        {
+            Task<TokenResult> task = _tokenAwaiter.WaitForResult();
+            ServerRPC_RequestLiveKitToken();
+            return task;
         }
 
         /// <summary>
@@ -242,6 +238,13 @@ namespace AnyVR.LobbySystem
         {
             Logger.Log(LogLevel.Info, nameof(LobbyPlayerController), $"Kick result: {playerKickResult}");
             _playerKickUpdateAwaiter?.Complete(playerKickResult);
+        }
+
+        [TargetRpc]
+        private void TargetRPC_OnTokenResult(NetworkConnection _, TokenState tokenState, string token = null, string liveKitServerUrl = null)
+        {
+            Logger.Log(LogLevel.Info, nameof(LobbyPlayerController), $"Token result: {tokenState}");
+            _tokenAwaiter?.Complete(new TokenResult(tokenState, token, liveKitServerUrl));
         }
 
 #endregion

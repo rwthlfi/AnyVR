@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Linq;
+using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
+using AnyVR.Voicechat;
 using FishNet.Connection;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
@@ -12,14 +14,16 @@ using Logger = AnyVR.Logging.Logger;
 namespace AnyVR.LobbySystem
 {
     /// <summary>
-    ///     Override this class to implement server-side gameplay logic of a lobby.
+    ///     Override this class to implement the server-side gameplay logic for a lobby.
     ///     Each lobby can be configured with its own custom LobbyGameMode.
-    ///     Manages the lobby lifecycle, closing inactive lobbies, and automatically expiring lobbies at a set time.
+    ///     Also manages the lifecycles of lobbies, closing inactive lobbies, and automatically expiring them at a set time.
     ///     <seealso cref="GameModeBase" />
     /// </summary>
     public class LobbyGameMode : GameModeBase
     {
         private readonly SyncVar<Guid> _lobbyId = new();
+
+        private LiveKitTokenClient _tokenClient;
 
         internal ILobbyInfo LobbyInfo => GlobalGameState.Instance.GetLobbyInfo(_lobbyId.Value);
 
@@ -58,6 +62,8 @@ namespace AnyVR.LobbySystem
             {
                 _expirationCoroutine = StartCoroutine(ExpireLobby(expiration.Value));
             }
+
+            _tokenClient = new LiveKitTokenClient(LobbyInfo.LobbyId.ToString());
         }
 
         protected override PlayerStateBase SpawnPlayerState(NetworkConnection conn)
@@ -111,6 +117,14 @@ namespace AnyVR.LobbySystem
 
             Logger.Log(LogLevel.Info, nameof(LobbyGameMode), $"Closing lobby {GetGameState<LobbyState>().LobbyId} due to inactivity.");
             LobbyManagerInternal.Instance.Server_CloseLobby(GetGameState<LobbyState>().LobbyId);
+        }
+
+        public Task<string> RequestLiveKitToken(LobbyPlayerState player)
+        {
+            string identity = player.ID.ToString();
+            Assert.IsNotNull(identity);
+
+            return _tokenClient.RequestToken(identity);
         }
 
 #region Private Fields
