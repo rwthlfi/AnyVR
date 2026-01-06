@@ -204,9 +204,8 @@ namespace AnyVR.LobbySystem
 
 #region Public API
 
-        //TODO: Hide token server from user. Connect using fishnet address instead.
         /// <summary>
-        ///     Starts a connection to a server.
+        ///     Starts a connection to a fishnet server.
         ///     After awaiting the asynchronous result, the active <see cref="GlobalGameState" /> is replicated and safe to use.
         ///     If the passed username is null, whitespace or already taken, the server will kick the local player immediately.
         /// </summary>
