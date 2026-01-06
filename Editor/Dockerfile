@@ -4,7 +4,7 @@
 #                  Unity base image stuff                  #
 # ======================================================== #
 
-FROM ubuntu:20.04 AS mpuk
+FROM ubuntu:22.04 AS mpuk
 
 RUN addgroup --gid 2000 mpukgame && \
     useradd -g 2000 -u 2000 -ms /bin/sh mpukgame && \
