@@ -42,11 +42,19 @@ namespace AnyVR.LobbySystem
                 return VoiceConnectionResult.AlreadyConnected;
             }
 
+            string liveKitUrl = this.GetGameState<LobbyState>().LiveKitServerUrl;
+
+            if (liveKitUrl == null)
+            {
+                Logger.Log(LogLevel.Warning, nameof(LobbyPlayerController), "This lobby is not set up for a LiveKit room. The LiveKit server url is not set.");
+                return VoiceConnectionResult.LiveKitServerNotSet;
+            }
+
             TokenResult tokenResult = await RequestLiveKitToken();
 
             if (tokenResult.State != TokenState.Success)
             {
-                Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), $"LiveKit token retrieval failed! {tokenResult.State.ToFriendlyString()}");
+                Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), $"LiveKit token retrieval failed. {tokenResult.State.ToFriendlyString()}");
                 return VoiceConnectionResult.TokenRetrievalFailed;
             }
 
@@ -55,18 +63,14 @@ namespace AnyVR.LobbySystem
 
             if (string.IsNullOrWhiteSpace(token))
             {
-                Logger.Log(LogLevel.Warning, nameof(LobbyPlayerController), "Received LiveKit Token is null or white space!");
+                Logger.Log(LogLevel.Warning, nameof(LobbyPlayerController), "Received LiveKit Token is null or white space.");
                 return VoiceConnectionResult.TokenRetrievalFailed;
             }
 
             Voice.SetAudioObjectMapping(GetRemoteParticipantAudioSource);
 
-            Uri voicechatUri = new UriBuilder(tokenResult.LiveKitServerUrl)
-            {
-                Scheme = ConnectionManager.Instance.UseSecureProtocol ? "wss" : "ws"
-            }.Uri;
 
-            LiveKitConnectionResult result = await Voice.Connect(voicechatUri.ToString(), token);
+            LiveKitConnectionResult result = await Voice.Connect(this.GetGameState<LobbyState>().LiveKitServerUrl, token);
 
             if (result == LiveKitConnectionResult.Connected)
             {
@@ -241,10 +245,9 @@ namespace AnyVR.LobbySystem
         }
 
         [TargetRpc]
-        private void TargetRPC_OnTokenResult(NetworkConnection _, TokenState tokenState, string token = null, string liveKitServerUrl = null)
+        private void TargetRPC_OnTokenResult(NetworkConnection _, TokenState tokenState, string token = null)
         {
-            Logger.Log(LogLevel.Info, nameof(LobbyPlayerController), $"Token result: {tokenState}");
-            _tokenAwaiter?.Complete(new TokenResult(tokenState, token, liveKitServerUrl));
+            _tokenAwaiter?.Complete(new TokenResult(tokenState, token));
         }
 
 #endregion

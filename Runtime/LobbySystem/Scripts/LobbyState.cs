@@ -2,20 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using AnyVR.LobbySystem.Internal;
+using AnyVR.Logging;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine.Assertions;
+using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
     public class LobbyState : GameStateBase
     {
-#region Replicated Properties
-
-        private readonly SyncVar<Guid> _lobbyId = new();
-
-#endregion
-
         [Server]
         internal void SetLobbyId(Guid lobbyId)
         {
@@ -35,6 +31,13 @@ namespace AnyVR.LobbySystem
             {
                 ((GlobalLobbyState)LobbyInfo).SetPlayerNum((ushort)GetPlayerStates().Count());
             };
+
+            string url = Environment.GetEnvironmentVariable("LIVEKIT_SERVER_URL");
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                Logger.Log(LogLevel.Warning, nameof(LobbyState), "The environmental variable 'LIVEKIT_SERVER_URL' is not set or white space.");
+            }
+            _liveKitServerUrl.Value = url;
         }
 
 
@@ -75,11 +78,21 @@ namespace AnyVR.LobbySystem
             return GetPlayerState<LobbyPlayerState>(clientId);
         }
 
+#region Replicated Properties
+
+        private readonly SyncVar<Guid> _lobbyId = new();
+
+        private readonly SyncVar<string> _liveKitServerUrl = new();
+
+#endregion
+
 #region Public API
 
         public Guid LobbyId => _lobbyId.Value;
 
         public ILobbyInfo LobbyInfo => GlobalGameState.Instance.GetLobbyInfo(LobbyId);
+
+        public string LiveKitServerUrl => _liveKitServerUrl.Value;
 
 #endregion
 

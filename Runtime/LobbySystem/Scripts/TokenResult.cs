@@ -33,20 +33,17 @@ namespace AnyVR.LobbySystem
 
     public class TokenResult
     {
-        public readonly string LiveKitServerUrl;
         public readonly TokenState State;
 
         public readonly string Token;
 
-        internal TokenResult(TokenState state, string token = null, string liveKitServerUrl = null)
+        internal TokenResult(TokenState state, string token = null)
         {
             State = state;
             Token = token;
-            LiveKitServerUrl = liveKitServerUrl;
 
             // state == success implies token != null.
             Assert.IsTrue(state != TokenState.Success || token != null);
-            Assert.IsTrue(state != TokenState.Success || liveKitServerUrl != null);
         }
     }
 

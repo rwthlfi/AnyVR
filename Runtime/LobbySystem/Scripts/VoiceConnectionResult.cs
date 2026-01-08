@@ -36,7 +36,12 @@ namespace AnyVR.LobbySystem
         /// <summary>
         ///     Could not connect because the current platform is not supported.
         /// </summary>
-        PlatformNotSupported
+        PlatformNotSupported,
+
+        /// <summary>
+        ///     Could not connect because the lobby does not have a LiveKit server address configured.
+        /// </summary>
+        LiveKitServerNotSet
     }
 
     public static partial class EnumExtensions
@@ -58,6 +63,7 @@ namespace AnyVR.LobbySystem
                 VoiceConnectionResult.Error => "There was an error connecting to the LiveKit server.",
                 VoiceConnectionResult.AlreadyConnected => "Already connected to a LiveKit server.",
                 VoiceConnectionResult.PlatformNotSupported => "The voicechat is not supported on this platform.",
+                VoiceConnectionResult.LiveKitServerNotSet => "Could not connect because the lobby does not have a LiveKit server address configured.",
                 VoiceConnectionResult.Timeout => "Could not connect to the LiveKit server. Request timed out.",
                 _ => result.ToString()
             };

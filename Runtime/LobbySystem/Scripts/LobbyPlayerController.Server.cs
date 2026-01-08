@@ -1,7 +1,5 @@
-using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
-using AnyVR.Voicechat;
 using FishNet.Object;
 using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
@@ -58,23 +56,15 @@ namespace AnyVR.LobbySystem
             string playerName = GetPlayerState<LobbyPlayerState>().Global.Name;
             Assert.IsNotNull(playerName);
 
-            _ = RequestTokenAsync();
-            return;
+            string token = this.GetGameMode<LobbyGameMode>().GenerateLiveKitToken(GetPlayerState<LobbyPlayerState>());
 
-            async Task RequestTokenAsync()
+            if (string.IsNullOrEmpty(token))
             {
-
-                Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Requesting LiveKit token for '{playerName}'");
-                string token = await this.GetGameMode<LobbyGameMode>().RequestLiveKitToken(GetPlayerState<LobbyPlayerState>());
-
-                if (string.IsNullOrEmpty(token))
-                {
-                    TargetRPC_OnTokenResult(Owner, TokenState.TokenRetrievalFailed);
-                }
-                else
-                {
-                    TargetRPC_OnTokenResult(Owner, TokenState.Success, token, VoiceConfig.LiveKitServerUrl);
-                }
+                TargetRPC_OnTokenResult(Owner, TokenState.TokenRetrievalFailed);
+            }
+            else
+            {
+                TargetRPC_OnTokenResult(Owner, TokenState.Success, token);
             }
         }
 

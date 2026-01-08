@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Linq;
-using System.Threading.Tasks;
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using AnyVR.Voicechat;
@@ -22,8 +21,6 @@ namespace AnyVR.LobbySystem
     public class LobbyGameMode : GameModeBase
     {
         private readonly SyncVar<Guid> _lobbyId = new();
-
-        private LiveKitTokenClient _tokenClient;
 
         internal ILobbyInfo LobbyInfo => GlobalGameState.Instance.GetLobbyInfo(_lobbyId.Value);
 
@@ -62,8 +59,6 @@ namespace AnyVR.LobbySystem
             {
                 _expirationCoroutine = StartCoroutine(ExpireLobby(expiration.Value));
             }
-
-            _tokenClient = new LiveKitTokenClient(LobbyInfo.LobbyId.ToString());
         }
 
         protected override PlayerStateBase SpawnPlayerState(NetworkConnection conn)
@@ -119,12 +114,17 @@ namespace AnyVR.LobbySystem
             LobbyManagerInternal.Instance.Server_CloseLobby(GetGameState<LobbyState>().LobbyId);
         }
 
-        public Task<string> RequestLiveKitToken(LobbyPlayerState player)
+        public string GenerateLiveKitToken(LobbyPlayerState player)
         {
+            if (player == null)
+                return null;
+            
             string identity = player.ID.ToString();
             Assert.IsNotNull(identity);
 
-            return _tokenClient.RequestToken(identity);
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Generating LiveKit token for '{player.Global.Name}' with identity '{identity}'");
+
+            return TokenServiceFfi.CreateToken(LobbyInfo.Name.Value, player.Global.Name, identity);
         }
 
 #region Private Fields
