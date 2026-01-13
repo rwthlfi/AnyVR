@@ -1,9 +1,10 @@
 using System;
+using UnityEngine.Assertions;
 
 namespace AnyVR.LobbySystem
 {
     /// <summary>
-    ///     Represents the result returned by the <see cref="LobbyManager.CreateLobby" /> method.
+    ///     Represents the result returned by the <see cref="GlobalPlayerController.CreateLobby" /> method.
     /// </summary>
     public struct CreateLobbyResult
     {
@@ -22,6 +23,8 @@ namespace AnyVR.LobbySystem
         {
             Status = status;
             LobbyId = lobbyId;
+            // success => lobbyId != null
+            Assert.IsTrue(status != CreateLobbyStatus.Success || lobbyId != null);
         }
     }
 

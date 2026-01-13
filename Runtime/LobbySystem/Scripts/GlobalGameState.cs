@@ -17,7 +17,20 @@ namespace AnyVR.LobbySystem
     /// </summary>
     public class GlobalGameState : GameStateBase
     {
+#region Serialized Fields
+
+        [SerializeField]
+        private LobbyConfiguration _lobbyConfiguration;
+
+#endregion
+
+#region Private Fields
+
         private readonly SyncDictionary<Guid, GlobalLobbyState> _globalLobbyStates = new();
+
+#endregion
+
+#region Lifecycle
 
         public override void OnStartNetwork()
         {
@@ -47,6 +60,10 @@ namespace AnyVR.LobbySystem
             }
         }
 
+#endregion
+
+#region Server Methods
+
         [Server]
         internal void AddGlobalLobbyState(GlobalLobbyState globalLobbyState)
         {
@@ -61,13 +78,8 @@ namespace AnyVR.LobbySystem
             _globalLobbyStates.Remove(globalLobbyLobbyId);
         }
 
-#region Serialized Fields
-
-        [SerializeField]
-        private LobbyConfiguration _lobbyConfiguration;
-        public LobbyConfiguration LobbyConfiguration => _lobbyConfiguration;
-
 #endregion
+
 
 #region Public API
 
@@ -80,6 +92,8 @@ namespace AnyVR.LobbySystem
         ///     Invoked when a remote client closed a lobby.
         /// </summary>
         public event Action<Guid> OnLobbyClosed;
+
+        public LobbyConfiguration LobbyConfiguration => _lobbyConfiguration;
 
         public IEnumerable<ILobbyInfo> GetLobbies()
         {

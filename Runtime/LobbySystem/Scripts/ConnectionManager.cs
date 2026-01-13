@@ -26,6 +26,13 @@ namespace AnyVR.LobbySystem
     [RequireComponent(typeof(NetworkManager))]
     public class ConnectionManager : MonoBehaviour
     {
+#region Serialized Fields
+
+        [SerializeField] [Scene]
+        private string _globalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
+
+#endregion
+
         private static async Task WaitUntilClientStarted()
         {
             TimeSpan timeout = TimeSpan.FromSeconds(10);
@@ -42,15 +49,6 @@ namespace AnyVR.LobbySystem
             }
         }
 
-#region Serialized Fields
-
-        [SerializeField] [Scene]
-        private string _globalScene = "Packages/rwth.lfi.anyvr/Runtime/LobbySystem/Scenes/GlobalScene.unity";
-
-        public string GlobalScene => _globalScene;
-
-#endregion
-
 #region Private Fields
 
         private readonly RpcAwaiter<ConnectionStatus> _connectionAwaiter = new(ConnectionStatus.Timeout, ConnectionStatus.Cancelled);
@@ -63,7 +61,7 @@ namespace AnyVR.LobbySystem
 
 #endregion
 
-#region Public Fields
+#region Public API
 
         /// <summary>
         ///     Current connection state
@@ -110,6 +108,8 @@ namespace AnyVR.LobbySystem
             }
         }
 
+        public string GlobalScene => _globalScene;
+
         /// <summary>
         ///     Called when the local client connection to the server has timed out.
         /// </summary>
@@ -119,12 +119,6 @@ namespace AnyVR.LobbySystem
         ///     Called after the local client connection state changes.
         /// </summary>
         public event Action<ConnectionState> OnClientConnectionState;
-
-        /// <summary>
-        ///     If <c>true</c>/<c>false</c>, use <c>https</c>/<c>http</c> and <c>wss</c>/<c>ws</c> internally.
-        ///     This is set when connecting to the server in <see cref="ConnectToServer" />.
-        /// </summary>
-        public bool UseSecureProtocol { get; }
 
 #endregion
 
@@ -164,14 +158,20 @@ namespace AnyVR.LobbySystem
 
         private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs args)
         {
-            if (args.ConnectionState == LocalConnectionState.Started)
+            switch (args.ConnectionState)
             {
-                _connectionAwaiter.Complete(ConnectionStatus.Connected);
-            }
-
-            if (args.ConnectionState == LocalConnectionState.Stopped)
-            {
-                SceneManager.UnloadSceneAsync(SceneManager.GetSceneByPath(_globalScene));
+                case LocalConnectionState.Started:
+                    _connectionAwaiter.Complete(ConnectionStatus.Connected);
+                    break;
+                case LocalConnectionState.Stopped:
+                    SceneManager.UnloadSceneAsync(SceneManager.GetSceneByPath(_globalScene));
+                    break;
+                case LocalConnectionState.Stopping:
+                    break;
+                case LocalConnectionState.Starting:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             OnClientConnectionState?.Invoke(State);

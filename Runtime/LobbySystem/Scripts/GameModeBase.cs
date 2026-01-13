@@ -19,12 +19,56 @@ namespace AnyVR.LobbySystem
     /// </summary>
     public abstract class GameModeBase : NetworkBehaviour
     {
+        protected virtual PlayerStateBase SpawnPlayerState(NetworkConnection conn)
+        {
+            PlayerStateBase ps = Instantiate(_playerStatePrefab).GetComponent<PlayerStateBase>();
+            Spawn(ps.gameObject, null, gameObject.scene);
+            ps.SetPlayerId(conn.ClientId);
+            GetGameState().AddPlayerState(ps);
+            return ps;
+        }
+
+        protected void SpawnPlayerController(NetworkConnection conn, PlayerStateBase playerState)
+        {
+            PlayerController playerController = Instantiate(_playerControllerPrefab);
+            playerController.SetPlayerState(playerState);
+
+            bool res = _playerControllers.TryAdd(conn, playerController);
+            Assert.IsTrue(res);
+
+            Spawn(playerController.NetworkObject, conn, gameObject.scene);
+        }
+
+#region Scene Instances
+
         private static readonly Dictionary<Scene, GameModeBase> Instances = new();
 
         internal static GameModeBase GetInstance(Scene scene)
         {
             return Instances.GetValueOrDefault(scene);
         }
+
+#endregion
+
+#region Serialized Fields
+
+        [SerializeField] protected GameStateBase _gameStatePrefab;
+
+        [SerializeField] protected PlayerStateBase _playerStatePrefab;
+
+        [SerializeField] protected PlayerController _playerControllerPrefab;
+
+#endregion
+
+#region Private Fields
+
+        private readonly Dictionary<NetworkConnection, PlayerController> _playerControllers = new();
+
+        private GameStateBase _gameState;
+
+#endregion
+
+#region Lifecycle
 
         public override void OnStartServer()
         {
@@ -91,25 +135,16 @@ namespace AnyVR.LobbySystem
             Despawn(playerController.NetworkObject, DespawnType.Destroy);
         }
 
-        protected virtual PlayerStateBase SpawnPlayerState(NetworkConnection conn)
+        public override void OnStopServer()
         {
-            PlayerStateBase ps = Instantiate(_playerStatePrefab).GetComponent<PlayerStateBase>();
-            Spawn(ps.gameObject, null, gameObject.scene);
-            ps.SetPlayerId(conn.ClientId);
-            GetGameState().AddPlayerState(ps);
-            return ps;
+            base.OnStopServer();
+            SceneManager.OnClientPresenceChangeEnd -= OnClientPresenceChangeEnd;
+            ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
         }
 
-        protected void SpawnPlayerController(NetworkConnection conn, PlayerStateBase playerState)
-        {
-            PlayerController playerController = Instantiate(_playerControllerPrefab);
-            playerController.SetPlayerState(playerState);
+#endregion
 
-            bool res = _playerControllers.TryAdd(conn, playerController);
-            Assert.IsTrue(res);
-
-            Spawn(playerController.NetworkObject, conn, gameObject.scene);
-        }
+#region Public API
 
         public GameStateBase GetGameState()
         {
@@ -120,29 +155,6 @@ namespace AnyVR.LobbySystem
         {
             return _gameState as T;
         }
-
-        public override void OnStopServer()
-        {
-            base.OnStopServer();
-            SceneManager.OnClientPresenceChangeEnd -= OnClientPresenceChangeEnd;
-            ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
-        }
-
-#region Serialized Fields
-
-        [SerializeField] protected GameStateBase _gameStatePrefab;
-
-        [SerializeField] protected PlayerStateBase _playerStatePrefab;
-
-        [SerializeField] protected PlayerController _playerControllerPrefab;
-
-#endregion
-
-#region Private Fields
-
-        private readonly Dictionary<NetworkConnection, PlayerController> _playerControllers = new();
-
-        private GameStateBase _gameState;
 
 #endregion
     }

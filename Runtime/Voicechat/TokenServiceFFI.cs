@@ -6,6 +6,6 @@ namespace AnyVR.Voicechat
     public class TokenServiceFfi : MonoBehaviour
     {
         [DllImport("livekit_tokengen_ffi", EntryPoint = "create_token")]
-        public static extern string CreateToken(string room, string userName, string userIdentity);
+        public static extern string CreateToken(string room, string userName, string userIdentity); //TODO: Add TTL parameter
     }
 }

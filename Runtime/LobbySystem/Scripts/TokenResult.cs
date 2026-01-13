@@ -25,10 +25,7 @@ namespace AnyVR.LobbySystem
         /// </summary>
         TokenRetrievalFailed
 
-        /// <summary>
-        ///     The server dropped the request due to insufficient permissions.
-        /// </summary>
-        // Rejected,
+        // TODO: Add 'Rejected' value
     }
 
     public class TokenResult

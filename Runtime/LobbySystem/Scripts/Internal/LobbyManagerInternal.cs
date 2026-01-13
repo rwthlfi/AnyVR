@@ -13,20 +13,24 @@ namespace AnyVR.LobbySystem.Internal
 
 #endregion
 
-        public static LobbyManagerInternal Instance { get; private set; }
-
-#region Lifecycle Overrides
-
-        private void Awake()
-        {
-            Assert.IsTrue(Instance == null);
-            Instance = this;
-        }
+#region Lifecycle
 
         public void Start()
         {
             _lobbyRegistry = GetComponent<LobbyRegistry>();
             _sceneService = new LobbySceneService(this);
+        }
+
+#endregion
+
+#region Singleton
+
+        public static LobbyManagerInternal Instance { get; private set; }
+
+        private void Awake()
+        {
+            Assert.IsTrue(Instance == null);
+            Instance = this;
         }
 
 #endregion

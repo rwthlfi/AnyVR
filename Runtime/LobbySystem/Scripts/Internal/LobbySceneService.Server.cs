@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using AnyVR.Logging;
 using FishNet.Connection;
@@ -85,16 +86,7 @@ namespace AnyVR.LobbySystem.Internal
 
             GameObject[] rootObjects = loadArgs.LoadedScenes[0].GetRootGameObjects();
 
-            LobbyGameMode lobbyGameMode = null;
-            foreach (GameObject root in rootObjects)
-            {
-                LobbyGameMode comp = root.GetComponent<LobbyGameMode>();
-                if (comp == null)
-                    continue;
-
-                lobbyGameMode = comp;
-                break;
-            }
+            LobbyGameMode lobbyGameMode = rootObjects.Select(root => root.GetComponent<LobbyGameMode>()).FirstOrDefault(comp => comp != null);
 
             Assert.IsNotNull(lobbyGameMode);
 
@@ -138,7 +130,7 @@ namespace AnyVR.LobbySystem.Internal
         }
 
         [Server]
-        internal static SceneUnloadData CreateUnloadData(LobbyGameMode gameMode, UnloadOptions.ServerUnloadMode unloadMode = UnloadOptions.ServerUnloadMode.KeepUnused)
+        private static SceneUnloadData CreateUnloadData(LobbyGameMode gameMode, UnloadOptions.ServerUnloadMode unloadMode = UnloadOptions.ServerUnloadMode.KeepUnused)
         {
             Assert.IsNotNull(gameMode);
 

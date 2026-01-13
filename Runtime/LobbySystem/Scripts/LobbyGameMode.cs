@@ -20,9 +20,13 @@ namespace AnyVR.LobbySystem
     /// </summary>
     public class LobbyGameMode : GameModeBase
     {
+#region Replicated Fields
+
         private readonly SyncVar<Guid> _lobbyId = new();
 
-        internal ILobbyInfo LobbyInfo => GlobalGameState.Instance.GetLobbyInfo(_lobbyId.Value);
+#endregion
+
+#region Internal Methods
 
         internal void SetLobbyId(Guid lobbyId)
         {
@@ -30,6 +34,48 @@ namespace AnyVR.LobbySystem
             _lobbyId.Value = lobbyId;
             GetGameState<LobbyState>().SetLobbyId(lobbyId);
         }
+
+#endregion
+
+#region Private Fields
+
+        private Coroutine _expirationCoroutine;
+
+        private Coroutine _inactiveCoroutine;
+
+        private LobbySceneService _sceneService;
+
+#endregion
+
+#region Public API
+
+        public ILobbyInfo GetLobbyInfo()
+        {
+            return GlobalGameState.Instance.GetLobbyInfo(_lobbyId.Value);
+        }
+
+        /// <summary>
+        ///     Generates a LiveKit token for the specified player.
+        ///     The player can then use this token to connect to the LiveKit server in their lobby.
+        ///     Calls the underlying Rust FFI.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <returns></returns>
+        public string GenerateLiveKitToken(LobbyPlayerState player)
+        {
+            if (player == null)
+                return null;
+
+            string identity = player.ID.ToString();
+
+            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Generating LiveKit token for '{player.Global.Name}' with identity '{identity}'");
+
+            return TokenServiceFfi.CreateToken(GetLobbyInfo().Name.Value, player.Global.Name, identity);
+        }
+
+#endregion
+
+#region Lifecycle
 
         public virtual void OnBeginPlay()
         {
@@ -54,7 +100,7 @@ namespace AnyVR.LobbySystem
                 }
             };
 
-            DateTime? expiration = LobbyInfo.ExpirationDate.Value;
+            DateTime? expiration = GetLobbyInfo().ExpirationDate.Value;
             if (expiration.HasValue)
             {
                 _expirationCoroutine = StartCoroutine(ExpireLobby(expiration.Value));
@@ -113,27 +159,6 @@ namespace AnyVR.LobbySystem
             Logger.Log(LogLevel.Info, nameof(LobbyGameMode), $"Closing lobby {GetGameState<LobbyState>().LobbyId} due to inactivity.");
             LobbyManagerInternal.Instance.Server_CloseLobby(GetGameState<LobbyState>().LobbyId);
         }
-
-        public string GenerateLiveKitToken(LobbyPlayerState player)
-        {
-            if (player == null)
-                return null;
-            
-            string identity = player.ID.ToString();
-            Assert.IsNotNull(identity);
-
-            Logger.Log(LogLevel.Verbose, nameof(LobbyPlayerController), $"Generating LiveKit token for '{player.Global.Name}' with identity '{identity}'");
-
-            return TokenServiceFfi.CreateToken(LobbyInfo.Name.Value, player.Global.Name, identity);
-        }
-
-#region Private Fields
-
-        private Coroutine _expirationCoroutine;
-
-        private Coroutine _inactiveCoroutine;
-
-        private LobbySceneService _sceneService;
 
 #endregion
     }

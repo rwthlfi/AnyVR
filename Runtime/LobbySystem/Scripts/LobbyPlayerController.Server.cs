@@ -1,17 +1,25 @@
 using AnyVR.LobbySystem.Internal;
 using AnyVR.Logging;
 using FishNet.Object;
-using UnityEngine.Assertions;
 using Logger = AnyVR.Logging.Logger;
 
 namespace AnyVR.LobbySystem
 {
     public partial class LobbyPlayerController
     {
+#region Lifecycle
+
         public override void OnStartServer()
         {
             base.OnStartServer();
             SpawnAvatar();
+        }
+
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+            NetworkObject avatar = GetPlayerState<LobbyPlayerState>().GetAvatar();
+            Despawn(avatar, DespawnType.Destroy);
         }
 
         [Server]
@@ -27,6 +35,8 @@ namespace AnyVR.LobbySystem
             GetPlayerState<LobbyPlayerState>().SetAvatar(nob);
             Spawn(nob, Owner, gameObject.scene);
         }
+
+#endregion
 
 #region RPCs
 
@@ -53,9 +63,6 @@ namespace AnyVR.LobbySystem
         [ServerRpc]
         private void ServerRPC_RequestLiveKitToken()
         {
-            string playerName = GetPlayerState<LobbyPlayerState>().Global.Name;
-            Assert.IsNotNull(playerName);
-
             string token = this.GetGameMode<LobbyGameMode>().GenerateLiveKitToken(GetPlayerState<LobbyPlayerState>());
 
             if (string.IsNullOrEmpty(token))
@@ -88,13 +95,6 @@ namespace AnyVR.LobbySystem
             LobbyManagerInternal.Instance.RemovePlayerFromLobby(GetPlayerState<LobbyPlayerState>());
         }
 
-        public override void OnStopServer()
-        {
-            base.OnStopServer();
-            NetworkObject avatar = GetPlayerState<LobbyPlayerState>().GetAvatar();
-            Despawn(avatar, DespawnType.Destroy);
-        }
-
-  #endregion
+#endregion
     }
 }

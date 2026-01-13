@@ -11,20 +11,56 @@ namespace AnyVR.LobbySystem
 {
     public partial class LobbyPlayerController
     {
-        public LiveKitClient Voice { get; private set; }
-
-        public override void OnStartClient()
+        [Client]
+        private Task<TokenResult> RequestLiveKitToken()
         {
-            base.OnStartClient();
-
-            Voice = LiveKitClient.Instantiate(gameObject);
-            Voice.OnParticipantConnected += OnParticipantConnected;
-            Voice.OnParticipantDisconnected += OnParticipantDisconnected;
+            Task<TokenResult> task = _tokenAwaiter.WaitForResult();
+            ServerRPC_RequestLiveKitToken();
+            return task;
         }
 
         /// <summary>
+        ///     Is called when a remote player publishes an audio track.
+        ///     Override this to specify the AudioSource the player's audio stream should be attached to.
+        ///     The default implementation instantiates a non-spatial audio source on the corresponding player state.
+        ///     The returned AudioSource component will be destroyed after the corresponding player unpublishes their audio track.
+        /// </summary>
+        /// <param name="player">The remote player who published the audio track.</param>
+        [Client]
+        protected virtual AudioSource ProvideRemoteAudioSource(LobbyPlayerState player)
+        {
+            return player.gameObject.AddComponent<AudioSource>();
+        }
+
+        [Client]
+        private AudioSource GetRemoteParticipantAudioSource(string liveKitIdentity)
+        {
+            if (int.TryParse(liveKitIdentity, out int clientId))
+            {
+                LobbyPlayerState playerState = this.GetGameState().GetPlayerState<LobbyPlayerState>(clientId);
+
+                if (playerState != null)
+                {
+                    //TODO: Check that the corresponding player wants to publish their microphone.
+                    //Currently, a malicious player could impersonate another player's voice.
+
+                    return ProvideRemoteAudioSource(playerState);
+                }
+            }
+
+            // This happens when someone joins the LiveKit room who is not participating in the lobby.
+            // TODO: Allow third-party voice participants?
+            Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), "Could not match LiveKit participant to player state.");
+            return null;
+        }
+
+#region Public API
+
+        public LiveKitClient Voice { get; private set; }
+
+        /// <summary>
         ///     Connects the local player to the LiveKit voice room of the player's lobby.
-        ///     Requests a LiveKit token from the token server before connecting to the LiveKit server.
+        ///     Requests a LiveKit token from the server in order to connect to the LiveKit server.
         /// </summary>
         /// <returns>
         ///     A <see cref="VoiceConnectionResult" /> indicating the result of the connection attempt.
@@ -69,7 +105,6 @@ namespace AnyVR.LobbySystem
 
             Voice.SetAudioObjectMapping(GetRemoteParticipantAudioSource);
 
-
             LiveKitConnectionResult result = await Voice.Connect(this.GetGameState<LobbyState>().LiveKitServerUrl, token);
 
             if (result == LiveKitConnectionResult.Connected)
@@ -94,20 +129,63 @@ namespace AnyVR.LobbySystem
             return res;
         }
 
-        [Client]
-        private Task<TokenResult> RequestLiveKitToken()
+        /// <summary>
+        ///     Disconnect from the LiveKit room.
+        /// </summary>
+        [Obsolete("Use Voice.Disconnect() instead.")]
+        public void DisconnectFromLiveKitRoom()
         {
-            Task<TokenResult> task = _tokenAwaiter.WaitForResult();
-            ServerRPC_RequestLiveKitToken();
+            Voice.Disconnect();
+        }
+
+        /// <summary>
+        ///     Promote another player in the lobby.
+        ///     Only admins have the authority to promote other players.
+        /// </summary>
+        /// <param name="other">The player which should be promoted.</param>
+        /// <returns>An asynchronous <see cref="PlayerPromotionResult" /> indicating if the operation was succeeded. </returns>
+        [Client]
+        public Task<PlayerPromotionResult> PromoteToAdmin(LobbyPlayerState other)
+        {
+            Task<PlayerPromotionResult> task = _playerPromoteUpdateAwaiter.WaitForResult();
+            ServerRPC_PromoteToAdmin(other);
             return task;
         }
 
         /// <summary>
-        ///     Disconnect from the LiveKit room.
+        ///     Kick another player from the lobby.
+        ///     Only admins have the authority to kick other players.
         /// </summary>
-        public void DisconnectFromLiveKitRoom()
+        /// <param name="other">The player which should be kicked.</param>
+        /// <returns>An asynchronous <see cref="PlayerKickResult" /> indicating if the operation was succeeded. </returns>
+        [Client]
+        public Task<PlayerKickResult> Kick(LobbyPlayerState other)
         {
-            Voice.Disconnect();
+            Task<PlayerKickResult> task = _playerKickUpdateAwaiter.WaitForResult();
+            ServerRPC_KickPlayer(other);
+            return task;
+        }
+
+        /// <summary>
+        ///     Leave the current lobby.
+        /// </summary>
+        [Client]
+        public void LeaveLobby()
+        {
+            ServerRPC_LeaveLobby();
+        }
+
+#endregion
+
+#region Lifecycle
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+
+            Voice = LiveKitClient.Instantiate(gameObject);
+            Voice.OnParticipantConnected += OnParticipantConnected;
+            Voice.OnParticipantDisconnected += OnParticipantDisconnected;
         }
 
         private void OnParticipantConnected(RemoteParticipant remote)
@@ -156,77 +234,7 @@ namespace AnyVR.LobbySystem
             player.SetIsConnectedToVoice(true);
         }
 
-        /// <summary>
-        ///     Promote another player in the lobby.
-        ///     Only admins have the authority to promote other players.
-        /// </summary>
-        /// <param name="other">The player which should be promoted.</param>
-        /// <returns>An asynchronous <see cref="PlayerPromotionResult" /> indicating if the operation was succeeded. </returns>
-        [Client]
-        public Task<PlayerPromotionResult> PromoteToAdmin(LobbyPlayerState other)
-        {
-            Task<PlayerPromotionResult> task = _playerPromoteUpdateAwaiter.WaitForResult();
-            ServerRPC_PromoteToAdmin(other);
-            return task;
-        }
-
-        /// <summary>
-        ///     Kick another player from the lobby.
-        ///     Only admins have the authority to kick other players.
-        /// </summary>
-        /// <param name="other">The player which should be kicked.</param>
-        /// <returns>An asynchronous <see cref="PlayerKickResult" /> indicating if the operation was succeeded. </returns>
-        [Client]
-        public Task<PlayerKickResult> Kick(LobbyPlayerState other)
-        {
-            Task<PlayerKickResult> task = _playerKickUpdateAwaiter.WaitForResult();
-            ServerRPC_KickPlayer(other);
-            return task;
-        }
-
-        /// <summary>
-        ///     Leave the current lobby.
-        /// </summary>
-        [Client]
-        public void LeaveLobby()
-        {
-            ServerRPC_LeaveLobby();
-        }
-
-        /// <summary>
-        ///     Is called when a remote player publishes an audio track.
-        ///     Override this to specify the AudioSource the player's audio stream should be attached to.
-        ///     The default implementation instantiates a non-spatial audio source on the corresponding player state.
-        ///     The returned AudioSource component will be destroyed after the corresponding player unpublishes their audio track.
-        /// </summary>
-        /// <param name="player">The remote player who published the audio track.</param>
-        [Client]
-        protected virtual AudioSource ProvideRemoteAudioSource(LobbyPlayerState player)
-        {
-            return player.gameObject.AddComponent<AudioSource>();
-        }
-
-        [Client]
-        internal AudioSource GetRemoteParticipantAudioSource(string liveKitIdentity)
-        {
-            if (int.TryParse(liveKitIdentity, out int clientId))
-            {
-                LobbyPlayerState playerState = this.GetGameState().GetPlayerState<LobbyPlayerState>(clientId);
-
-                if (playerState != null)
-                {
-                    //TODO: Check that the corresponding player wants to publish their microphone.
-                    //Currently, a malicious player could impersonate another player's voice.
-
-                    return ProvideRemoteAudioSource(playerState);
-                }
-            }
-
-            // This happens when someone joins the LiveKit room who is not participating in the lobby.
-            // TODO: Allow third-party voice participants?
-            Logger.Log(LogLevel.Error, nameof(LobbyPlayerController), "Could not match LiveKit participant to player state.");
-            return null;
-        }
+#endregion
 
 #region RPCs
 
