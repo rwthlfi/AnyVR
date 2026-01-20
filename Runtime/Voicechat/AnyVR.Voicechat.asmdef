@@ -3,8 +3,6 @@
     "rootNamespace": "AnyVR.Voicechat",
     "references": [
         "GUID:6055be8ebefd69e48b49212b09b47b2f",
-        "GUID:702f733b4deb246808c6ce84d93b5c9c",
-        "GUID:ea9451ff16a9bab499ea5677a2d67939",
         "GUID:f1f53d788522cff30900036330eedb8a",
         "GUID:ecdea381db2902dc080e71a5f5cfd7cb",
         "GUID:f3efbb9be41342010b917c2ddc11e2eb"
