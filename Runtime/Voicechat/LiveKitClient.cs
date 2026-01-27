@@ -85,7 +85,7 @@ namespace AnyVR.Voicechat
             return null;
 #endif
 
-#if UNITY_WEBGL
+#if UNITY_WEBGL && !UNITY_EDITOR
             liveKitClient = go.AddComponent<WebGLVoicechatClient>();
             Logger.Log(LogLevel.Verbose, nameof(LiveKitClient), "VoiceChatManager initialized. Platform: WEBGL");
 #elif UNITY_STANDALONE || UNITY_ANDROID
