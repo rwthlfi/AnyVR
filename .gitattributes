@@ -1,6 +1,5 @@
 *.png filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
 *.jpeg filter=lfs diff=lfs merge=lfs -text
+
 * text eol=crlf
-ThirdParty/client-sdk-unity/Runtime/Plugins/Google.Protobuf.dll filter=lfs diff=lfs merge=lfs -text
-ThirdParty/client-sdk-unity/Runtime/Plugins/System.Runtime.CompilerServices.Unsafe.dll filter=lfs diff=lfs merge=lfs -text
