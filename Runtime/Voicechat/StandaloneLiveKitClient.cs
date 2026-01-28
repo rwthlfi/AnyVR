@@ -108,7 +108,7 @@ namespace AnyVR.Voicechat
 
             _activeMicName = deviceName;
 
-            _audioSource = new MicrophoneSource(_activeMicName, gameObject);
+            _audioSource = new MicrophoneSource(_activeMicName, gameObject, (int)RtcAudioSource.DefaultChannels, (int)RtcAudioSource.DefaultMicrophoneSampleRate);
             LocalAudioTrack track = LocalAudioTrack.CreateAudioTrack($"audio-track-{LocalParticipant.Identity}", _audioSource, _room);
 
             Task<MicrophonePublishResult> task = TrackPublishResult.WaitForResult();

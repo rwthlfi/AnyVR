@@ -34,13 +34,13 @@ namespace AnyVR.Editor
         private const string LiveKitWebImportUrl = "https://github.com/livekit/client-sdk-unity-web.git";
         private const string AsmDefPath = "Runtime/livekit.unity.Runtime.asmdef";
 
-        [InitializeOnLoadMethod]
-        private static void Initialize()
-        {
-            EditorApplication.delayCall += InstallPackages;
-        }
+        // [InitializeOnLoadMethod]
+        // private static void Initialize()
+        // {
+        //     EditorApplication.delayCall += InstallPackages;
+        // }
 
-        [MenuItem("AnyVR/Install LiveKit Packages")]
+        // [MenuItem("AnyVR/Install LiveKit Packages")]
         private static void InstallPackages()
         {
             bool liveKitExists = PackageInfo.FindForPackageName(LiveKitName) != null;
@@ -70,7 +70,7 @@ namespace AnyVR.Editor
 #endif
         }
 
-        [MenuItem("AnyVR/Refresh LiveKit AsmDefs")]
+        // [MenuItem("AnyVR/Refresh LiveKit AsmDefs")]
         private static void RefreshAsmDefs()
         {
             bool isWebGl = EditorUserBuildSettings.activeBuildTarget == BuildTarget.WebGL;
