@@ -10,12 +10,22 @@ namespace AnyVR.LobbySystem
     /// </summary>
     public class PlayerController : NetworkBehaviour
     {
+#region Replicated Fields
+
         private readonly SyncVar<PlayerStateBase> _playerState = new();
+
+#endregion
+
+#region Internal Methods
 
         internal void SetPlayerState(PlayerStateBase playerState)
         {
             _playerState.Value = playerState;
         }
+
+#endregion
+
+#region Public API
 
         public PlayerStateBase GetPlayerState()
         {
@@ -26,5 +36,7 @@ namespace AnyVR.LobbySystem
         {
             return _playerState.Value as T;
         }
+
+#endregion
     }
 }

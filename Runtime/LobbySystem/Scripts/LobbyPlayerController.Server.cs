@@ -7,10 +7,19 @@ namespace AnyVR.LobbySystem
 {
     public partial class LobbyPlayerController
     {
+#region Lifecycle
+
         public override void OnStartServer()
         {
             base.OnStartServer();
             SpawnAvatar();
+        }
+
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+            NetworkObject avatar = GetPlayerState<LobbyPlayerState>().GetAvatar();
+            Despawn(avatar, DespawnType.Destroy);
         }
 
         [Server]
@@ -26,6 +35,8 @@ namespace AnyVR.LobbySystem
             GetPlayerState<LobbyPlayerState>().SetAvatar(nob);
             Spawn(nob, Owner, gameObject.scene);
         }
+
+#endregion
 
 #region RPCs
 
@@ -50,6 +61,21 @@ namespace AnyVR.LobbySystem
         }
 
         [ServerRpc]
+        private void ServerRPC_RequestLiveKitToken()
+        {
+            string token = this.GetGameMode<LobbyGameMode>().GenerateLiveKitToken(GetPlayerState<LobbyPlayerState>());
+
+            if (string.IsNullOrEmpty(token))
+            {
+                TargetRPC_OnTokenResult(Owner, TokenState.TokenRetrievalFailed);
+            }
+            else
+            {
+                TargetRPC_OnTokenResult(Owner, TokenState.Success, token);
+            }
+        }
+
+        [ServerRpc]
         private void ServerRPC_KickPlayer(LobbyPlayerState other)
         {
             if (!GetPlayerState<LobbyPlayerState>().IsAdmin)
@@ -69,13 +95,6 @@ namespace AnyVR.LobbySystem
             LobbyManagerInternal.Instance.RemovePlayerFromLobby(GetPlayerState<LobbyPlayerState>());
         }
 
-        public override void OnStopServer()
-        {
-            base.OnStopServer();
-            NetworkObject avatar = GetPlayerState<LobbyPlayerState>().GetAvatar();
-            Despawn(avatar, DespawnType.Destroy);
-        }
-
-  #endregion
+#endregion
     }
 }

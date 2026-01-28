@@ -17,7 +17,11 @@ namespace AnyVR.LobbySystem.Internal
     /// </summary>
     public abstract class GameStateBase : NetworkBehaviour
     {
+#region Private Fields
+
         private static readonly Dictionary<Scene, GameStateBase> Instances = new();
+
+#endregion
 
 #region Replicated Fields
 
@@ -28,6 +32,25 @@ namespace AnyVR.LobbySystem.Internal
         internal static GameStateBase GetInstance(Scene scene)
         {
             return Instances.GetValueOrDefault(scene);
+        }
+
+
+#region Lifecycle
+
+        public override void OnStartNetwork()
+        {
+            base.OnStartNetwork();
+
+            _playerStates.OnChange += PlayerStatesOnChange;
+
+            Assert.IsFalse(Instances.ContainsKey(gameObject.scene));
+            Instances.Add(gameObject.scene, this);
+        }
+
+        public override void OnStopNetwork()
+        {
+            base.OnStopNetwork();
+            Instances.Clear();
         }
 
         private void PlayerStatesOnChange(SyncDictionaryOperation op, int playerId, NetworkBehaviour _, bool asServer)
@@ -49,24 +72,6 @@ namespace AnyVR.LobbySystem.Internal
                 default:
                     throw new ArgumentOutOfRangeException(nameof(op), op, null);
             }
-        }
-
-#region Lifecycle Overrides
-
-        public override void OnStartNetwork()
-        {
-            base.OnStartNetwork();
-
-            _playerStates.OnChange += PlayerStatesOnChange;
-
-            Assert.IsFalse(Instances.ContainsKey(gameObject.scene));
-            Instances.Add(gameObject.scene, this);
-        }
-
-        public override void OnStopNetwork()
-        {
-            base.OnStopNetwork();
-            Instances.Clear();
         }
 
 #endregion

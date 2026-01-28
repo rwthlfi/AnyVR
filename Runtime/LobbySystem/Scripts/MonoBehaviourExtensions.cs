@@ -14,5 +14,15 @@ namespace AnyVR.LobbySystem
         {
             return GameStateBase.GetInstance(behaviour.gameObject.scene) as T;
         }
+
+        public static GameModeBase GetGameMode(this MonoBehaviour behaviour)
+        {
+            return GameModeBase.GetInstance(behaviour.gameObject.scene);
+        }
+
+        public static T GetGameMode<T>(this MonoBehaviour behaviour) where T : GameModeBase
+        {
+            return GameModeBase.GetInstance(behaviour.gameObject.scene) as T;
+        }
     }
 }

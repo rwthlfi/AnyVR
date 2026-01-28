@@ -18,11 +18,7 @@ namespace AnyVR.LobbySystem
     /// </summary>
     public partial class GlobalPlayerController : PlayerController
     {
-        private readonly RpcAwaiter<PlayerNameUpdateResult> _playerNameUpdateAwaiter = new(PlayerNameUpdateResult.Timeout, PlayerNameUpdateResult.Cancelled);
-
-        private TaskCompletionSource<CreateLobbyResult> _createLobbyTcs;
-
-        private TaskCompletionSource<JoinLobbyResult> _joinLobbyTcs;
+#region Livecycle
 
         public override void OnStartClient()
         {
@@ -34,14 +30,32 @@ namespace AnyVR.LobbySystem
             SceneManager.OnUnloadEnd += Client_OnUnloadEnd;
         }
 
+#endregion
+
+#region Target RPCs
+
         [TargetRpc]
         private void TargetRPC_OnNameChange(NetworkConnection _, PlayerNameUpdateResult playerNameUpdateResult)
         {
             _playerNameUpdateAwaiter?.Complete(playerNameUpdateResult);
         }
 
+#endregion
+
+#region Private Fields
+
+        private readonly RpcAwaiter<PlayerNameUpdateResult> _playerNameUpdateAwaiter = new(PlayerNameUpdateResult.Timeout, PlayerNameUpdateResult.Cancelled);
+
+        private TaskCompletionSource<CreateLobbyResult> _createLobbyTcs;
+
+        private TaskCompletionSource<JoinLobbyResult> _joinLobbyTcs;
+
+#endregion
+
+#region Client Methods
+
         [Client]
-        internal async Task<CreateLobbyResult> Client_CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMetaData, ushort maxClients, DateTime? expirationDate = null, TimeSpan? timeout = null)
+        private async Task<CreateLobbyResult> Client_CreateLobby(string lobbyName, string password, LobbySceneMetaData sceneMetaData, ushort maxClients, DateTime? expirationDate = null, TimeSpan? timeout = null)
         {
             if (_createLobbyTcs != null && !_createLobbyTcs.Task.IsCompleted)
             {
@@ -105,7 +119,7 @@ namespace AnyVR.LobbySystem
         }
 
         [Client]
-        internal Task<JoinLobbyResult> Client_QuickConnect(string quickConnectCode, TimeSpan? timeout = null)
+        private Task<JoinLobbyResult> Client_QuickConnect(string quickConnectCode, TimeSpan? timeout = null)
         {
             quickConnectCode = quickConnectCode.Trim();
 
@@ -115,14 +129,14 @@ namespace AnyVR.LobbySystem
                 return Task.FromResult(JoinLobbyResult.InvalidQuickConnectFormat);
             }
 
-            if (code >= 99999)
-            {
-                Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal), $"QuickConnect failed: code out of range '{code}'");
-                return Task.FromResult(JoinLobbyResult.QuickConnectOutOfRange);
-            }
+            if (code < 99999)
+                return Client_JoinLobby(() => ServerRPC_QuickConnect(code), timeout);
 
-            return Client_JoinLobby(() => ServerRPC_QuickConnect(code), timeout);
+            Logger.Log(LogLevel.Warning, nameof(LobbyManagerInternal), $"QuickConnect failed: code out of range '{code}'");
+            return Task.FromResult(JoinLobbyResult.QuickConnectOutOfRange);
         }
+
+#endregion
 
 #region Public API
 
@@ -207,7 +221,7 @@ namespace AnyVR.LobbySystem
 
 #endregion
 
-#region RPCs
+#region Observer RPCs
 
         // The owner is the only observer
         [ObserversRpc]

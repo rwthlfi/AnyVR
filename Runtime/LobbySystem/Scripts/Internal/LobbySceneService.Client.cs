@@ -1,3 +1,0 @@
-namespace AnyVR.LobbySystem.Internal
-{
-}

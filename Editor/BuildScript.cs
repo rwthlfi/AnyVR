@@ -95,8 +95,8 @@ namespace AnyVR.Editor
         {
             SetEnableOpenXR(BuildTargetGroup.Android, true);
             EditorUserBuildSettings.standaloneBuildSubtarget = StandaloneBuildSubtarget.Player;
-            BuildReport report = BuildPipeline.BuildPlayer(Scenes, $"Builds/Android/{BinaryName}",
-                BuildTarget.WebGL, BuildOptions.None);
+            BuildReport report = BuildPipeline.BuildPlayer(Scenes, $"Builds/Android/{BinaryName}.apk",
+                BuildTarget.Android, BuildOptions.None);
             Assert.IsTrue(report.summary.result == BuildResult.Succeeded, "Build Failed");
         }
 
