@@ -75,7 +75,7 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
 /ThirdParty/**/*.so
-/ThirdParty/**/*.dll
+# /ThirdParty/**/*.dll
 /ThirdParty/**/*.dylib
 /ThirdParty/**/*.a
 /ThirdParty/**/*.jar
