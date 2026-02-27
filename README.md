@@ -30,8 +30,4 @@
 
 ### LiveKit
 
-The project integrates LiveKit for real-time voice communication.
-To support both Standalone and WebGL builds, the following LiveKit packages are included:
-
-- [client-sdk-unity](https://github.com/livekit/client-sdk-unity) (Standalone)
-- [client-sdk-unity-web](https://github.com/livekit/client-sdk-unity-web) (WegGL)
+> **Note**: The voicechat is disabled in the editor.

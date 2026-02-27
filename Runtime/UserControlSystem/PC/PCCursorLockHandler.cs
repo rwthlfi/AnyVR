@@ -1,23 +1,7 @@
-// AnyVR is a multiuser, multiplatform XR framework.
-// Copyright (C) 2025 Engineering Hydrology, RWTH Aachen University.
-// 
-// AnyVR is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published
-// by the Free Software Foundation, either version 3 of the License,
-// or (at your option) any later version.
-// 
-// AnyVR is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANT-
-// ABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-// See the GNU General Public License for more details.
-// 
-// You should have received a copy of the GNU General Public License
-// along with AnyVR.
-// If not, see <https://www.gnu.org/licenses/>.
-
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace AnyVR.UserControlSystem.PC
 {
@@ -33,10 +17,10 @@ namespace AnyVR.UserControlSystem.PC
         private InputActionProperty _cursorUnlockAction =
             new(new InputAction("Interaction", expectedControlType: "Button"));
 
-        [SerializeField]
-        [Tooltip("The Input System Action that will be used to lock the cursor.")]
-        private InputActionProperty _cursorLockAction =
-            new(new InputAction("Interaction", expectedControlType: "Button"));
+        //[SerializeField]
+        //[Tooltip("The Input System Action that will be used to lock the cursor.")]
+        //private InputActionProperty _cursorLockAction =
+        //    new(new InputAction("Interaction", expectedControlType: "Button"));
 
         [SerializeField]
         private bool _isCursorUnlocked;
@@ -73,18 +57,27 @@ namespace AnyVR.UserControlSystem.PC
         private void Start()
         {
             // Subscribes to the action events.
-            _cursorUnlockAction.action.performed += UnlockCursorInputActionCallback;
-            _cursorLockAction.action.performed += LockCursorInputActionCallback;
+            //_cursorUnlockAction.action.performed += UnlockCursorInputActionCallback;
+            //_cursorLockAction.action.performed += LockCursorInputActionCallback; 
+            _cursorUnlockAction.action.performed += ToggleCursorLock;
 
             // Locks cursor initially.
             IsCursorUnlocked = false;
+
+            //SceneManager.sceneLoaded += (_, _) => IsCursorUnlocked = false;
+        }
+
+        private void Action_performed(InputAction.CallbackContext obj)
+        {
+            throw new System.NotImplementedException();
         }
 
         private void OnDestroy()
         {
             // Unsubscribes from the action events to prevent memory leaks.
-            _cursorUnlockAction.action.performed -= UnlockCursorInputActionCallback;
-            _cursorLockAction.action.performed -= LockCursorInputActionCallback;
+            //_cursorUnlockAction.action.performed -= UnlockCursorInputActionCallback;
+            //_cursorLockAction.action.performed -= LockCursorInputActionCallback;
+            _cursorUnlockAction.action.performed -= ToggleCursorLock;
         }
 
 
@@ -95,16 +88,16 @@ namespace AnyVR.UserControlSystem.PC
             Cursor.lockState = isUnlocked ? CursorLockMode.None : CursorLockMode.Locked;
 
             // Disables and enables the respective actions.
-            if (isUnlocked)
-            {
-                _cursorUnlockAction.action.Disable();
-                _cursorLockAction.action.Enable();
-            }
-            else
-            {
-                _cursorUnlockAction.action.Enable();
-                _cursorLockAction.action.Disable();
-            }
+            //if (isUnlocked)
+            //{
+            //    _cursorUnlockAction.action.Disable();
+            //    _cursorLockAction.action.Enable();
+            //}
+            //else
+            //{
+            //    _cursorUnlockAction.action.Enable();
+            //    _cursorLockAction.action.Disable();
+            //}
 
             // Toggles movement and turning depending on the cursor state.
             if (isUnlocked)
@@ -130,6 +123,11 @@ namespace AnyVR.UserControlSystem.PC
         private void LockCursorInputActionCallback(InputAction.CallbackContext context)
         {
             IsCursorUnlocked = false;
+        }
+
+        private void ToggleCursorLock(InputAction.CallbackContext context)
+        {
+            IsCursorUnlocked = !IsCursorUnlocked;
         }
 
         /// <summary>
